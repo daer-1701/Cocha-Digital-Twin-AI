@@ -1,0 +1,22 @@
+{
+  "name": "cocha-digital-twin",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/web", "packages/shared"],
+  "engines": { "node": ">=22.14.0 <23" },
+  "scripts": {
+    "dev": "npm run dev --workspace @cocha/web",
+    "build": "npm run build --workspace @cocha/web",
+    "start": "npm run start --workspace @cocha/web",
+    "lint": "npm run lint --workspace @cocha/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "contracts:generate": "openapi-typescript packages/shared/openapi.json -o packages/shared/src/api.d.ts",
+    "contracts:check": "npm run contracts:generate && git diff --exit-code -- packages/shared/src/api.d.ts"
+  },
+  "devDependencies": { "openapi-typescript": "7.13.0" },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
+  }
+}

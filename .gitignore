@@ -1,0 +1,44 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+secrets/
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+build/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage/
+htmlcov/
+*.tsbuildinfo
+
+# Scientific artifacts: retain documentation, not raw observations
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/models/*
+!data/models/.gitkeep
+.ipynb_checkpoints/
+*.log
+*.dump
+*.backup
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

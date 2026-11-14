@@ -1,0 +1,22 @@
+import json
+import logging
+from datetime import UTC, datetime
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        # Do not serialize request bodies, query strings, headers or credentials.
+        return json.dumps(
+            {
+                "timestamp": datetime.now(UTC).isoformat(),
+                "level": record.levelname,
+                "logger": record.name,
+                "message": record.getMessage(),
+            }
+        )
+
+
+def configure_logging(level: str) -> None:
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
+    logging.basicConfig(level=level.upper(), handlers=[handler], force=True)
