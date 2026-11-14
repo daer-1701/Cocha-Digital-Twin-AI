@@ -17,6 +17,7 @@ from cocha_api.schemas.availability import (
     JobsResponse,
     ModelsResponse,
     ObservationExport,
+    PilotTrendItem,
     PilotWindowScene,
     PilotWindowSummary,
     ReportsResponse,
@@ -35,7 +36,7 @@ from cocha_api.science.indicators import (
     SERIES_REASON,
     pilot_window_from_scenes,
 )
-from cocha_api.science.trends import TREND_PUBLICATION_REASON
+from cocha_api.science.trends import TREND_PUBLICATION_REASON, descriptive_slope
 from cocha_api.science.viability import (
     FUSION_BLOCKERS,
     FUSION_NOTE,
@@ -95,12 +96,36 @@ def list_series(limit: LimitQuery = 50, offset: OffsetQuery = 0) -> SeriesRespon
 
 @router.get("/trends", response_model=TrendsResponse)
 def list_trends(limit: LimitQuery = 50, offset: OffsetQuery = 0) -> TrendsResponse:
+    # Official district trends stay unavailable. Pilot slopes are descriptive only.
+    pilot_trends: list[PilotTrendItem] = []
+    snapshot = load_snapshot(get_settings().evidence_path)
+    if snapshot is not None:
+        for variable, values in (
+            ("lst_mean", [scene.lst_mean for scene in snapshot.scenes]),
+            ("ndvi_mean", [scene.ndvi_mean for scene in snapshot.scenes]),
+        ):
+            result = descriptive_slope(values, min_n=3)
+            pilot_trends.append(
+                PilotTrendItem(
+                    variable=variable,
+                    n_finite=result.n_finite,
+                    min_n=result.min_n,
+                    status=result.status,
+                    slope_per_step=result.slope_per_step,
+                    method=result.method,
+                    note=(
+                        f"{result.note} Scope is the Landsat pilot window only; "
+                        "not a district trend or climate inference."
+                    ),
+                )
+            )
     return TrendsResponse(
         status="unavailable",
         reason=TREND_PUBLICATION_REASON,
         items=[],
         limit=limit,
         offset=offset,
+        pilot_trends=pilot_trends,
     )
 
 
@@ -122,8 +147,10 @@ def list_stations(
                 StationItem(
                     source_id=profile["source_id"],
                     name=profile["name"],
-                    variable="pm10",
-                    unit=None,
+                    described_location=profile.get("described_location"),
+                    variable=profile.get("variable", "pm10"),
+                    unit=profile.get("unit"),
+                    unit_source=profile.get("unit_source"),
                     timezone=None,
                     analysis_enabled=False,
                     metadata_pending=list(MONICA_METADATA_PENDING),
@@ -280,8 +307,17 @@ def list_reports(limit: LimitQuery = 50, offset: OffsetQuery = 0) -> ReportsResp
     export = None
     if snapshot is not None:
         export = ObservationExport(note=OBSERVATION_EXPORT_NOTE, evidence=snapshot)
+    if export is None:
+        return ReportsResponse(
+            status="empty",
+            reason="No observation snapshot is published for export.",
+            items=[],
+            limit=limit,
+            offset=offset,
+            observation_export=None,
+        )
     return ReportsResponse(
-        status="unavailable",
+        status="available",
         reason=REPORTS_REASON,
         items=[],
         limit=limit,

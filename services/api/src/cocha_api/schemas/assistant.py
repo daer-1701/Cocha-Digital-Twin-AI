@@ -7,13 +7,14 @@ from pydantic import Field
 from cocha_api.schemas.availability import AvailabilityModel
 
 ASSISTANT_REASON = (
-    "Gemini calls are disabled. Configured token prices are placeholders and must be "
-    "verified against official Google pricing before any paid request. "
-    "This endpoint does not call Gemini."
+    "Gemini calls remain disabled. Model and paid-tier token prices were verified "
+    "against Google documentation on 2026-11-14, but live requests still require an "
+    "explicit authorization and a configured API key. This endpoint does not call Gemini."
 )
 PRICES_NOTE = (
-    "input_price_usd_per_million_tokens and output_price_usd_per_million_tokens "
-    "are configuration placeholders, not verified official prices."
+    "Paid tier for gemini-3.6-flash: $0.75 input / $3.75 output per 1M tokens through "
+    "2026-12-31 (then $1.50 / $7.50). Source: https://ai.google.dev/gemini-api/docs/pricing "
+    "checked on 2026-11-14. Project budget default is USD 4, not a verified account balance."
 )
 
 
@@ -24,7 +25,9 @@ class AssistantStatusResponse(AvailabilityModel):
     budget_usd: float = Field(gt=0)
     input_price_usd_per_million_tokens: float | None = None
     output_price_usd_per_million_tokens: float | None = None
-    prices_verified: Literal[False] = False
+    prices_verified: bool
+    prices_verified_on: str | None = None
+    prices_source_url: str | None = None
     prices_note: str
     calls_enabled: Literal[False] = False
     key_configured: bool

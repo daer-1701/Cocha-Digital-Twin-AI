@@ -39,7 +39,6 @@ def test_domain_endpoints_report_unavailable_without_faking_science(monkeypatch,
         "/v1/trends": "district time series",
         "/v1/models": "pm10",
         "/v1/scenarios": "validated model",
-        "/v1/reports": "formal district reports",
     }
     with TestClient(app) as client:
         for path, fragment in reasons.items():
@@ -49,6 +48,12 @@ def test_domain_endpoints_report_unavailable_without_faking_science(monkeypatch,
             assert body["status"] == "unavailable", path
             assert body["items"] == [], path
             assert fragment in body["reason"].lower(), path
+        reports = client.get("/v1/reports")
+        assert reports.status_code == 200
+        report_body = reports.json()
+        assert report_body["status"] == "empty"
+        assert report_body["observation_export"] is None
+        assert "snapshot" in report_body["reason"].lower()
         jobs = client.get("/v1/jobs")
     assert jobs.status_code == 200
     assert jobs.json()["status"] == "empty"

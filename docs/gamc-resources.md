@@ -53,16 +53,18 @@ no implican continuidad entre esas fechas. No se encontraron duplicados de
 número en esta revisión inicial. Esto no equivale a validación de calidad.
 Detalle legible por código en `data/catalog/gamc.json`.
 
-Pendientes obligatorios para A08:
+Actualización A08 (14/11/2026):
 
-- Unidad PM10: no está declarada en el encabezado. No asignar µg/m³ sin fuente.
-- Zona horaria: timestamps sin offset. No etiquetar UTC por defecto.
-- Coordenadas/elevación: no están en estos CSV; no geocodificar por nombre
-  y presentar el resultado como ubicación oficial.
-- La descripción del portal menciona Av. 6 de Agosto y Av. Circunvalación;
-  los nombres internos son Kanata/Semapa. Reconciliar identidad y ubicación.
-- Interpretación de ceros y negativos, códigos de calibración, instrumentos,
-  frecuencia esperada, discontinuidades y permisos de uso.
+- Unidad PM10: el CSV no declara unidad. Informes oficiales de Red MoniCA /
+  Contaminación Atmosférica Gestión 2021 usan **µg/m³**. Fuente:
+  [informe 2021](http://snia.mmaya.gob.bo/web/modulos/PNGCA/publicaciones/items/14042022-030417-130459_209/14042022-030417-130459_209.pdf).
+  Queda registrada en catálogo/API con esa procedencia; `analysis_enabled`
+  sigue en false.
+- Identidad: `kanata` → Parque Kanata (Av. 6 de Agosto y Av. del Cabildo);
+  `semapa` → SEMAPA (Av. Circunvalación y Atahuallpa). Sin lat/lon inventados.
+- Zona horaria: timestamps sin offset. No etiquetar UTC ni America/La_Paz.
+- Coordenadas/elevación numéricas: siguen ausentes en los CSV.
+- Interpretación de ceros/negativos, instrumentos y licencia: pendientes.
 
 Conservar todos los originales. Los negativos requieren bandera de calidad y
 exclusión de análisis físico hasta justificar su tratamiento; no truncarlos a
@@ -127,6 +129,12 @@ automáticamente. El pipeline piloto conserva su área explícita mientras tanto
   bloqueo documentado: **WMS/BBOX no es un vector distrital completo**.
 - La importación PostGIS de los 15 distritos permanece bloqueada hasta obtener
   un archivo o servicio de features autorizado.
+- Candidatos de terceros **no autorizados como oficiales** (solo inventario):
+  [ciudatoslab/20-distritos](https://github.com/ciudatoslab/20-distritos-en-cochabamba)
+  (habla de 20 distritos; el alcance municipal del proyecto es 15) y
+  [hogaria distritos.geojson](https://hogaria.com/geo/datos/distritos.geojson)
+  (ODbL). No importarlos a PostGIS como límites oficiales sin verificación
+  GAMC de licencia, versión, IDs y completitud.
 
 ## Reparto actualizado
 

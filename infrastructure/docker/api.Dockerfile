@@ -1,11 +1,18 @@
+FROM ghcr.io/astral-sh/uv:0.12.3 AS uv
+
 FROM python:3.12-slim AS builder
 WORKDIR /build
+COPY --from=uv /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
 COPY services/api/src services/api/src
-RUN pip install --no-cache-dir uv==0.12.3 && uv sync --frozen --no-dev --no-editable
+RUN uv sync --frozen --no-dev --no-editable
 
 FROM builder AS test
 ENV PATH="/build/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+# rasterio wheels need libexpat at import time in the slim image.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libexpat1 \
+    && rm -rf /var/lib/apt/lists/*
 RUN uv sync --frozen --group science --no-editable
 COPY alembic.ini ./
 COPY services/api/migrations services/api/migrations

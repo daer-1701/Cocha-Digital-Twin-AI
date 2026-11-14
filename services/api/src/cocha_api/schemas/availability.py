@@ -49,19 +49,36 @@ class SeriesResponse(AvailabilityEnvelope, PaginationParams):
     items: list[dict] = Field(default_factory=list)
 
 
+class PilotTrendItem(AvailabilityModel):
+    variable: Literal["lst_mean", "ndvi_mean"]
+    scope: Literal["pilot_window"] = "pilot_window"
+    district_trend: Literal[False] = False
+    n_finite: int
+    min_n: int
+    status: Literal["descriptive", "inconclusive"]
+    slope_per_step: float | None
+    method: str
+    publishes_inference: Literal[False] = False
+    note: str
+
+
 class TrendsResponse(AvailabilityEnvelope, PaginationParams):
     items: list[dict] = Field(default_factory=list)
+    # Pilot-only descriptive slopes from the explorer snapshot; never district trends.
+    pilot_trends: list[PilotTrendItem] = Field(default_factory=list)
 
 
 class StationItem(AvailabilityModel):
     id: UUID | None = None
     source_id: str
     name: str
+    described_location: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     elevation_m: float | None = None
     variable: str = "pm10"
     unit: str | None = None
+    unit_source: str | None = None
     timezone: str | None = None
     analysis_enabled: bool = False
     metadata_pending: list[str] = Field(default_factory=list)
