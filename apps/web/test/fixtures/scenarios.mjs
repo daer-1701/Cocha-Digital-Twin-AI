@@ -75,6 +75,12 @@ export const scenarios = {
     status: 200,
     body: snapshot([scene(2022, 24, 0.32), scene(2023, 25, 0.3), scene(2024, 26, 0.28)]),
   },
+  wms: {
+    description: "Tres escenas y capas GAMC sintéticas (imágenes rayadas, no límites reales)",
+    status: 200,
+    wms: true,
+    body: snapshot([scene(2022, 24, 0.32), scene(2023, 25, 0.3), scene(2024, 26, 0.28)]),
+  },
   partial: {
     description: "Cobertura reducida, celdas sin datos y una escena sin píxeles válidos",
     status: 200,

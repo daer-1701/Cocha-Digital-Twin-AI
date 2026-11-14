@@ -1,4 +1,5 @@
 import type { TerritoryId, TerritoryOption } from "../lib/territory";
+import { ServerDetail } from "./ui/server-detail";
 
 export function TerritorySelector({
   options,
@@ -42,6 +43,7 @@ export function TerritorySelector({
                   <span className="territory-pending">{option.pending}</span>
                 )}
               </p>
+              {!option.available && <ServerDetail reason={option.detail} />}
             </div>
           </div>
         );

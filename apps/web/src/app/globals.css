@@ -178,7 +178,7 @@ h1 {
 /* Forms */
 .controls {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-5);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -607,6 +607,116 @@ summary {
   margin-top: var(--space-5);
 }
 
+/* Server availability and contextual warnings */
+.server-detail {
+  margin-top: var(--space-2);
+}
+.server-detail summary {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+.server-detail p,
+.server-detail li {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.warning {
+  border-left: 3px solid var(--nature-synthetic);
+  padding-left: var(--space-3);
+  color: var(--color-text);
+}
+.series-status {
+  margin-top: var(--space-4);
+}
+
+/* Map layers */
+.map-layers {
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.map-layers legend {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-text-strong);
+  margin-bottom: var(--space-2);
+}
+.map-layers > .caption {
+  margin: 0 0 var(--space-3);
+}
+.wms-legend {
+  display: block;
+  max-width: 100%;
+  margin-top: var(--space-2);
+  background: var(--color-text-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* Chart details */
+.history .point-missing {
+  fill: none;
+  stroke: var(--color-text-subtle);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+.history .label-selected {
+  fill: var(--color-text-strong);
+  font-weight: 700;
+}
+tbody tr[aria-current="true"] td {
+  color: var(--color-text-strong);
+  background: var(--color-surface-raised);
+}
+.comparison {
+  margin-top: var(--space-5);
+}
+.comparison tbody th {
+  color: var(--color-text);
+  font-weight: 400;
+}
+
+/* Fact lists */
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+}
+.facts dt {
+  color: var(--color-text-muted);
+}
+.facts dd {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+.facts .nature {
+  margin-top: 0;
+}
+.facts .nature-label {
+  font-size: var(--text-sm);
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+  margin-bottom: var(--space-8);
+}
+.card-grid .panel h2 {
+  margin-bottom: var(--space-3);
+}
+.station-status {
+  margin: var(--space-6) 0 var(--space-5);
+}
+.station-status p {
+  margin: 0;
+}
+main > .panel:last-child {
+  margin-bottom: var(--space-8);
+}
+
 footer {
   display: flex;
   justify-content: space-between;
@@ -617,12 +727,25 @@ footer {
   font-size: var(--text-xs);
 }
 
+@media (max-width: 1200px) {
+  .controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   :root {
     --page-gutter: 18px;
   }
   .metrics {
     grid-template-columns: 1fr 1fr;
+  }
+  .facts {
+    grid-template-columns: 1fr;
+    gap: 0 var(--space-4);
+  }
+  .facts dd {
+    margin-bottom: var(--space-3);
   }
   .workspace,
   .provenance,

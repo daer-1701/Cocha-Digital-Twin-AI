@@ -37,6 +37,15 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
+    href: "/estaciones",
+    label: "Estaciones",
+    title: "Estaciones MÓNICA (PM10)",
+    summary:
+      "Estaciones municipales de material particulado PM10, con los metadatos que faltan confirmar antes de analizar sus series.",
+    available: true,
+    nature: "observed",
+  },
+  {
     href: "/modelos",
     label: "Estimaciones",
     title: "Estimaciones con modelos",
@@ -71,7 +80,7 @@ export const SECTIONS: Section[] = [
       "Preguntar por la evidencia publicada y recibir respuestas que citan su fuente.",
     available: false,
     requires: [
-      "Integración en el servidor con límite de presupuesto y cuota por consulta.",
+      "Habilitar las llamadas en el servidor después de verificar los precios oficiales; hoy están desactivadas.",
       "Resultados estructurados que el asistente pueda citar sin inventar cifras.",
     ],
   },

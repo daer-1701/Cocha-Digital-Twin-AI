@@ -1,8 +1,9 @@
 import type { components } from "@cocha/shared";
 
 type Snapshot = components["schemas"]["Snapshot"];
+type Territories = components["schemas"]["TerritoriesResponse"];
 
-export type TerritoryId = "piloto" | "distritos-wms" | "distritos-vector";
+export type TerritoryId = "piloto" | "distritos";
 
 export type TerritoryOption = {
   id: TerritoryId;
@@ -11,14 +12,18 @@ export type TerritoryOption = {
   available: boolean;
   /** Reason shown while the option cannot be selected. */
   pending?: string;
+  /** Verbatim server reason, if the API gave one. */
+  detail?: string | null;
 };
 
 export const DEFAULT_TERRITORY: TerritoryId = "piloto";
 
-// The API exposes no territorial catalog yet (team plan A02/A03). The GAMC
-// options stay disabled until the backend confirms geometries and results;
-// a documented layer extent (BBOX) is not a district polygon.
-export function territoryOptions(evidence: Snapshot): TerritoryOption[] {
+// WMS district images only orient the map (see components/map-layers.tsx);
+// indicators by district require the complete vector catalog.
+export function territoryOptions(
+  evidence: Snapshot,
+  catalog: Territories | null,
+): TerritoryOption[] {
   return [
     {
       id: "piloto",
@@ -28,32 +33,21 @@ export function territoryOptions(evidence: Snapshot): TerritoryOption[] {
       available: true,
     },
     {
-      id: "distritos-wms",
-      label: "Límites distritales GAMC (capa de mapa)",
-      description:
-        "Imagen oficial de los límites para orientarse en el mapa. No permite calcular indicadores por distrito.",
-      available: false,
-      pending:
-        "Pendiente: el servidor aún no ofrece la capa. La clave del servicio municipal no puede usarse en el navegador.",
-    },
-    {
-      id: "distritos-vector",
+      id: "distritos",
       label: "Distritos con análisis",
       description:
         "Polígonos completos de cada distrito, con versión y licencia, para calcular indicadores por distrito.",
       available: false,
-      pending:
-        "Pendiente: no se ha obtenido un catálogo vectorial completo y verificado de los distritos.",
+      pending: catalog
+        ? "Pendiente: el servidor todavía no tiene polígonos completos y verificados de los 15 distritos."
+        : "No se pudo consultar el catálogo territorial del servidor.",
+      detail: catalog?.vector_districts.reason,
     },
   ];
 }
 
 export function isTerritoryId(value: string): value is TerritoryId {
-  return (
-    value === "piloto" ||
-    value === "distritos-wms" ||
-    value === "distritos-vector"
-  );
+  return value === "piloto" || value === "distritos";
 }
 
 const KM_PER_DEGREE_LAT = 110.574;

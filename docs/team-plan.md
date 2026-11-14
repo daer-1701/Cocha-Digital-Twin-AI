@@ -128,6 +128,22 @@ para Diego. ★ indica las tareas científicas o técnicas más difíciles.
 | A17 | Parcial | Checklist en `docs/a17-checklist.md`; falta validación end-to-end con datos oficiales |
 | A18 | Parcial | Borrador en `docs/a18-operations.md`; sin despliegue productivo |
 
+### Estado Diego — 14/11/2026
+
+Verificado con fixtures sintéticas de D02, no con la API real de Andrés.
+
+| ID | Estado | Notas |
+| --- | --- | --- |
+| D01–D03 | Completado | Matriz de requisitos, fixtures sin Docker y estructura UX |
+| D04 | Completado (código) | Selector consume `/v1/territories`; distritos deshabilitados con el motivo del servidor; WMS pasa a capa del mapa |
+| D05 | Parcial | Capas WMS por proxy de Next.js y comparación de dos fechas; sin probar contra el WMS municipal real; sin capas por distrito (A06) |
+| D06 | Parcial | Gráfico en escala fija con huecos y estado de `/v1/series` y `/v1/trends`; faltan esquemas de `items` y resultados A07 |
+| D07 | Bloqueado | Requiere vector distrital, A06 y A07 |
+| D08 | Parcial | Panel de procedencia con campos del contrato; falta verificar con un snapshot real |
+| D09 | Parcial | `/estaciones` con fichas y metadatos pendientes; sin series PM10 en la API |
+| D10–D12 | Parcial (estado) | Secciones muestran motivo y bloqueos del servidor; el asistente muestra el presupuesto; sin resultados |
+| D13–D17 | Pendiente | — |
+
 | ID | Responsable | Tarea | Depende |
 | --- | --- | --- | --- |
 | A01 | Andrés | Estabilizar base, contenedores y CI | — |
