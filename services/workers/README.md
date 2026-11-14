@@ -1,6 +1,9 @@
 # Procesamiento científico — planificado
 
 Todavía no hay worker ejecutable ni dependencias Celery/Redis instaladas.
+El lote piloto se ejecuta con `uv run --group science python scripts/ingest_landsat.py`
+desde la raíz. El cálculo puro vive en `cocha_api.science.landsat`, independiente
+de HTTP. Publica snapshots; todavía no hay cola ni agregación distrital.
 La primera etapa será un pipeline por lotes. Cuando requiera cola:
 
 - Extraer cálculos a módulos Python independientes de FastAPI y Celery.

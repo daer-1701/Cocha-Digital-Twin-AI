@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Cocha Digital Twin AI",
-    "description": "Environmental evidence API. No scientific datasets loaded by default.",
+    "description": "Read-only evidence. Run Landsat ingestion to publish a snapshot.",
     "version": "0.1.0"
   },
   "paths": {
@@ -117,10 +117,85 @@
           }
         }
       }
+    },
+    "/v1/explorer": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Explorer",
+        "operationId": "explorer_v1_explorer_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplorerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "Cell": {
+        "properties": {
+          "bounds": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Bounds"
+          },
+          "lst": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lst"
+          },
+          "ndvi": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ndvi"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "bounds",
+          "lst",
+          "ndvi"
+        ],
+        "title": "Cell"
+      },
       "DatasetResponse": {
         "properties": {
           "id": {
@@ -163,6 +238,34 @@
           "created_at"
         ],
         "title": "DatasetResponse"
+      },
+      "ExplorerResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "empty"
+            ],
+            "title": "Status"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Snapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ExplorerResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -211,6 +314,171 @@
           "status"
         ],
         "title": "ReadinessResponse"
+      },
+      "Scene": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "acquired_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Acquired At"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "valid_fraction": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Valid Fraction"
+          },
+          "valid_pixels": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Valid Pixels"
+          },
+          "total_pixels": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Total Pixels"
+          },
+          "lst_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lst Mean"
+          },
+          "ndvi_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ndvi Mean"
+          },
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/Cell"
+            },
+            "type": "array",
+            "title": "Cells"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "acquired_at",
+          "platform",
+          "source_url",
+          "valid_fraction",
+          "valid_pixels",
+          "total_pixels",
+          "lst_mean",
+          "ndvi_mean",
+          "cells"
+        ],
+        "title": "Scene"
+      },
+      "Snapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version",
+            "default": 1
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "area_name": {
+            "type": "string",
+            "title": "Area Name"
+          },
+          "bounds": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Bounds"
+          },
+          "collection": {
+            "type": "string",
+            "const": "landsat-c2-l2",
+            "title": "Collection",
+            "default": "landsat-c2-l2"
+          },
+          "product_version": {
+            "type": "string",
+            "title": "Product Version"
+          },
+          "license": {
+            "type": "string",
+            "title": "License"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "scenes": {
+            "items": {
+              "$ref": "#/components/schemas/Scene"
+            },
+            "type": "array",
+            "title": "Scenes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "generated_at",
+          "area_name",
+          "bounds",
+          "product_version",
+          "license",
+          "method",
+          "limitations",
+          "scenes"
+        ],
+        "title": "Snapshot"
       },
       "ValidationError": {
         "properties": {

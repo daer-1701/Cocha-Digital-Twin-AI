@@ -1,20 +1,60 @@
-import { getApiHealth } from "../lib/api";
+import Link from "next/link";
+import { getEvidence } from "../lib/api";
+import { Explorer } from "../components/explorer";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const health = await getApiHealth();
+  const { data, error } = await getEvidence();
   return (
     <main>
-      <p className="eyebrow">COCHABAMBA · EVIDENCIA AMBIENTAL</p>
-      <h1>Cocha Digital Twin AI</h1>
-      <p className="intro">Una base para investigar cómo cambian la temperatura superficial y la vegetación de nuestra ciudad.</p>
-      <section aria-labelledby="status-title">
-        <h2 id="status-title">Estado del proyecto</h2>
-        <p role="status">API: <strong>{health ? "disponible" : "sin conexión"}</strong></p>
-        <p>Arquitectura inicial. Los datos satelitales, estaciones y límites distritales aún no están integrados.</p>
-        <p>Los indicadores se publicarán con su fuente, período, cobertura e incertidumbre.</p>
-      </section>
+      <header className="topbar">
+        <Link href="/" className="brand">
+          COCHA<span> / DIGITAL TWIN AI</span>
+        </Link>
+        <span className="badge">MVP · OBSERVACIÓN TERRESTRE</span>
+      </header>
+      <div className="heading">
+        <div>
+          <p className="eyebrow">COCHABAMBA, BOLIVIA · 17.39° S / 66.16° O</p>
+          <h1>La ciudad, bajo otra mirada.</h1>
+          <p className="intro">
+            Explora temperatura superficial y vegetación a partir de
+            observaciones Landsat. Cada cifra tiene una fuente y un límite.
+          </p>
+        </div>
+        <div className="mission">
+          01 / EXPLORADOR
+          <br />
+          <strong>Evidencia antes que predicción.</strong>
+        </div>
+      </div>
+      {data ? (
+        <Explorer evidence={data} />
+      ) : (
+        <section className="empty" role="status">
+          <p className="eyebrow">
+            {error ? "CONEXIÓN PENDIENTE" : "SIN OBSERVACIONES PUBLICADAS"}
+          </p>
+          <h2>
+            {error
+              ? "No pudimos consultar la evidencia."
+              : "El explorador está listo para recibir datos."}
+          </h2>
+          <p>
+            {error
+              ? "Comprueba que la API esté disponible y vuelve a cargar la página."
+              : "Ejecuta la ingesta Landsat documentada en el README. No se muestran valores de ejemplo."}
+          </p>
+          <Link href="/">Volver a intentar →</Link>
+        </section>
+      )}
+      <footer>
+        COCHA DIGITAL TWIN AI{" "}
+        <span>
+          Datos Landsat · USGS / NASA · Exploración científica reproducible
+        </span>
+      </footer>
     </main>
   );
 }

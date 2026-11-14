@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import PostgresDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     )
     cors_origins: list[str] = ["http://localhost:3000"]
     log_level: str = "INFO"
+    evidence_path: Path = Path("data/processed/explorer.json")
     gemini_api_key: SecretStr | None = None
     database_host: str | None = None
     postgres_db: str = "cocha"

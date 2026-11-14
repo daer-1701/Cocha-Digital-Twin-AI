@@ -40,6 +40,13 @@ dominio reutilizables; evitar capas sin responsabilidad real.
 
 ## Decisiones
 
+El primer MVP añade una persistencia de evidencia basada en snapshots JSON
+validados por Pydantic: el lote científico escribe `data/processed/explorer.json`
+y `/v1/explorer` lo lee sin procesar rásteres en HTTP. Es un paso incremental
+para el piloto sin límites distritales. No inserta resultados en el catálogo
+PostGIS ni sustituye sus migraciones; la persistencia distrital se incorpora
+cuando existan geometrías verificadas. Compose monta los snapshots en solo lectura.
+
 1. **Monorepo:** npm workspaces para web y tipos; proyecto Python en la raíz.
 2. **Contrato generado:** FastAPI genera OpenAPI y openapi-typescript genera tipos.
 3. **Esquema versionado:** Alembic, sin `create_all` al iniciar la API.
@@ -63,6 +70,7 @@ Revisarlo al actualizar typescript-eslint; no es dependencia del runtime web.
 | GET | `/health/ready` | Comprueba PostGIS y existencia de una revisión Alembic; 503 ante fallo |
 | GET | `/v1/datasets?limit=50&offset=0` | Catálogo persistido; limit entre 1 y 100 |
 | GET | `/openapi.json` | Contrato generado |
+| GET | `/v1/explorer` | Snapshot Landsat validado; estado vacío si falta, 503 si es inválido |
 
 Readiness no sustituye la comprobación `alembic check` de CI ni garantiza que
 los datos científicos estén disponibles. No hay endpoints de escritura públicos,

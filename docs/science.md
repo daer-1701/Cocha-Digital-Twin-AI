@@ -2,8 +2,9 @@
 
 ## Estado
 
-No se ha descargado, procesado ni validado ningún dataset. Las fuentes
-siguientes son candidatas, no integraciones disponibles.
+El piloto descarga ventanas reales Landsat C2 L2 mediante Planetary Computer,
+aplica escalas USGS y una máscara QA compartida para LST/NDVI. Ver `docs/mvp.md`
+para alcance y limitaciones. MODIS, MÓNICA y límites GAMC siguen pendientes.
 
 | Fuente | Uso candidato | Verificación pendiente |
 | --- | --- | --- |

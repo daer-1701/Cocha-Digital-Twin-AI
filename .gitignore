@@ -38,6 +38,9 @@ data/models/*
 *.log
 *.dump
 *.backup
+.playwright-cli/
+output/playwright/
+apps/web/public/maplibre-worker.mjs
 .DS_Store
 Thumbs.db
 .idea/

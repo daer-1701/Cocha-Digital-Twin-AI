@@ -3,9 +3,36 @@
 Base de una plataforma de evidencia ambiental para Cochabamba: temperatura
 superficial, vegetación y tendencias territoriales reproducibles.
 
-**Estado: arquitectura inicial funcional, sin datos científicos integrados.**
-No incluye predicciones, estaciones inventadas, mapas distritales aproximados
-ni llamadas a Gemini. No es todavía un gemelo digital validado.
+**Estado: primer recorrido MVP con ingesta real Landsat, API y explorador.**
+Incluye LST, NDVI, QA, mapa y comparación descriptiva de fechas sobre una
+ventana urbana. No incluye aún límites distritales verificados, MÓNICA,
+tendencias inferenciales, ML ni Gemini. No es un gemelo digital validado.
+
+## Ejecutar el piloto con datos reales
+
+Desde la raíz, sin credenciales NASA ni servicios de pago:
+
+```powershell
+uv sync --frozen --group science
+uv run --group science python scripts/ingest_landsat.py
+# En una terminal:
+uv run uvicorn cocha_api.main:app --reload --no-access-log
+# En otra:
+npm ci
+npm run dev
+```
+
+Abrir http://localhost:3000. Esta ruta piloto no requiere PostgreSQL; el catálogo
+`/v1/datasets` y readiness sí lo requieren. La ingesta consulta Planetary Computer
+y lee ventanas COG de cinco bandas para una escena de julio por año (2022–2024).
+Los archivos originales recortados y manifiestos quedan fuera de Git. Una copia
+nueva del repositorio debe ejecutar la ingesta para mostrar observaciones.
+
+También funciona con Compose tras la ingesta: monta `data/processed` en la API
+en solo lectura. No descarga datos al iniciar contenedores. Sin snapshot se
+muestra un estado vacío; si falla la API se informa un error de conexión.
+
+Detalles de método, alcance y verificación: [MVP Landsat](docs/mvp.md).
 
 ## Requisitos
 
@@ -90,11 +117,14 @@ infrastructure/docker/    Imágenes para API y web
 ```powershell
 uv run ruff check .
 uv run ruff format --check .
-uv run pytest -q
+uv run --group science pytest -q
 npm run lint
 npm run typecheck
 npm run build
 ```
+
+Las pruebas científicas requieren `--group science`:
+`uv run --group science pytest -q`. CI instala ese grupo explícitamente.
 
 Las pruebas de integración se omiten sin RUN_DB_TESTS. Para ejecutarlas usa una
 base exclusiva de pruebas: la prueba inserta y elimina un registro de fixture.

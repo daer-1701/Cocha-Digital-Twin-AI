@@ -69,7 +69,8 @@ definen el alcance. Las reglas de subdirectorios añaden detalles de su área.
 ## Validación proporcional
 
 - Backend: `uv run ruff check .`, `uv run ruff format --check .` y las pruebas
-  relacionadas con el cambio. Usar `uv run pytest -q` para el conjunto inicial.
+  relacionadas con el cambio. Usar `uv run --group science pytest -q` para
+  incluir las pruebas del procesamiento Landsat.
 - Web: `npm run lint`, `npm run typecheck`; `npm run build` para cambios que
   afecten compilación, dependencias o comportamiento de la aplicación.
 - API: regenerar contratos y verificar su diff. DB: probar migraciones y

@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from cocha_api.core.config import get_settings
 from cocha_api.core.logging import configure_logging
-from cocha_api.routes import datasets, health
+from cocha_api.routes import datasets, explorer, health
 
 
 @asynccontextmanager
@@ -22,7 +22,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Cocha Digital Twin AI",
         version="0.1.0",
-        description="Environmental evidence API. No scientific datasets loaded by default.",
+        description="Read-only evidence. Run Landsat ingestion to publish a snapshot.",
         lifespan=lifespan,
     )
     app.add_middleware(
@@ -40,6 +40,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(datasets.router)
+    app.include_router(explorer.router)
     return app
 
 

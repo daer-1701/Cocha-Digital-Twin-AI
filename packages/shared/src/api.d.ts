@@ -55,10 +55,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/explorer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Explorer */
+        get: operations["explorer_v1_explorer_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Cell */
+        Cell: {
+            /** Bounds */
+            bounds: [
+                number,
+                number,
+                number,
+                number
+            ];
+            /** Lst */
+            lst: number | null;
+            /** Ndvi */
+            ndvi: number | null;
+        };
         /** DatasetResponse */
         DatasetResponse: {
             /**
@@ -82,6 +113,15 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** ExplorerResponse */
+        ExplorerResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty";
+            evidence?: components["schemas"]["Snapshot"] | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -110,6 +150,71 @@ export interface components {
              * @enum {string}
              */
             status: "ready" | "not_ready";
+        };
+        /** Scene */
+        Scene: {
+            /** Id */
+            id: string;
+            /**
+             * Acquired At
+             * Format: date-time
+             */
+            acquired_at: string;
+            /** Platform */
+            platform: string;
+            /** Source Url */
+            source_url: string;
+            /** Valid Fraction */
+            valid_fraction: number;
+            /** Valid Pixels */
+            valid_pixels: number;
+            /** Total Pixels */
+            total_pixels: number;
+            /** Lst Mean */
+            lst_mean: number | null;
+            /** Ndvi Mean */
+            ndvi_mean: number | null;
+            /** Cells */
+            cells: components["schemas"]["Cell"][];
+        };
+        /** Snapshot */
+        Snapshot: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Area Name */
+            area_name: string;
+            /** Bounds */
+            bounds: [
+                number,
+                number,
+                number,
+                number
+            ];
+            /**
+             * Collection
+             * @default landsat-c2-l2
+             * @constant
+             */
+            collection: "landsat-c2-l2";
+            /** Product Version */
+            product_version: string;
+            /** License */
+            license: string;
+            /** Method */
+            method: string;
+            /** Limitations */
+            limitations: string[];
+            /** Scenes */
+            scenes: components["schemas"]["Scene"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -210,6 +315,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    explorer_v1_explorer_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplorerResponse"];
                 };
             };
         };

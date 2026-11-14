@@ -10,6 +10,10 @@ La CI debe ejecutarse en GitHub; su existencia no implica una ejecución exitosa
 
 ## 1. Primera evidencia real
 
+Piloto implementado: ventanas Landsat de julio 2022/2023/2024, escalas, QA,
+LST/NDVI, manifiestos, snapshot y mapa. Pendientes: límites oficiales,
+agregación por distrito y persistencia de indicadores en PostGIS.
+
 Verificar límites, elegir producto y período, descargar una muestra y construir
 un pipeline reproducible. Criterio de salida: un indicador distrital recalculable
 con fuente, unidad, QA y cobertura, sin intervención manual en notebooks.

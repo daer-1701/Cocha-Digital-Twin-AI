@@ -35,12 +35,12 @@ jobs:
         with:
           version: "0.12.3"
           enable-cache: true
-      - run: uv sync --frozen --python 3.12
+      - run: uv sync --frozen --group science --python 3.12
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run alembic upgrade head
       - run: uv run alembic check
-      - run: uv run pytest -q
+      - run: uv run --group science pytest -q
       - run: uv run python scripts/export_openapi.py
       - run: git diff --exit-code -- packages/shared/openapi.json
 
