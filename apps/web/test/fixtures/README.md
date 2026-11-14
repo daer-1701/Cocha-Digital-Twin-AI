@@ -43,10 +43,39 @@ apuntando a 8100).
 
 Los escenarios cambian `/v1/explorer`. El resto de rutas (`domain.mjs`) reproduce
 los estados honestos por defecto de la API: territorios con vector distrital no
-disponible, estaciones Kanata/Semapa sin importar, y series, tendencias,
-indicadores, modelos, escenarios y asistente como `unavailable`. Las capas WMS
-solo están disponibles en el escenario `wms`; en los demás responden 503, como
-la API sin `GAMC_WMS_API_KEY`.
+disponible, dos estaciones sintéticas sin importar (unidad declarada,
+coordenadas pendientes), y series, indicadores, modelos, escenarios y asistente
+como `unavailable`. Además, derivadas del snapshot del escenario activo:
+
+- `/v1/trends` es `unavailable` por distrito, con `pilot_trends`: pendiente
+  descriptiva por mínimos cuadrados sobre el índice de escena, con la misma regla
+  que el backend (mínimo 3 valores; si no, `inconclusive`).
+- `/v1/reports` es `available` con `observation_export` cuando hay snapshot, y
+  `empty` cuando no lo hay.
+
+Las capas WMS solo están disponibles en el escenario `wms`; en los demás
+responden 503, como la API sin `GAMC_WMS_API_KEY`. El escenario `wms` también
+marca precios del asistente como verificados, con valores de relleno, para
+probar esa vista.
+
+## Pruebas de navegador (D15)
+
+`apps/web/test/e2e/` contiene pruebas Playwright que arrancan estas fixtures en
+el puerto 8110 y `next start` en el 3110, sin tocar servidores de desarrollo:
+
+```powershell
+npm run build
+npx playwright install chromium   # una vez, desde apps/web
+npm run test:e2e -w @cocha/web
+```
+
+Cubren territorio, fecha, comparación y variable en la URL; estados vacío,
+error y parcial; tabla; capas WMS y validación del proxy; pendiente piloto;
+secciones sin datos; escenario rotulado; asistente sin cuota y con precios
+verificados; estaciones; descargas CSV/JSON; teclado, nombres accesibles,
+ids duplicados, falta de WebGL y desbordamiento a 320 y 390 px. CI las ejecuta
+en el job `web`. **Pasar estas pruebas valida la interfaz contra el contrato,
+no los datos reales ni la integración con la API de Andrés.**
 
 ## Garantías
 

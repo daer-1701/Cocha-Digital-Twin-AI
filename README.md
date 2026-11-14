@@ -178,6 +178,8 @@ de publicar código para reutilización. Las licencias de datos son independient
 
 ## Documentación
 
+- [Manual de uso y guion de demostración](docs/manual.md)
+- [Interfaz y accesibilidad](docs/ux.md)
 - [Arquitectura y decisiones](docs/architecture.md)
 - [Modelo de datos](docs/data-model.md)
 - [Plan científico y procedencia](docs/science.md)

@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import type { Evidence, Series, Territories, Trends } from "../lib/api";
+import type { Evidence, PilotTrend, Series, Territories, Trends } from "../lib/api";
 import {
   filtersToQuery,
   type ExplorerFilters,
@@ -35,20 +36,58 @@ const format = (value: number | null | undefined, digits = 2) =>
 
 type CopyState = "idle" | "copied" | "failed";
 
-function TrendStatus({ trends }: { trends: Trends | null }) {
+function PilotSlope({ item, variable }: { item: PilotTrend; variable: Variable }) {
+  const lst = variable === "lst";
+  const label = lst ? "LST" : "NDVI";
+  const counts = `${item.n_finite} escenas con valor; mínimo requerido: ${item.min_n}.`;
+  if (item.status === "inconclusive" || item.slope_per_step == null)
+    return (
+      <div className="pilot-slope">
+        <p>
+          Pendiente descriptiva del {label} en la ventana piloto: no concluyente. {counts}
+        </p>
+        <ServerDetail reason={item.note} />
+      </div>
+    );
+  const slope = item.slope_per_step;
+  const value = `${slope > 0 ? "+" : slope < 0 ? "−" : ""}${Math.abs(slope).toFixed(lst ? 2 : 3)}`;
+  return (
+    <div className="pilot-slope">
+      <p>
+        Pendiente descriptiva del {label} en la ventana piloto:{" "}
+        <strong>
+          {value}
+          {lst ? " °C" : ""}
+        </strong>{" "}
+        por escena, en orden de adquisición. {counts}
+      </p>
+      <p className="caption">
+        Resume las fechas disponibles con una recta; no es una tendencia por
+        distrito, no tiene escala temporal anual y no publica significancia ni
+        causas.
+      </p>
+      <ServerDetail reason={item.note} />
+    </div>
+  );
+}
+
+function TrendStatus({ trends, variable }: { trends: Trends | null; variable: Variable }) {
   if (!trends)
     return <p>No se pudo consultar en el servidor si hay tendencias publicadas.</p>;
   const text = {
     unavailable:
-      "Todavía no. El servidor no publica tendencias: hace falta una serie más larga y comparable por distrito, tratando la estacionalidad y la autocorrelación.",
-    empty: "El servidor no tiene tendencias calculadas para esta área.",
+      "Por distrito, todavía no. El servidor no publica tendencias: hace falta una serie más larga y comparable por distrito, tratando la estacionalidad y la autocorrelación.",
+    empty: "El servidor no tiene tendencias por distrito calculadas para esta área.",
     available:
-      "El servidor publicó resultados de tendencia, pero esta vista todavía no los muestra.",
+      "El servidor publicó tendencias por distrito, pero esta vista todavía no las muestra.",
   }[trends.status];
+  const key = variable === "lst" ? "lst_mean" : "ndvi_mean";
+  const pilot = trends.pilot_trends?.find((item) => item.variable === key);
   return (
     <>
       <p>{text}</p>
       <ServerDetail reason={trends.reason} />
+      {pilot && <PilotSlope item={pilot} variable={variable} />}
     </>
   );
 }
@@ -207,6 +246,9 @@ export function Explorer({
                 ? "No se pudo copiar. Copia la dirección del navegador; ya incluye los filtros."
                 : "El enlace conserva territorio, fechas y variable."}
           </small>
+          <Link href={`/informes?contenido=escenas&escena=${encodeURIComponent(scene.id)}`}>
+            Descargar los datos de esta fecha
+          </Link>
         </div>
       </section>
       <section className="metrics" aria-label={`Indicadores del ${date}`}>
@@ -268,7 +310,7 @@ export function Explorer({
             La temperatura superficial no equivale a la temperatura del aire.
           </div>
           <h3>¿Hay una tendencia?</h3>
-          <TrendStatus trends={trends} />
+          <TrendStatus trends={trends} variable={variable} />
           <h3>Calidad de esta escena</h3>
           <p className={scene.valid_fraction < 0.7 ? "warning" : undefined}>
             {scene.valid_fraction === 0

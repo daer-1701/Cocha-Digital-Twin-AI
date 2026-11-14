@@ -27,6 +27,7 @@ Definida en `apps/web/src/lib/navigation.ts`, fuente única para menú y página
 | `/` | Explorador | Disponible (piloto Landsat) | Observación |
 | `/comparar` | Comparar distritos | En preparación | Observación |
 | `/estaciones` | Estaciones MÓNICA (PM10) | Disponible (catálogo, sin series) | Observación |
+| `/informes` | Informes y descargas | Disponible (ventana piloto) | Observación |
 | `/modelos` | Estimaciones | En preparación | Estimación |
 | `/escenarios` | Escenarios | En preparación | Simulación |
 | `/asistente` | Asistente | En preparación | — |
@@ -41,7 +42,9 @@ Cada sección consulta su recurso de la API (`/v1/indicators` y `/v1/trends`,
 servidor confirma que no hay resultados, si está vacío o si no respondió. El
 motivo original del servidor, en inglés, queda en un desplegable
 (`ServerDetail`) con `lang="en"`. El asistente muestra además el estado del
-presupuesto que informa el servidor; no envía consultas.
+presupuesto que informa el servidor (D12): modelo previsto, precios por millón
+de tokens, si se verificaron con la tarifa oficial, la fecha y la fuente como
+enlace externo, y que las llamadas siguen desactivadas. No envía consultas.
 
 ## Tokens
 
@@ -85,6 +88,7 @@ En `apps/web/src/components/ui/`:
 | `StatusPanel` | Estados `loading`, `empty`, `error` y `pending` |
 | `DemoBanner` | Franja permanente con datos sintéticos o bloqueados |
 | `ServerDetail` | Motivo literal del servidor, plegado y marcado en inglés |
+| `ExternalLink` | Enlace externo solo si la URL del servidor es http(s); anuncia la pestaña nueva |
 
 `PendingSection` compone estos elementos para secciones sin resultados.
 `TerritorySelector` y `TerritoryCard` (en `components/`) se describen en
@@ -117,8 +121,42 @@ La falta de datos nunca se muestra como cero.
 
 Enlace para saltar al contenido, foco visible en todos los controles, objetivos
 táctiles de 44 px, tablas con `scope`, alternativa tabular al mapa y respeto de
-`prefers-reduced-motion`. Verificado sin desbordamiento horizontal a 390 px.
-Auditoría completa pendiente en D14.
+`prefers-reduced-motion`.
+
+### Auditoría D14 (14/11/2026)
+
+Medido con Playwright (Chromium 159, build de producción y fixtures) en las
+siete rutas. Las comprobaciones quedaron como pruebas en
+`apps/web/test/e2e/accessibility.spec.ts`, para que no retrocedan:
+
+| Comprobación | Resultado |
+| --- | --- |
+| Desbordamiento horizontal global a 320 px (reflow WCAG 1.4.10) y 390 px | 0 px en todas las rutas |
+| Primer Tab | Enfoca «Saltar al contenido»; Enter lleva a `#contenido` |
+| Un único `h1` por página | Sí |
+| Controles visibles sin nombre accesible | Ninguno, tras la corrección siguiente |
+| Ids duplicados | Ninguno, tras la corrección siguiente |
+| Sin WebGL | Aviso en el mapa; la tabla de escenas sigue disponible |
+| Tablas anchas en móvil | Desplazamiento dentro de `.table-wrap`, no de la página |
+
+Correcciones aplicadas:
+
+- `/informes` usaba `id="contenido"` en un select, el mismo id que `<main>`. La
+  etiqueta apuntaba a `<main>` y el select quedaba sin nombre; además, el enlace
+  de salto podía ir al control. Ids renombrados con prefijo `informe-`.
+- El texto «se abre en una pestaña nueva» de los enlaces externos usaba una
+  clase inexistente y se veía en pantalla; ahora usa `sr-only`.
+- `.card-grid` usaba un mínimo fijo de 280 px; ahora `min(280px, 100%)` para no
+  forzar desbordamiento en pantallas estrechas.
+
+Rendimiento: el mapa se carga con `next/dynamic` sin SSR, se crea una vez por
+límites y actualiza capas con `setData`. Las imágenes WMS se piden con 400 ms de
+espera tras mover el mapa y se liberan al desmontar. Las páginas consultan sus
+recursos en paralelo con timeout de 5 s.
+
+Sin medir todavía: lector de pantalla real (NVDA o VoiceOver), zoom del
+navegador al 200 % y contraste de las imágenes WMS municipales, que no
+controlamos.
 
 ## Selección territorial y filtros (D04)
 
@@ -172,9 +210,16 @@ alternar fechas.
 `ObservationChart` usa la misma escala fija que la leyenda del mapa, muestra
 cada fecha como punto independiente y marca las fechas sin datos con un
 círculo punteado y el texto «Sin datos». El estado de `/v1/series` y
-`/v1/trends` se explica en español; hoy ambos son `unavailable`, así que no se
-dibuja ninguna tendencia. Los `items` de esos contratos aún no tienen esquema:
-cuando Andrés lo defina, se mostrarán pendiente, intervalo, n y método.
+`/v1/trends` se explica en español; por distrito ambos son `unavailable`, así
+que no se dibuja ninguna tendencia distrital. Los `items` de esos contratos aún
+no tienen esquema.
+
+Bajo «¿Hay una tendencia?» se muestra `pilot_trends` (A07) para la variable
+elegida: pendiente descriptiva por escena en orden de adquisición, escenas con
+valor y mínimo requerido. Se aclara que no es una tendencia por distrito, que
+no tiene escala anual y que no publica significancia ni causas. Si el servidor
+la marca `inconclusive`, se dice «no concluyente» con los conteos. La web no
+recalcula la pendiente.
 
 `ProvenancePanel` lista solo campos del contrato: colección, producto, licencia,
 plataforma, escena, hora de adquisición, unidades, tamaño de celda calculado de
@@ -183,15 +228,63 @@ está en el snapshot y se indica así, sin suponerla.
 
 ## Estaciones (D09)
 
-`/estaciones` consume `/v1/stations`: ficha por estación con unidad, zona
-horaria, ubicación y elevación como «Pendiente» cuando faltan, análisis
-desactivado y lista de metadatos pendientes traducida. No hay marcadores en el
-mapa sin coordenadas oficiales ni series hasta que la API las publique. Se
-aclara que PM10 no es temperatura ni valida LST.
+`/estaciones` consume `/v1/stations`: ficha por estación con ubicación descrita
+(dirección del catálogo), unidad (`ug/m3` se muestra como µg/m³) con su fuente
+como enlace, zona horaria, coordenadas y elevación como «Pendiente» cuando
+faltan, análisis desactivado y lista de metadatos pendientes traducida; las
+claves desconocidas se muestran literales con `lang="en"`. La dirección
+descrita no se geocodifica: no hay marcadores en el mapa sin coordenadas de
+fuente primaria ni series hasta que la API las publique. Se aclara que PM10 no
+es temperatura ni valida LST.
+
+## Informes y descargas (D13)
+
+`/informes` consume `/v1/reports` (A15). Solo existe la exportación de
+observaciones de la ventana piloto (`observation_export`); el informe distrital
+formal sigue bloqueado y la página lo dice.
+
+- **Selección:** resumen por escena (todas o una) o celdas de una escena. Es un
+  formulario GET, funciona sin JavaScript y la URL es compartible
+  (`?contenido=escenas|celdas&escena=<id>`). El explorador enlaza a la descarga
+  de la fecha seleccionada.
+- **Metadatos:** alcance, período, fuente y versión, licencia, unidades, fecha
+  del snapshot, tratamiento de faltantes, nota del servidor y limitaciones.
+- **Descargas:** `/api/informes/csv|json`, rutas de Next.js que consultan la API
+  desde el servidor y solo serializan lo publicado. El CSV lleva encabezado de
+  metadatos con `#`, faltantes vacíos (nunca 0), BOM UTF-8 y protección contra
+  fórmulas en celdas de texto. El JSON conserva el contrato y añade un bloque
+  `download` con la selección y la fecha de descarga.
+- **Demo:** con fixtures, el archivo empieza por `DEMO-SINTETICO_`, el CSV
+  abre con un aviso y el JSON marca `synthetic_fixture: true`. Si un build de
+  producción recibe datos sintéticos, la descarga responde 503.
+- **Estados:** vacío sin snapshot (descarga 404), error si la API no responde
+  (descarga 502).
+
+Pendiente: comparar un informe real con los valores de la pantalla cuando
+exista un snapshot Landsat publicado.
+
+## Visualización 3D (D17): se omite
+
+Decisión: no se implementa 3D por ahora. Motivos:
+
+- Los datos publicados son una cuadrícula de celdas de unos 360 m con LST y
+  NDVI medios. Extruirlas añadiría altura sin significado físico: la LST no es
+  una altura, y un eje vertical distorsiona la lectura de valores frente a la
+  escala de color fija y la tabla.
+- No hay alturas de edificios ni un modelo digital de elevación integrado. La
+  capa «Cota 2750» del GAMC es una imagen de referencia, no un DEM, y la regla
+  del proyecto prohíbe inventar alturas.
+- deck.gl o Three.js añadirían peso y dependencia de WebGL a una vista que hoy
+  ya degrada a tabla cuando WebGL falla.
+
+Se reconsiderará si se integra un DEM con fuente, resolución y licencia (para
+mostrar el relieve del valle bajo la LST) o datos de altura urbana verificados,
+siempre con alternativa 2D y tabular.
 
 ## Pendiente
 
-- Mostrar series, tendencias e indicadores cuando sus `items` tengan esquema.
+- Mostrar series, tendencias e indicadores distritales cuando sus `items` tengan esquema.
 - D07: comparación de distritos cuando exista el vector y A06/A07.
 - Series PM10 por estación cuando la API las publique (A08).
+- Probar contra la API real de Andrés y el WMS municipal real (las pruebas usan fixtures).
 - Revisar la dirección visual completa cuando existan las secciones reales.

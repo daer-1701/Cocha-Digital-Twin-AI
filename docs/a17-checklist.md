@@ -17,7 +17,7 @@ verificado en local el 14 de noviembre de 2026.
 | Runner local sin Celery | Hecho: `services/workers/offline_runner.py`. No es una cola de producción |
 | Gemini con llamada real acotada | Pendiente a propósito. Precios verificados; llamadas apagadas |
 | `require_write_token` | Probado. No hay POST público; CORS solo GET |
-| Pruebas de navegador Diego (D15) | Pendiente |
+| Pruebas de navegador Diego (D15) | Hecho con fixtures 14/11/2026 (45 pruebas); falta contra la API real |
 | Despliegue no local (A18) | Pendiente |
 
 Pendiente de una reproducción con PostGIS de prueba: importar el fixture demo

@@ -38,9 +38,15 @@ for (const [name, scenario] of Object.entries(scenarios)) {
   if (responseSchema("/v1/explorer", scenario.status))
     assertContract(`Scenario "${name}"`, "/v1/explorer", scenario.status, scenario.body);
 }
-for (const wms of [false, true])
-  for (const [path, body] of Object.entries(domainRoutes({ wms })))
-    assertContract(`Route ${path} (wms=${wms})`, path, 200, body);
+const scenarioDomain = (scenario) =>
+  domainRoutes({
+    wms: Boolean(scenario.wms),
+    evidence: scenario.status === 200 ? (scenario.body.evidence ?? null) : null,
+  });
+
+for (const [name, scenario] of Object.entries(scenarios))
+  for (const [path, body] of Object.entries(scenarioDomain(scenario)))
+    assertContract(`Route ${path} (scenario "${name}")`, path, 200, body);
 
 const fixed = {
   "/health/live": { status: 200, body: { status: "ok", service: "cocha-api" } },
@@ -102,7 +108,7 @@ const server = createServer((request, response) => {
   if (fixed[pathname]) return send(response, fixed[pathname].status, fixed[pathname].body);
   if (pathname === "/v1/gamc/wms/map" || pathname === "/v1/gamc/wms/legend")
     return sendWms(response, pathname, searchParams);
-  const domain = domainRoutes({ wms: Boolean(scenarios[active].wms) })[pathname];
+  const domain = scenarioDomain(scenarios[active])[pathname];
   if (domain) return send(response, 200, domain);
   if (pathname !== "/v1/explorer") return send(response, 404, { detail: "Not Found" });
 

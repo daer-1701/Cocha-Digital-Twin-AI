@@ -46,6 +46,15 @@ export const SECTIONS: Section[] = [
     nature: "observed",
   },
   {
+    href: "/informes",
+    label: "Informes",
+    title: "Informes y descargas",
+    summary:
+      "Descargar las observaciones de la ventana piloto en CSV o JSON, con fuente, unidades, período y limitaciones.",
+    available: true,
+    nature: "observed",
+  },
+  {
     href: "/modelos",
     label: "Estimaciones",
     title: "Estimaciones con modelos",

@@ -142,12 +142,17 @@ Verificado con fixtures sintéticas de D02, no con la API real de Andrés.
 | D01–D03 | Completado | Matriz de requisitos, fixtures sin Docker y estructura UX |
 | D04 | Completado (código) | Selector consume `/v1/territories`; distritos deshabilitados con el motivo del servidor; WMS pasa a capa del mapa |
 | D05 | Parcial | Capas WMS por proxy de Next.js y comparación de dos fechas; sin probar contra el WMS municipal real; sin capas por distrito (A06) |
-| D06 | Parcial | Gráfico en escala fija con huecos y estado de `/v1/series` y `/v1/trends`; faltan esquemas de `items` y resultados A07 |
+| D06 | Completado (piloto) | Gráfico en escala fija con huecos; `pilot_trends` como pendiente descriptiva, no inferencial; tendencia distrital bloqueada con A07 |
 | D07 | Bloqueado | Requiere vector distrital, A06 y A07 |
 | D08 | Parcial | Panel de procedencia con campos del contrato; falta verificar con un snapshot real |
-| D09 | Parcial | `/estaciones` con fichas y metadatos pendientes; sin series PM10 en la API |
-| D10–D12 | Parcial (estado) | Secciones muestran motivo y bloqueos del servidor; el asistente muestra el presupuesto; sin resultados |
-| D13–D17 | Pendiente | — |
+| D09 | Completado (catálogo) | Ubicación descrita, unidad con fuente y metadatos pendientes traducidos; sin series PM10 en la API (A08) |
+| D10–D11 | Parcial (estado) | Muestran motivo y bloqueos del servidor; modelos y escenarios no viables con los datos actuales |
+| D12 | Parcial (estado) | Presupuesto, modelo, precios verificados con fecha y fuente; llamadas desactivadas en el servidor |
+| D13 | Completado (piloto) | `/informes` con selección, vista previa y descargas CSV/JSON de `observation_export`; falta comparar con un informe real |
+| D14 | Completado | Auditoría en `docs/ux.md`: 0 px de desbordamiento a 320/390 px, teclado, nombres e ids; corregido un id duplicado |
+| D15 | Completado | 45 pruebas Playwright sobre fixtures validadas contra OpenAPI; ejecución en el job `web` de CI |
+| D16 | Parcial | `docs/manual.md` con manual, guion y plan B; faltan capturas de un caso real y resultados A17 |
+| D17 | Completado (decisión) | 3D omitido y justificado en `docs/ux.md`: sin DEM ni alturas, celdas de unos 360 m |
 
 | ID | Responsable | Tarea | Depende |
 | --- | --- | --- | --- |

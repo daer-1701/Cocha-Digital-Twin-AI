@@ -43,6 +43,8 @@ data/models/*
 *.backup
 .playwright-cli/
 output/playwright/
+apps/web/test-results/
+apps/web/playwright-report/
 apps/web/public/maplibre-worker.mjs
 .DS_Store
 Thumbs.db
