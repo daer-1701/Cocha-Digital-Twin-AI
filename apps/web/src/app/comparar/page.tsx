@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DistrictBoard } from "../../components/district-board";
 import { PendingSection } from "../../components/pending-section";
 import { getIndicators, getTrends, mergeDemo } from "../../lib/api";
 import { section } from "../../lib/navigation";
@@ -12,10 +13,14 @@ export default async function Page() {
   const reasons = [indicators.data?.reason, trends.data?.reason].filter(
     (reason): reason is string => Boolean(reason),
   );
+  const demoItems = (indicators.data?.items ?? []).filter(
+    (item) => item.nature === "demo_synthetic",
+  );
   return (
     <PendingSection
       section={current}
       demo={mergeDemo(indicators.demo, trends.demo)}
+      preview={demoItems.length > 0}
       server={{
         // District comparison needs both resources; report the least available one.
         status:
@@ -26,6 +31,8 @@ export default async function Page() {
             : null,
         items: reasons,
       }}
-    />
+    >
+      <DistrictBoard indicators={demoItems} trends={trends.data?.demo_trends ?? []} />
+    </PendingSection>
   );
 }

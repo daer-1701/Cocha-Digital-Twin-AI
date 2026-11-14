@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Atkinson_Hyperlegible } from "next/font/google";
+import { Archivo, Atkinson_Hyperlegible } from "next/font/google";
 import Link from "next/link";
 import { NavLinks } from "../components/ui/nav-links";
 import "./globals.css";
@@ -10,6 +10,12 @@ const font = Atkinson_Hyperlegible({
   display: "swap",
   variable: "--font-brand",
 });
+const display = Archivo({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  display: "swap",
+  variable: "--font-display",
+});
 
 export const metadata: Metadata = {
   title: { default: "Cocha Digital Twin AI", template: "%s | Cocha Digital Twin AI" },
@@ -18,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={font.variable}>
+    <html lang="es" className={`${font.variable} ${display.variable}`}>
       <body>
         <a className="skip-link" href="#contenido">
           Saltar al contenido

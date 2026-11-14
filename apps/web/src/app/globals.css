@@ -157,12 +157,25 @@ code,
   margin: var(--space-10) 0 var(--space-8);
 }
 h1 {
+  font-family: var(--font-display, var(--font-brand)), system-ui, sans-serif;
   font-size: var(--text-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
   color: var(--color-text-strong);
   margin: 0 0 var(--space-3);
+  animation: title-rise 900ms cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+@keyframes title-rise {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(0.35em);
+  }
+  to {
+    clip-path: inset(0 0 -0.2em 0);
+    transform: none;
+  }
 }
 .intro {
   display: flex;
@@ -445,6 +458,217 @@ button {
   font-size: var(--text-sm);
   color: var(--color-text);
   line-height: 1.6;
+}
+
+/* Stage: full-bleed 3D valley. */
+html {
+  overflow-x: clip;
+}
+.stage {
+  position: relative;
+  margin: 0 calc(50% - 50vw) var(--space-6);
+  border-block: 1px solid var(--color-border);
+  background: radial-gradient(120% 90% at 50% 0%, #12303d 0%, var(--color-bg) 70%);
+}
+.stage .study-map,
+.stage .map-placeholder {
+  height: min(78vh, 820px);
+  min-height: 460px;
+  border-radius: 0;
+}
+.stage .maplibregl-ctrl-top-right {
+  top: var(--space-4);
+  right: var(--space-4);
+}
+.hud {
+  position: absolute;
+  left: max(var(--page-gutter), calc(50vw - 740px + var(--page-gutter)));
+  bottom: var(--space-8);
+  width: min(380px, calc(100% - 2 * var(--page-gutter)));
+  padding: var(--space-5) var(--space-6);
+  background: rgb(11 20 25 / 0.78);
+  backdrop-filter: blur(10px) saturate(1.2);
+  border: 1px solid rgb(112 229 188 / 0.22);
+  border-radius: var(--radius-md);
+  animation: hud-in 700ms 1.2s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+@keyframes hud-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.hud p {
+  margin: 0;
+}
+.hud-date {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.hud .hud-value {
+  font-family: var(--font-display, var(--font-brand)), system-ui, sans-serif;
+  font-size: clamp(2.6rem, 5vw, 3.8rem);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+  margin: var(--space-2) 0 var(--space-1);
+}
+.hud-value small {
+  font-size: 0.45em;
+  font-stretch: 100%;
+  color: var(--color-text-muted);
+  letter-spacing: 0;
+}
+.hud-label {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+.hud .legend {
+  margin: var(--space-4) 0 var(--space-3);
+}
+.hud .hud-note {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text-subtle);
+}
+.mode-switch {
+  position: absolute;
+  top: var(--space-4);
+  left: max(var(--page-gutter), calc(50vw - 740px + var(--page-gutter)));
+  display: flex;
+  padding: 3px;
+  gap: 3px;
+  background: rgb(11 20 25 / 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+}
+.mode-switch button {
+  min-height: 38px;
+  padding: var(--space-1) var(--space-4);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  transition:
+    background-color 200ms,
+    color 200ms;
+}
+.mode-switch button[aria-pressed="true"] {
+  background: var(--color-link);
+  color: #062218;
+  font-weight: 700;
+}
+.mode-switch button:hover:not([aria-pressed="true"]) {
+  color: var(--color-text-strong);
+}
+.stage .maplibregl-ctrl-group {
+  background: rgb(11 20 25 / 0.8);
+  border: 1px solid var(--color-border-strong);
+}
+.stage .maplibregl-ctrl-group button + button {
+  border-top-color: var(--color-border);
+}
+.stage .maplibregl-ctrl button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.9);
+}
+.stage .maplibregl-ctrl-scale {
+  background: rgb(11 20 25 / 0.7);
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+/* Demo district board */
+.district-board {
+  margin-bottom: var(--space-8);
+}
+.board {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.4fr);
+  gap: var(--space-8);
+  align-items: start;
+  margin-top: var(--space-5);
+}
+.tile-map {
+  margin: 0;
+  max-width: 420px;
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  /* The 5 × 3 demo rectangles cover about 4.8 km by 5 km. */
+  aspect-ratio: 4.8 / 5;
+  padding: 3px;
+  background: var(--color-border);
+  border-radius: var(--radius-md);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-2);
+  border-radius: 3px;
+  color: #10161a;
+  background: var(--color-surface-raised);
+}
+.tile[data-missing] {
+  color: var(--color-text-subtle);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-surface-raised) 0 6px,
+    var(--color-surface) 6px 12px
+  );
+}
+.tile span {
+  font-size: var(--text-xs);
+  opacity: 0.75;
+}
+.tile strong {
+  font-family: var(--font-display, var(--font-brand)), system-ui, sans-serif;
+  font-stretch: 115%;
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+}
+.tile-map figcaption {
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+.tile-map .legend {
+  margin: 0 0 var(--space-2);
+}
+.bar-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.bar-track {
+  width: 90px;
+  flex: 0 0 auto;
+}
+.bar {
+  display: inline-block;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  min-width: 2px;
+}
+.bar-cell {
+  min-width: 140px;
+}
+.trend-n {
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+@media (max-width: 900px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Map */
@@ -811,6 +1035,24 @@ footer {
   }
   .study-map {
     height: 340px;
+  }
+  .stage .study-map,
+  .stage .map-placeholder {
+    height: 62vh;
+    min-height: 380px;
+  }
+  .hud {
+    position: static;
+    width: auto;
+    margin: 0;
+    border-radius: 0;
+    border-inline: 0;
+    border-bottom: 0;
+    background: var(--color-surface);
+    backdrop-filter: none;
+  }
+  .mode-switch {
+    left: var(--page-gutter);
   }
   footer {
     flex-direction: column;

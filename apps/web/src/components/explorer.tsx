@@ -27,7 +27,7 @@ const StudyMap = dynamic(() => import("./study-map"), {
   ssr: false,
   loading: () => (
     <div className="map-placeholder" role="status">
-      Cargando mapa…
+      Cargando el valle…
     </div>
   ),
 });
@@ -129,8 +129,7 @@ export function Explorer({
   const [filters, setFilters] = useState(initial);
   const [copy, setCopy] = useState<CopyState>("idle");
   const [overlays, setOverlays] = useState<string[]>([]);
-  const [failedOverlays, setFailedOverlays] = useState<string[]>([]);
-  const update = (change: Partial<ExplorerFilters>) => {
+  const [failedOverlays, setFailedOverlays] = useState<string[]>([]);  const update = (change: Partial<ExplorerFilters>) => {
     const next = { ...filters, ...change };
     if (next.compareId === next.sceneId) next.compareId = null;
     setFilters(next);
@@ -170,8 +169,41 @@ export function Explorer({
   const compared = evidence.scenes.find((s) => s.id === filters.compareId) ?? null;
   const lst = variable === "lst";
   const date = scene.acquired_at.slice(0, 10);
+  const mean = lst ? scene.lst_mean : scene.ndvi_mean;
   return (
     <>
+      <section className="stage" aria-label={`Valle de Cochabamba, ${date}`}>
+        <StudyMap
+          scene={scene}
+          variable={variable}
+          bounds={evidence.bounds}
+          overlays={overlays}
+          onOverlayError={overlayFailed}
+        />
+        <div className="hud">
+          <p className="hud-date">
+            <time dateTime={scene.acquired_at}>{date}</time>, {scene.platform}
+          </p>
+          <p className="hud-value">
+            {mean == null ? "Sin datos" : mean.toFixed(lst ? 1 : 3)}
+            {mean != null && lst && <small> °C</small>}
+          </p>
+          <p className="hud-label">
+            {lst ? "Temperatura superficial media" : "NDVI medio"} de los píxeles válidos
+          </p>
+          <div className="legend">
+            <span>{lst ? "0 °C" : "−1"}</span>
+            <div className={lst ? "gradient heat" : "gradient green"} />
+            <span>{lst ? "50 °C" : "1"}</span>
+          </div>
+          <p className="hud-note">
+            Escala fija para todas las fechas. En 3D, la altura de cada columna
+            repite el mismo valor (tope de escala = 900 m) y el relieve es la
+            elevación real exagerada ×1,5. Celdas de unos 360 m; los huecos no
+            tienen datos.
+          </p>
+        </div>
+      </section>
       {notices.length > 0 && (
         <div className="link-notice" role="status">
           <p>Algunos filtros del enlace no se pudieron aplicar:</p>
@@ -182,14 +214,6 @@ export function Explorer({
           </ul>
         </div>
       )}
-      <div className="territory">
-        <TerritorySelector
-          options={territoryOptions(evidence, catalog)}
-          value={filters.territory}
-          onChange={(territory) => update({ territory })}
-        />
-        <TerritoryCard evidence={evidence} />
-      </div>
       <section className="controls" aria-label="Filtros">
         <div className="field">
           <label htmlFor="scene">Fecha de adquisición</label>
@@ -272,24 +296,19 @@ export function Explorer({
           <NatureBadge nature={synthetic ? "synthetic" : "observed"} detailed />
         </article>
       </section>
+      <div className="territory">
+        <TerritorySelector
+          options={territoryOptions(evidence, catalog)}
+          value={filters.territory}
+          onChange={(territory) => update({ territory })}
+        />
+        <TerritoryCard evidence={evidence} />
+      </div>
       <div className="workspace">
-        <Panel title="Territorio observado" meta={date} className="map-panel">
-          <StudyMap
-            scene={scene}
-            variable={variable}
-            bounds={evidence.bounds}
-            overlays={overlays}
-            onOverlayError={overlayFailed}
-          />
-          <div className="legend">
-            <span>{lst ? "0 °C" : "−1"}</span>
-            <div className={lst ? "gradient heat" : "gradient green"} />
-            <span>{lst ? "50 °C" : "1"}</span>
-            <small>Escala fija. Celdas de unos 360 m. Los huecos no tienen datos.</small>
-          </div>
+        <Panel title="Capas de referencia" meta={date} className="map-panel">
           <p className="caption">
-            El rectángulo es una ventana de estudio, no un límite municipal ni
-            distrital.
+            El rectángulo de celdas es una ventana de estudio, no un límite
+            municipal ni distrital.
           </p>
           <MapLayers
             layers={catalog?.wms_layers ?? []}

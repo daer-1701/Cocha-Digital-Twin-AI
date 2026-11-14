@@ -22,7 +22,8 @@ Para volver a la API real, restaurar `API_INTERNAL_URL=http://localhost:8000`
 
 | Nombre | Comportamiento |
 | --- | --- |
-| `available` | Tres escenas completas (predeterminado) |
+| `valle` | Predeterminado. Once escenas de julio (2015-2025) en una malla de 15 × 15 celdas (unos 320 m), con nubes en 2017 y 2021. Activa indicadores, series y tendencias descriptivas sobre los 15 rectángulos `demo-synthetic-v1`. Patrón espacial inventado (núcleo cálido, piedemonte y corredor verdes); no es un mapa de Cochabamba |
+| `available` | Tres escenas completas |
 | `wms` | Como `available`, con capas GAMC habilitadas que devuelven imágenes rayadas sintéticas |
 | `partial` | Cobertura reducida, celdas sin datos y una escena sin píxeles válidos |
 | `no-scenes` | Snapshot sin escenas |

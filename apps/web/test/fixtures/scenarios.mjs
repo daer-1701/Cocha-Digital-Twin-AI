@@ -1,4 +1,5 @@
 // Synthetic demo data for frontend development only. Values are generated, not observed.
+import { valleySnapshot } from "./valley.mjs";
 
 const BOUNDS = [-66.18, -17.41, -66.14, -17.37];
 const GRID = 6;
@@ -70,6 +71,13 @@ function snapshot(scenes) {
 }
 
 export const scenarios = {
+  valle: {
+    description:
+      "Once escenas de julio (2015-2025), celdas de unos 360 m, nubes y distritos demo con indicadores, series y tendencias",
+    status: 200,
+    districts: true,
+    body: valleySnapshot(),
+  },
   available: {
     description: "Tres escenas completas",
     status: 200,

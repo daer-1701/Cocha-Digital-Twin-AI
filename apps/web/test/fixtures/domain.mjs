@@ -1,5 +1,6 @@
 // Synthetic availability envelopes mirroring the honest defaults of services/api.
 import { deflateSync, crc32 } from "node:zlib";
+import { valleyDomain } from "./valley.mjs";
 
 const BOUNDS = [-66.18, -17.41, -66.14, -17.37];
 const PAGE = { limit: 50, offset: 0 };
@@ -95,9 +96,12 @@ const unavailable = (reason, extra = {}) => ({
 
 /**
  * GET routes outside /v1/explorer. `wms` enables the synthetic GAMC layers;
- * `evidence` is the active scenario snapshot, or null when none is published.
+ * `evidence` is the active scenario snapshot, or null when none is published;
+ * `districts` adds demo-rectangle indicators, series and trends.
  */
-export function domainRoutes({ wms, evidence }) {
+export function domainRoutes({ wms, evidence, districts = false }) {
+  const valley = districts ? valleyDomain() : {};
+  if (valley["/v1/trends"]) valley["/v1/trends"].pilot_trends = pilotTrends(evidence);
   return {
     "/v1/territories": territories(wms),
     "/v1/indicators": unavailable("district indicators need verified district vectors."),
@@ -175,6 +179,7 @@ export function domainRoutes({ wms, evidence }) {
       spent_usd: 0,
       reserved_usd: 0,
     },
+    ...valley,
   };
 }
 

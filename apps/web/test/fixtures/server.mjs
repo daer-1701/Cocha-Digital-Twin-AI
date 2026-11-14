@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const argument = process.argv.find((arg) => arg.startsWith("--scenario="));
-let active = argument?.split("=")[1] ?? process.env.FIXTURE_SCENARIO ?? "available";
+let active = argument?.split("=")[1] ?? process.env.FIXTURE_SCENARIO ?? "valle";
 if (!scenarios[active]) {
   console.error(`Unknown scenario "${active}". Options: ${Object.keys(scenarios).join(", ")}`);
   process.exit(1);
@@ -42,6 +42,7 @@ const scenarioDomain = (scenario) =>
   domainRoutes({
     wms: Boolean(scenario.wms),
     evidence: scenario.status === 200 ? (scenario.body.evidence ?? null) : null,
+    districts: Boolean(scenario.districts),
   });
 
 for (const [name, scenario] of Object.entries(scenarios))

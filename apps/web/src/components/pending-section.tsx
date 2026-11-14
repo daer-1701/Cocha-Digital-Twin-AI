@@ -26,11 +26,14 @@ export function PendingSection({
   section,
   demo = "off",
   server,
+  preview = false,
   children,
 }: {
   section: Section;
   demo?: DemoState;
   server?: ServerState;
+  /** True when children show a labelled synthetic preview, not results. */
+  preview?: boolean;
   children?: ReactNode;
 }) {
   return (
@@ -47,7 +50,9 @@ export function PendingSection({
       >
         {server && (
           <p>
-            {server.status
+            {server.status === "available" && preview
+              ? "El servidor solo publica rectángulos de prueba; los resultados oficiales siguen pendientes."
+              : server.status
               ? SERVER_TEXT[server.status]
               : "No se pudo consultar el estado de esta sección en el servidor."}
           </p>
@@ -56,7 +61,11 @@ export function PendingSection({
         <ul>
           {section.requires?.map((item) => <li key={item}>{item}</li>)}
         </ul>
-        <p>No se muestran valores de ejemplo mientras tanto.</p>
+        <p>
+          {preview
+            ? "Debajo hay una vista de prueba con rectángulos sintéticos. No son resultados."
+            : "No se muestran valores de ejemplo mientras tanto."}
+        </p>
         {server && <ServerDetail reason={server.reason} items={server.items} />}
       </StatusPanel>
       {children}
