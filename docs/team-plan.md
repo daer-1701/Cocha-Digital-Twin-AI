@@ -57,9 +57,9 @@ npm run dev
 ```
 
 La web debe consultar el servidor de fixtures mediante `API_INTERNAL_URL` en
-`apps/web/.env.local`. Se acordará un puerto distinto al de la API real.
-Las fixtures serán sintéticas y estarán rotuladas permanentemente como demo.
-La implementación actual todavía no incluye `dev:fixtures`: crearla es D02.
+`apps/web/.env.local`: `http://127.0.0.1:8100`, distinto al puerto 8000 de la
+API real. Las fixtures son sintéticas y se rotulan permanentemente como demo.
+Escenarios y uso: `apps/web/test/fixtures/README.md` (D02).
 
 Para integrar datos reales, Andrés proporcionará una API de desarrollo accesible
 por un canal acordado o un snapshot sanitizado compatible. `localhost` de Diego
