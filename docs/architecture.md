@@ -4,8 +4,8 @@
 
 Separar presentación, contratos HTTP, persistencia y cálculo científico.
 La API entrega evidencia calculada y trazable; no ejecuta descargas satelitales
-ni entrenamiento dentro de una petición HTTP. El asistente futuro explica
-evidencia y no calcula métricas científicas por su cuenta.
+ni entrenamiento dentro de una petición HTTP. `GET /v1/assistant` solo informa
+el presupuesto: no llama a Gemini ni calcula métricas.
 
 ```mermaid
 flowchart LR
@@ -15,7 +15,7 @@ flowchart LR
     S[Fuentes científicas verificadas] -. pendiente .-> P[Pipeline Python por lotes]
     P -. metadatos e indicadores .-> DB
     P -. rásteres COG y artefactos .-> O[Archivos / almacenamiento de objetos]
-    A -. consulta futura .-> G[Gemini en servidor]
+    A -. estado, sin llamada .-> G[Gemini en servidor]
 ```
 
 Líneas continuas: base implementada. Líneas discontinuas: componentes planificados.
@@ -67,14 +67,30 @@ Revisarlo al actualizar typescript-eslint; no es dependencia del runtime web.
 | Método | Ruta | Comportamiento |
 | --- | --- | --- |
 | GET | `/health/live` | Proceso HTTP disponible; no consulta DB |
-| GET | `/health/ready` | Comprueba PostGIS y existencia de una revisión Alembic; 503 ante fallo |
+| GET | `/health/ready` | Comprueba PostGIS y revisión Alembic vigente; 503 ante fallo o revisión distinta |
 | GET | `/v1/datasets?limit=50&offset=0` | Catálogo persistido; limit entre 1 y 100 |
 | GET | `/openapi.json` | Contrato generado |
 | GET | `/v1/explorer` | Snapshot Landsat validado; estado vacío si falta, 503 si es inválido |
+| GET | `/v1/territories` | Piloto disponible; capas WMS según clave; vector distrital `unavailable` |
+| GET | `/v1/indicators` | Distritos `unavailable` (falta el vector). `pilot_window` opcional, etiquetado como ventana piloto |
+| GET | `/v1/series` | `unavailable`: no hay series distritales |
+| GET | `/v1/trends` | `unavailable` para publicación oficial; la pendiente descriptiva no se sirve como resultado |
+| GET | `/v1/models` | `unavailable` con nota de viabilidad; sin métricas; filas de `model_runs` solo como referencia no publicada |
+| GET | `/v1/scenarios` | `unavailable` con blockers; sin escenarios evaluados |
+| GET | `/v1/jobs` | Lectura de `processing_runs` o `empty`; `GET /v1/jobs/{id}` responde 404 si no existe; sin escritura |
+| GET | `/v1/reports` | Informes formales `unavailable`. Si hay snapshot, `observation_export` es la ventana piloto, no un informe distrital |
+| GET | `/v1/assistant` | Estado de presupuesto; no llama a Gemini; precios sin verificar; la clave no sale en la respuesta |
+| GET | `/v1/stations` | Estaciones DB si existen; si no, perfil vacío con metadatos pendientes |
+| GET | `/v1/gamc/wms/map`, `/legend`, `/feature-info` | Proxy WMS servidor; 503 sin clave; allowlist; límite de tasa en memoria; la clave no sale en la respuesta |
 
-Readiness no sustituye la comprobación `alembic check` de CI ni garantiza que
-los datos científicos estén disponibles. No hay endpoints de escritura públicos,
-autenticación, simulación ni conversación implementados.
+Cada recurso de dominio incluye un sobre de disponibilidad
+(`available` \| `empty` \| `unavailable` y `reason` opcional). No se inventan
+mediciones. Readiness no garantiza calidad científica.
+No hay endpoints de escritura públicos ni autenticación. `GET /v1/assistant`
+informa el presupuesto y no llama a Gemini. Los precios de token configurables
+son marcadores de posición: hay que verificar las tarifas oficiales antes de
+un uso real. La ingesta multitemporal sigue fuera de HTTP y la ventana piloto
+no sustituye distritos. CORS sigue limitado a GET.
 
 ## Referencias de implementación
 

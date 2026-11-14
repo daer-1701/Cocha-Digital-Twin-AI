@@ -27,7 +27,7 @@ base se actualizan mediante reconstrucción y revisión.
 ## Operación
 
 `/health/live` solo comprueba HTTP. `/health/ready` verifica conectividad a
-PostGIS y presencia del historial de migraciones; no evalúa calidad científica
+PostGIS y coincidencia de la revisión Alembic con el código; no evalúa calidad científica
 ni deriva del esquema. Ejecutar `alembic check` en el proceso de entrega.
 
 No ejecutar migraciones en cada worker ni usar `create_all`. El servicio

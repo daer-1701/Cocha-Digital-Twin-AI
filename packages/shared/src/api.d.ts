@@ -72,10 +72,287 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/territories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Territories */
+        get: operations["territories_v1_territories_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Indicators */
+        get: operations["list_indicators_v1_indicators_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Series */
+        get: operations["list_series_v1_series_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Trends */
+        get: operations["list_trends_v1_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Stations */
+        get: operations["list_stations_v1_stations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Models */
+        get: operations["list_models_v1_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Scenarios */
+        get: operations["list_scenarios_v1_scenarios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Jobs */
+        get: operations["list_jobs_v1_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Job */
+        get: operations["get_job_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Reports */
+        get: operations["list_reports_v1_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assistant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assistant Status */
+        get: operations["assistant_status_v1_assistant_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/gamc/wms/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wms Map */
+        get: operations["wms_map_v1_gamc_wms_map_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/gamc/wms/legend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wms Legend */
+        get: operations["wms_legend_v1_gamc_wms_legend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/gamc/wms/feature-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wms Feature Info */
+        get: operations["wms_feature_info_v1_gamc_wms_feature_info_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AssistantStatusResponse */
+        AssistantStatusResponse: {
+            /**
+             * Status
+             * @default unavailable
+             * @constant
+             */
+            status: "unavailable";
+            /** Reason */
+            reason: string;
+            /** Model */
+            model: string;
+            /** Budget Usd */
+            budget_usd: number;
+            /** Input Price Usd Per Million Tokens */
+            input_price_usd_per_million_tokens?: number | null;
+            /** Output Price Usd Per Million Tokens */
+            output_price_usd_per_million_tokens?: number | null;
+            /**
+             * Prices Verified
+             * @default false
+             * @constant
+             */
+            prices_verified: false;
+            /** Prices Note */
+            prices_note: string;
+            /**
+             * Calls Enabled
+             * @default false
+             * @constant
+             */
+            calls_enabled: false;
+            /** Key Configured */
+            key_configured: boolean;
+            /** Spent Usd */
+            spent_usd: number;
+            /** Reserved Usd */
+            reserved_usd: number;
+        };
         /** Cell */
         Cell: {
             /** Bounds */
@@ -143,6 +420,163 @@ export interface components {
              */
             service: "cocha-api";
         };
+        /** IndicatorsResponse */
+        IndicatorsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+            pilot_window?: components["schemas"]["PilotWindowSummary"] | null;
+        };
+        /** JobItem */
+        JobItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Status */
+            status: string;
+            /** Started At */
+            started_at?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
+        };
+        /** JobsResponse */
+        JobsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: components["schemas"]["JobItem"][];
+        };
+        /** ModelsResponse */
+        ModelsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: components["schemas"]["StoredModelRef"][];
+            /** Viability Note */
+            viability_note?: string | null;
+            /** Blockers */
+            blockers?: string[];
+        };
+        /** ObservationExport */
+        ObservationExport: {
+            /**
+             * Kind
+             * @default observation_export
+             * @constant
+             */
+            kind: "observation_export";
+            /**
+             * Scope
+             * @default pilot_window
+             * @constant
+             */
+            scope: "pilot_window";
+            /**
+             * District Report
+             * @default false
+             * @constant
+             */
+            district_report: false;
+            /** Note */
+            note: string;
+            evidence: components["schemas"]["Snapshot"];
+        };
+        /** PilotTerritory */
+        PilotTerritory: {
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @default available
+             * @constant
+             */
+            status: "available";
+            /** Bounds Wgs84 */
+            bounds_wgs84: [
+                number,
+                number,
+                number,
+                number
+            ];
+            /** Source */
+            source: string;
+            /** Note */
+            note: string;
+        };
+        /** PilotWindowScene */
+        PilotWindowScene: {
+            /** Scene Id */
+            scene_id: string;
+            /** Lst Mean */
+            lst_mean?: number | null;
+            /** Ndvi Mean */
+            ndvi_mean?: number | null;
+            /**
+             * Scope
+             * @default pilot_window
+             * @constant
+             */
+            scope: "pilot_window";
+            /**
+             * District Indicator
+             * @default false
+             * @constant
+             */
+            district_indicator: false;
+        };
+        /** PilotWindowSummary */
+        PilotWindowSummary: {
+            /**
+             * Scope
+             * @default pilot_window
+             * @constant
+             */
+            scope: "pilot_window";
+            /**
+             * Label
+             * @default pilot-only
+             * @constant
+             */
+            label: "pilot-only";
+            /** Note */
+            note: string;
+            /** Scenes */
+            scenes?: components["schemas"]["PilotWindowScene"][];
+        };
         /** ReadinessResponse */
         ReadinessResponse: {
             /**
@@ -150,6 +584,43 @@ export interface components {
              * @enum {string}
              */
             status: "ready" | "not_ready";
+        };
+        /** ReportsResponse */
+        ReportsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+            observation_export?: components["schemas"]["ObservationExport"] | null;
+        };
+        /** ScenariosResponse */
+        ScenariosResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: components["schemas"]["StoredScenarioRef"][];
+            /** Blockers */
+            blockers?: string[];
         };
         /** Scene */
         Scene: {
@@ -176,6 +647,24 @@ export interface components {
             ndvi_mean: number | null;
             /** Cells */
             cells: components["schemas"]["Cell"][];
+        };
+        /** SeriesResponse */
+        SeriesResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
         };
         /** Snapshot */
         Snapshot: {
@@ -216,6 +705,122 @@ export interface components {
             /** Scenes */
             scenes: components["schemas"]["Scene"][];
         };
+        /** StationItem */
+        StationItem: {
+            /** Id */
+            id?: string | null;
+            /** Source Id */
+            source_id: string;
+            /** Name */
+            name: string;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Elevation M */
+            elevation_m?: number | null;
+            /**
+             * Variable
+             * @default pm10
+             */
+            variable: string;
+            /** Unit */
+            unit?: string | null;
+            /** Timezone */
+            timezone?: string | null;
+            /**
+             * Analysis Enabled
+             * @default false
+             */
+            analysis_enabled: boolean;
+            /** Metadata Pending */
+            metadata_pending?: string[];
+        };
+        /** StationsResponse */
+        StationsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: components["schemas"]["StationItem"][];
+        };
+        /** StoredModelRef */
+        StoredModelRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Objective */
+            objective: string;
+            /**
+             * Metrics Published
+             * @default false
+             * @constant
+             */
+            metrics_published: false;
+        };
+        /** StoredScenarioRef */
+        StoredScenarioRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Evaluated
+             * @default false
+             * @constant
+             */
+            evaluated: false;
+            /**
+             * Note
+             * @default Stored row is not an evaluated scenario.
+             */
+            note: string;
+        };
+        /** TerritoriesResponse */
+        TerritoriesResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            pilot: components["schemas"]["PilotTerritory"];
+            /** Wms Layers */
+            wms_layers: components["schemas"]["WmsLayerAvailability"][];
+            vector_districts: components["schemas"]["VectorDistrictsAvailability"];
+            /** Generated At */
+            generated_at?: string | null;
+        };
+        /** TrendsResponse */
+        TrendsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -228,6 +833,31 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VectorDistrictsAvailability */
+        VectorDistrictsAvailability: {
+            /**
+             * Status
+             * @default unavailable
+             * @constant
+             */
+            status: "unavailable";
+            /** Reason */
+            reason: string;
+        };
+        /** WmsLayerAvailability */
+        WmsLayerAvailability: {
+            /** Name */
+            name: string;
+            /** Service Id */
+            service_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "unavailable";
+            /** Reason */
+            reason?: string | null;
         };
     };
     responses: never;
@@ -335,6 +965,439 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExplorerResponse"];
+                };
+            };
+        };
+    };
+    territories_v1_territories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritoriesResponse"];
+                };
+            };
+        };
+    };
+    list_indicators_v1_indicators_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndicatorsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_series_v1_series_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_trends_v1_trends_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_stations_v1_stations_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_models_v1_models_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_scenarios_v1_scenarios_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenariosResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_jobs_v1_jobs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_v1_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reports_v1_reports_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assistant_status_v1_assistant_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantStatusResponse"];
+                };
+            };
+        };
+    };
+    wms_map_v1_gamc_wms_map_get: {
+        parameters: {
+            query: {
+                service_id: string;
+                bbox: string;
+                width: number;
+                height: number;
+                crs?: "EPSG:4326" | "EPSG:3857";
+                format?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wms_legend_v1_gamc_wms_legend_get: {
+        parameters: {
+            query: {
+                service_id: string;
+                format?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wms_feature_info_v1_gamc_wms_feature_info_get: {
+        parameters: {
+            query: {
+                service_id: string;
+                bbox: string;
+                width: number;
+                height: number;
+                x: number;
+                y: number;
+                crs?: "EPSG:4326" | "EPSG:3857";
+                info_format?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -27,6 +27,9 @@ coverage/
 htmlcov/
 *.tsbuildinfo
 
+# Local assistant ledger. Do not commit reservation state.
+data/local/
+
 # Scientific artifacts: retain documentation, not raw observations
 data/raw/*
 !data/raw/.gitkeep

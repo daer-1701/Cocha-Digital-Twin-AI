@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+import pytest
+from cocha_api.db.migrations import expected_revision
 from cocha_api.main import create_app
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import OperationalError
@@ -33,3 +35,14 @@ def test_cors_rejects_unconfigured_origin():
     with TestClient(create_app()) as client:
         response = client.get("/health/live", headers={"Origin": "https://untrusted.example"})
     assert "access-control-allow-origin" not in response.headers
+
+
+@pytest.mark.parametrize("revision_mode,status_code", [("match", 200), ("obsolete", 503)])
+def test_readiness_requires_current_migration(revision_mode, status_code):
+    revision = expected_revision() if revision_mode == "match" else "obsolete"
+    with patch("cocha_api.routes.health.get_engine") as engine:
+        connection = engine.return_value.connect.return_value.__enter__.return_value
+        connection.execute.return_value.scalar_one.return_value = revision
+        with TestClient(create_app()) as client:
+            response = client.get("/health/ready")
+    assert response.status_code == status_code

@@ -1,5 +1,7 @@
 # Cocha Digital Twin AI
 
+Para continuar el desarrollo desde Cursor: [traspaso completo](CONTINUAR_EN_CURSOR.md).
+
 Base de una plataforma de evidencia ambiental para Cochabamba: temperatura
 superficial, vegetación y tendencias territoriales reproducibles.
 
@@ -45,7 +47,7 @@ Detalles de método, alcance y verificación: [MVP Landsat](docs/mvp.md).
 Desde la raíz, en PowerShell:
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 # Editar POSTGRES_PASSWORD en .env antes de continuar.
 docker compose up --build --wait
 ```
@@ -77,8 +79,8 @@ base ya inicializada; debe rotarse también dentro de PostgreSQL.
 ```powershell
 npm ci
 uv sync --frozen
-Copy-Item .env.example .env
-Copy-Item apps/web/.env.example apps/web/.env.local
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+if (-not (Test-Path apps/web/.env.local)) { Copy-Item apps/web/.env.example apps/web/.env.local }
 # Editar .env: DATABASE_URL debe coincidir con el usuario/contraseña locales.
 docker compose up -d db
 uv run alembic upgrade head
@@ -114,6 +116,14 @@ infrastructure/docker/    Imágenes para API y web
 
 ## Calidad y contratos
 
+Comprobación aislada de contenedores y PostGIS (solo Andrés; Diego no necesita Docker):
+
+```powershell
+./scripts/check_containers.ps1
+```
+
+Usa una base temporal sin puertos ni datos de desarrollo. Ver [A01](docs/a01-validation.md).
+
 ```powershell
 uv run ruff check .
 uv run ruff format --check .
@@ -127,7 +137,7 @@ Las pruebas científicas requieren `--group science`:
 `uv run --group science pytest -q`. CI instala ese grupo explícitamente.
 
 Las pruebas de integración se omiten sin RUN_DB_TESTS. Para ejecutarlas usa una
-base exclusiva de pruebas: la prueba inserta y elimina un registro de fixture.
+base exclusiva cuyo nombre termine en `_test`: las pruebas escriben fixtures.
 
 ```powershell
 # Establecer DATABASE_URL apuntando a una base exclusiva de pruebas.

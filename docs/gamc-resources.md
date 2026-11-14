@@ -116,6 +116,18 @@ Si falta acceso vectorial, A03 deja constancia del bloqueo y de la fuente que
 debe obtener el equipo por un canal autorizado; no envía solicitudes a terceros
 automáticamente. El pipeline piloto conserva su área explícita mientras tanto.
 
+### Estado de implementación A03 (backend)
+
+- Proxy WMS en `/v1/gamc/wms/{map,legend,feature-info}` con
+  `GAMC_WMS_API_KEY` solo en servidor, allowlist de los cinco `service_id`,
+  CRS `EPSG:4326`/`EPSG:3857`, dimensiones 1–2048, timeout ~20 s y caché LRU
+  de GetMap. Sin clave: 503/`unavailable` sin llamar al origen.
+- `/v1/territories` expone el piloto Landsat como disponible, el estado WMS
+  según configuración de clave, y `vector_districts.status=unavailable` con el
+  bloqueo documentado: **WMS/BBOX no es un vector distrital completo**.
+- La importación PostGIS de los 15 distritos permanece bloqueada hasta obtener
+  un archivo o servicio de features autorizado.
+
 ## Reparto actualizado
 
 - **Andrés:** A03 (WMS + vector por separado), A04 (persistencia), A08 (QA e

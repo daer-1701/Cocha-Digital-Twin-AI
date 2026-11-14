@@ -19,3 +19,7 @@ secrets
 **/*.pem
 **/*.key
 **/*.tsbuildinfo
+.playwright-cli
+output
+.coverage
+apps/web/public/maplibre-worker.mjs

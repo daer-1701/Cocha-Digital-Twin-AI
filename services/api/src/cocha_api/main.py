@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from cocha_api.core.config import get_settings
 from cocha_api.core.logging import configure_logging
-from cocha_api.routes import datasets, explorer, health
+from cocha_api.routes import assistant, datasets, domain, explorer, gamc_wms, health, territories
 
 
 @asynccontextmanager
@@ -22,7 +22,10 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Cocha Digital Twin AI",
         version="0.1.0",
-        description="Read-only evidence. Run Landsat ingestion to publish a snapshot.",
+        description=(
+            "Read-only evidence. Landsat ingestion publishes a snapshot outside HTTP. "
+            "Assistant status does not call Gemini."
+        ),
         lifespan=lifespan,
     )
     app.add_middleware(
@@ -41,6 +44,10 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(datasets.router)
     app.include_router(explorer.router)
+    app.include_router(territories.router)
+    app.include_router(domain.router)
+    app.include_router(assistant.router)
+    app.include_router(gamc_wms.router)
     return app
 
 

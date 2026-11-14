@@ -4,6 +4,14 @@ COPY pyproject.toml uv.lock ./
 COPY services/api/src services/api/src
 RUN pip install --no-cache-dir uv==0.12.3 && uv sync --frozen --no-dev --no-editable
 
+FROM builder AS test
+ENV PATH="/build/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+RUN uv sync --frozen --group science --no-editable
+COPY alembic.ini ./
+COPY services/api/migrations services/api/migrations
+COPY tests tests
+CMD ["python", "-m", "pytest", "-q"]
+
 FROM python:3.12-slim AS runtime
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
