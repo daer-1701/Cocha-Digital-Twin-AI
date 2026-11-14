@@ -2,7 +2,8 @@
 
 These data are particulate matter (PM10), not air temperature, and must never be
 used to calibrate LST. The catalog declares ug/m3 from a Red MoniCA report.
-Timezone and coordinates stay undeclared. analysis_enabled stays false.
+Timezone America/La_Paz and station coordinates are declared from the catalog.
+observed_at stays naive (local wall time). analysis_enabled stays false until MF06.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from typing import Literal
 from cocha_api.science.gamc_catalog import (
     MONICA_METADATA_PENDING,
     MONICA_PM10_UNIT,
+    MONICA_TIMEZONE,
     STATION_CATALOG_PROFILE,
 )
 
@@ -150,28 +152,44 @@ class StationImportProfile:
     source_id: str
     name: str
     unit_declared: str
-    timezone_declared: None
+    timezone_declared: str | None
     analysis_enabled: Literal[False]
     metadata_pending: tuple[str, ...]
-    latitude: None
-    longitude: None
+    latitude: float | None
+    longitude: float | None
+    elevation_m: float | None
 
 
 def station_import_profile(source_id: str) -> StationImportProfile:
-    """Declared PM10 unit from the catalog. Does not invent timezone or coordinates."""
+    """Declared unit, timezone and coordinates from the verified catalog."""
 
     catalog = next(
         (profile for profile in STATION_CATALOG_PROFILE if profile["source_id"] == source_id),
         None,
     )
-    name = catalog["name"] if catalog else source_id
+    name = str(catalog["name"]) if catalog else source_id
+    if catalog is None:
+        return StationImportProfile(
+            source_id=source_id,
+            name=name,
+            unit_declared=MONICA_PM10_UNIT,
+            timezone_declared=None,
+            analysis_enabled=False,
+            metadata_pending=MONICA_METADATA_PENDING,
+            latitude=None,
+            longitude=None,
+            elevation_m=None,
+        )
     return StationImportProfile(
         source_id=source_id,
         name=name,
         unit_declared=MONICA_PM10_UNIT,
-        timezone_declared=None,
+        timezone_declared=str(catalog.get("timezone") or MONICA_TIMEZONE),
         analysis_enabled=False,
         metadata_pending=MONICA_METADATA_PENDING,
-        latitude=None,
-        longitude=None,
+        latitude=float(catalog["latitude"]) if catalog.get("latitude") is not None else None,
+        longitude=float(catalog["longitude"]) if catalog.get("longitude") is not None else None,
+        elevation_m=(
+            float(catalog["elevation_m"]) if catalog.get("elevation_m") is not None else None
+        ),
     )

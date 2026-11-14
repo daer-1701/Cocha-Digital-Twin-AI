@@ -1,0 +1,102 @@
+{
+  "task": "EF09",
+  "verified_on": "2026-11-14T21:02:01.037623+00:00",
+  "endpoint": "https://serviciosgamc.cochabamba.bo/api/gs/wms",
+  "wms_version": "1.1.1",
+  "api_key_present": true,
+  "live_requested": true,
+  "layers": [
+    {
+      "name": "Limite Urbano",
+      "service_id": "fd77d463-9729-4c66-b686-23dccbb4ab8f",
+      "bbox_documented": [
+        -66.251426,
+        -17.50846,
+        -66.084188,
+        -17.332785
+      ],
+      "live_probe": {
+        "ok": true,
+        "status_code": 200,
+        "content_type": "image/png",
+        "bytes": 18108
+      }
+    },
+    {
+      "name": "Cota 2750",
+      "service_id": "297cefa4-0832-42bb-a98e-2cbea989fd9d",
+      "bbox_documented": [
+        -66.193763,
+        -17.367136,
+        -66.103902,
+        -17.257306
+      ],
+      "live_probe": {
+        "ok": true,
+        "status_code": 200,
+        "content_type": "image/png",
+        "bytes": 13931
+      }
+    },
+    {
+      "name": "\u00c1reas Verdes",
+      "service_id": "47360ddc-e35f-4ece-a995-59e90eb79cc6",
+      "bbox_documented": [
+        -66.2493,
+        -17.502865,
+        -66.085546,
+        -17.335849
+      ],
+      "live_probe": {
+        "ok": true,
+        "status_code": 200,
+        "content_type": "image/png",
+        "bytes": 63211
+      }
+    },
+    {
+      "name": "Limite Distritos",
+      "service_id": "7eb13092-bf0e-493b-aae6-03c43eedda2c",
+      "bbox_documented": [
+        -66.280703,
+        -17.53119,
+        -66.06952,
+        -17.257306
+      ],
+      "live_probe": {
+        "ok": true,
+        "status_code": 200,
+        "content_type": "image/png",
+        "bytes": 21565
+      }
+    },
+    {
+      "name": "Poblaci\u00f3n por Manzanas",
+      "service_id": "194a02a0-a73a-48c1-a260-82847c5c905d",
+      "bbox_documented": [
+        -66.280703,
+        -17.53119,
+        -66.06952,
+        -17.257306
+      ],
+      "live_probe": {
+        "ok": true,
+        "status_code": 200,
+        "content_type": "image/png",
+        "bytes": 57503
+      }
+    }
+  ],
+  "relief_3d": {
+    "ui_source": "AWS Terrain Tiles Terrarium (elevation-tiles-prod)",
+    "registry": "https://registry.opendata.aws/terrain-tiles/",
+    "attribution_in_ui": true,
+    "precision_claim": "Visual hillshade/DEM tiles for MapLibre terrain. Not a surveyed municipal DEM and not equivalent to GAMC Cota 2750.",
+    "gamc_cota_2750": "WMS context layer only; GetMap image, not a downloadable DEM product"
+  },
+  "quota_and_license": {
+    "wms_quota": "Not published in reviewed GAMC docs; treat as unknown",
+    "wms_license": "Not confirmed; key stays server-side",
+    "terrain_tiles_license": "AWS Open Data / Terrain Tiles terms; attribution required"
+  }
+}

@@ -40,12 +40,11 @@ GAMC_WMS_DEFAULT_ENDPOINT: Final[str] = "https://serviciosgamc.cochabamba.bo/api
 GAMC_WMS_VERSION: Final[str] = "1.1.1"
 ALLOWED_CRS: Final[frozenset[str]] = frozenset({"EPSG:4326", "EPSG:3857"})
 VECTOR_DISTRICTS_BLOCKER: Final[str] = (
-    "Complete district vector geometries are not available from an authorized "
-    "GAMC source. WMS GetMap/GetFeatureInfo and documented BBOX extents are not "
-    "a complete vector dataset. Third-party GeoJSON/Shapefile candidates exist "
-    "but are not verified as the official 15 municipal districts. "
-    "A demo-synthetic-v1 fixture may be imported for UI development only and "
-    "is not a GAMC boundary."
+    "Official GAMC Limite Distritos polygons are imported in PostGIS as "
+    "boundary_version=gamc-official-20261114 (WMS KML kmscore=100, 15 valid "
+    "districts, no overlap >1 m2). Public /v1/territories still reports "
+    "unavailable until Andrés exposes the official version in the contract. "
+    "Do not treat demo-synthetic-v1 rectangles as GAMC boundaries."
 )
 
 # Pilot bounds from the Landsat MVP; not municipal district polygons.
@@ -64,35 +63,58 @@ MONICA_PM10_UNIT_SOURCE: Final[str] = (
 )
 MONICA_PM10_UNIT_NOTE: Final[str] = (
     "Declared from municipal/national Red MoniCA reports (ug/m3), not from the "
-    "CSV header. Keep analysis_enabled=false until timezone and coordinates are "
-    "confirmed from primary station metadata."
+    "CSV header. Timezone America/La_Paz and station coordinates confirmed "
+    "2026-11-14; analysis_enabled stays false until Mateo accepts series QA (MF06)."
+)
+
+MONICA_TIMEZONE: Final[str] = "America/La_Paz"
+
+# Zeros/negatives: no instrument codes from the provider. Project policy.
+MONICA_QA_POLICY: Final[str] = (
+    "Preserve raw values. Flag zero and negative PM10. Exclude them from "
+    "physical aggregates (analysis_eligible requires valid only). Never clamp "
+    "negatives to zero or convert zeros to missing without a written instrument note."
+)
+
+# App display for the project is allowed; do not publish raw CSV outside the team.
+MONICA_LICENSE_POLICY: Final[str] = (
+    "Project may show imported records in the app. Keep raw CSV/ZIP outside Git. "
+    "Do not republish the source archive publicly without a written redistribution grant."
 )
 
 MONICA_METADATA_PENDING: Final[tuple[str, ...]] = (
-    "timezone of fecha_medicion",
-    "station coordinates (lat/lon not in CSV)",
-    "measurement QA codes and zero interpretation",
-    "data redistribution license",
+    "instrument manufacturer QA codes (zeros/negatives handled by project policy)",
+    "written redistribution grant beyond project app display",
 )
 
-# Identity from Contaminación Atmosférica Gestión 2021-CBBA. No invented lat/lon.
-STATION_CATALOG_PROFILE: Final[tuple[dict[str, str], ...]] = (
+# Identity + coordinates confirmed 2026-11-14 (team/GAMC). Elevations approximate.
+STATION_CATALOG_PROFILE: Final[tuple[dict[str, object], ...]] = (
     {
         "source_id": "kanata",
         "name": "Parque Kanata",
         "csv_label": "kanata",
-        "described_location": "Av. 6 de Agosto y Av. del Cabildo",
+        "described_location": "Av. 6 de Agosto / Av. del Cabildo",
         "variable": "pm10",
         "unit": MONICA_PM10_UNIT,
         "unit_source": MONICA_PM10_UNIT_SOURCE,
+        "timezone": MONICA_TIMEZONE,
+        "latitude": -17.41252,
+        "longitude": -66.15897,
+        "elevation_m": 2564.0,
+        "elevation_note": "approx 2554-2574 m asl",
     },
     {
         "source_id": "semapa",
         "name": "SEMAPA",
         "csv_label": "semapa",
-        "described_location": "Av. Circunvalación y Atahuallpa",
+        "described_location": "Predios SEMAPA / Planta Cala Cala (Av. Circunvalación / Atahuallpa)",
         "variable": "pm10",
         "unit": MONICA_PM10_UNIT,
         "unit_source": MONICA_PM10_UNIT_SOURCE,
+        "timezone": MONICA_TIMEZONE,
+        "latitude": -17.36470,
+        "longitude": -66.16245,
+        "elevation_m": 2600.0,
+        "elevation_note": "approx 2600 m asl",
     },
 )

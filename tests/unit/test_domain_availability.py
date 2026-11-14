@@ -111,7 +111,7 @@ def test_territories_exposes_pilot_and_vector_blocker():
     assert body["status"] == "available"
     assert body["pilot"]["status"] == "available"
     assert body["vector_districts"]["status"] == "unavailable"
-    assert "not a complete vector" in body["vector_districts"]["reason"].lower()
+    assert "gamc-official-20261114" in body["vector_districts"]["reason"].lower()
     assert "not a gamc boundary" in body["vector_districts"]["reason"].lower()
     assert all(layer["status"] == "unavailable" for layer in body["wms_layers"])
 

@@ -25,10 +25,15 @@ espacial de 15 distritos. Además no hay un vector distrital verificado: WMS y
 los BBOX anunciados no son polígonos. Sin ese vector no hay series distritales
 con las que construir un conjunto de entrenamiento defendible.
 
+## Decisión AF01 (14/11/2026)
+
+ML térmico queda **condicionado**: se habilita solo con series de temperatura
+del aire de Semapa (huso, coords, licencia). Hasta entonces, bloqueado.
+`/v1/models` y `/v1/scenarios` permanecen `unavailable`. No se publican
+métricas. Detalle: `docs/af01-scope.md`.
+
 ## Estado de A10–A12
 
-No se entrenó baseline, Random Forest ni otro modelo. A10–A12 quedan cerrados
-como bloqueados hasta tener una variable objetivo compatible. `/v1/models` y
-`/v1/scenarios` permanecen `unavailable` y no publican métricas ni resultados
-de intervención. Cambiar NDVI en un regresor no está evaluado como efecto de
-plantar árboles. Detalle en `docs/andres-blockers.md`.
+No se entrenó baseline, Random Forest ni otro modelo. A10–A12 siguen
+bloqueados hasta la serie térmica de Semapa. Cambiar NDVI en un regresor no
+está evaluado como efecto de plantar árboles. Detalle en `docs/andres-blockers.md`.

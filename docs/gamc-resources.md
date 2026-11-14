@@ -10,9 +10,14 @@ Verificación: **14 de noviembre de 2026**. Fuente:
 - Se verificó que una segunda ejecución reutiliza archivos sin sobrescribirlos.
 - Se inspeccionó el catálogo publicado de capas; no se probaron solicitudes WMS
   autenticadas ni se descargaron polígonos completos de distritos.
-- No se importaron observaciones a PostGIS ni se activaron en el dashboard.
+- No se importaron observaciones a PostGIS ni se activaron en el dashboard en
+  esta sesión (Compose del proyecto no estaba en ejecución).
 - Acceso público al archivo no confirma licencia de redistribución. Mantener
   datos crudos fuera de Git y verificar condiciones antes de redistribuirlos.
+- Borrador de solicitud del vector oficial: `docs/gamc-vector-request.md`
+  (el equipo lo envía; el agente no contacta al GAMC).
+- Validación/importación preparadas: `scripts/validate_district_vector.py` y
+  `scripts/import_official_districts.py` (requieren archivo autorizado).
 
 ## Descarga local reproducible
 

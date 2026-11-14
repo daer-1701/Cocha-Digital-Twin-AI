@@ -1,0 +1,83 @@
+{
+  "task": "EF04_EF05_offline",
+  "verified_on": "2026-11-14T20:50:52.162317+00:00",
+  "import_to_postgis": "not executed in this audit (Compose DB not required here)",
+  "analysis_enabled_policy": false,
+  "official_correction_policy": "Pending GAMC procedure. Reimport never overwrites existing station+variable+timestamp rows; corrections need an explicit review path.",
+  "files": [
+    {
+      "file": "red_monica.kanata (1).csv",
+      "status": "audited",
+      "bytes": 1979506,
+      "sha256": "f60846899967a700ca60c9f5b5d4757b97545e7c0d19c39febfb5a170575f888",
+      "checksum_matches_catalog": true,
+      "catalog_rows": 54711,
+      "parsed_rows": 54711,
+      "quality_counts": {
+        "valid": 51293,
+        "negative": 721,
+        "zero": 2697
+      },
+      "duplicate_keys_in_file": 0,
+      "station_values": [
+        "kanata"
+      ],
+      "pm10_never_presented_as_temperature": true,
+      "variable": "pm10"
+    },
+    {
+      "file": "red_monica.semapa (1).csv",
+      "status": "audited",
+      "bytes": 2582941,
+      "sha256": "da7fcc9732887412b70a4b62aba5a8a6389170cca8174a01a92d5a03e216d4be",
+      "checksum_matches_catalog": true,
+      "catalog_rows": 71154,
+      "parsed_rows": 71154,
+      "quality_counts": {
+        "valid": 66271,
+        "negative": 1499,
+        "zero": 3384
+      },
+      "duplicate_keys_in_file": 0,
+      "station_values": [
+        "semapa"
+      ],
+      "pm10_never_presented_as_temperature": true,
+      "variable": "pm10"
+    }
+  ],
+  "field_evidence": {
+    "estacion": {
+      "status": "known",
+      "evidence": "CSV column; mapped to Parque Kanata / SEMAPA via 2021 report"
+    },
+    "pm10": {
+      "status": "known_variable_unknown_instrument_qa",
+      "evidence": "CSV column; particulate matter only; not air temperature or LST"
+    },
+    "fecha_medicion": {
+      "status": "known_naive",
+      "evidence": "CSV timestamps without offset; timezone still unknown"
+    },
+    "unit": {
+      "status": "declared_from_report_not_csv",
+      "evidence": "ug/m3 from Contaminaci\u00f3n Atmosf\u00e9rica Gesti\u00f3n 2021 PDF"
+    },
+    "timezone": {
+      "status": "unknown",
+      "evidence": "No offset in CSV; do not label UTC"
+    },
+    "latitude_longitude_elevation": {
+      "status": "unknown",
+      "evidence": "Addresses only; no official coordinates in download"
+    },
+    "zeros_and_negatives": {
+      "status": "flagged_not_interpreted",
+      "evidence": "Counted and quality-flagged; no official correction policy yet"
+    },
+    "redistribution_license": {
+      "status": "unknown",
+      "evidence": "Public download URL does not confirm redistribution rights"
+    }
+  }
+}

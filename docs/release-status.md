@@ -36,10 +36,10 @@ Una tarea se cierra por su criterio de aceptación, no por tener una pantalla.
 | ID | Responsable | Pendiente | Dependencia y criterio de cierre |
 | --- | --- | --- | --- |
 | C01 | Andrés + equipo | Fijar el alcance final: tablero ambiental, sensado virtual o ambos | Documento de aceptación; confirmar requisitos oficiales antes de atribuirlos al reto |
-| C02 | Eduardo | Obtener vector oficial de los 15 distritos | Archivo autorizado, CRS, versión, licencia y correspondencia territorial verificadas |
-| C03 | Eduardo | Completar metadatos MÓNICA | Coordenadas, huso, instrumentos, interpretación de QA y permisos documentados |
-| C04 | Eduardo | Inventariar cobertura satelital y disponibilidad temporal | Catálogo acotado, costos y volumen acordados antes de nuevas descargas |
-| C05 | Eduardo | Capas socioambientales complementarias si entran en C01 | Geometrías/datos autorizados de áreas verdes, población y equipamiento con unidades y fechas |
+| C02 | Eduardo | Obtener vector oficial de los 15 distritos | Bloqueado; borrador en `docs/gamc-vector-request.md`; validadores listos (EF02/EF03) |
+| C03 | Eduardo | Completar metadatos MÓNICA | Matriz de campos y auditoría local listas; huso/coords/licencia siguen pendientes (EF04/EF05) |
+| C04 | Eduardo | Inventariar cobertura satelital y disponibilidad temporal | Plan en `docs/satellite-acquisition-plan.md` (EF07) |
+| C05 | Eduardo | Capas socioambientales complementarias si entran en C01 | Inventariadas en `docs/data-catalog.md`; vectores autorizados ausentes (EF06) |
 | C06 | Mateo | Pipeline multitemporal reproducible | C04; escalas, QA, CRS, cobertura y manifiestos con resultados reproducibles |
 | C07 | Mateo + Andrés | Agregación por distritos oficiales y persistencia | C02/C06; estadísticas zonales, tratamiento de bordes/NoData y versión de geometría |
 | C08 | Mateo | Tendencias e incertidumbre | C06/C07; temporadas comparables, autocorrelación, intervalos y multiplicidad cuando aplique |
@@ -56,7 +56,7 @@ Una tarea se cierra por su criterio de aceptación, no por tener una pantalla.
 | C19 | Diego | Manual, ayuda y presentación con un caso real | Capturas rotuladas, guion reproducible y distinguir demo de observación |
 | C20 | Andrés/Mateo + Julio | Ejecutar checks y corregir regresiones | Andrés/Mateo: Python, ciencia, migraciones y PostGIS aislado. Julio: lint, tipos, build, contratos TS y Playwright sin Docker |
 | C21 | Julio | Integración con API y proveedores reales | Datos reales acotados, WMS, fallos de red y permisos; sin usar la DB de desarrollo para pruebas de escritura |
-| C22 | Eduardo | Backup y restauración comprobados | Verificar dump, snapshots, PostGIS, Alembic y conteos en base nueva; programar retención y copias externas |
+| C22 | Eduardo | Backup y restauración comprobados | Procedimiento en `docs/backup-recovery.md`; ensayo Compose pendiente (EF10) |
 | C23 | Andrés | Preparar despliegue y observabilidad | Entorno elegido, HTTPS, red privada DB, privilegios mínimos, alertas, costos y rollback; Julio revisa el resultado desde navegador |
 | C24 | Equipo | Aceptación y publicación | C01 y criterios aplicables aprobados; licencias de código/datos decididas; autorización de despliegue |
 

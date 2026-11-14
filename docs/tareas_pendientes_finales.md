@@ -85,6 +85,12 @@ integrador de contratos; los demás no editan a mano los tipos generados.
 
 ## 5. Eduardo — fuentes, GIS y recuperación, con Docker
 
+Estado de avance local (14/11/2026): ver `docs/eduardo-status.md`. Los IDs
+siguen pendientes de cierre humano; no se marca terminado sin evidencia de
+aceptación. Artefactos ya producidos: inventario, auditoría MÓNICA, borrador
+EF02, validadores/import oficial, plan satelital, referencia terrestre,
+verificación WMS/relieve documentada, procedimiento de backup y paquete de datos.
+
 | ID | Prioridad | Tarea | Dependencias | Criterio de cierre |
 | --- | --- | --- | --- | --- |
 | EF01 | P0 | Auditar inventario real de archivos, fuentes y permisos | Ninguna | Catálogo con disponibilidad, checksum, fecha, versión, cobertura, unidades, licencia y bloqueos; no repetir descargas ya disponibles |

@@ -1,0 +1,52 @@
+{
+  "task": "EF05",
+  "verified_on": "2026-11-14T20:50:49.632823+00:00",
+  "environment": {
+    "database": "cocha",
+    "host_port": 5434,
+    "postgis": "3.5.2",
+    "alembic": "0002",
+    "analysis_enabled": false
+  },
+  "source_files": [
+    {
+      "file": "red_monica.kanata (1).csv",
+      "origin_rows": 54711,
+      "destination_rows": 54711,
+      "quality": {
+        "valid": 51293,
+        "zero": 2697,
+        "negative": 721
+      },
+      "duplicates_in_file": 0,
+      "skipped_existing": 0,
+      "sha256": "f60846899967a700ca60c9f5b5d4757b97545e7c0d19c39febfb5a170575f888"
+    },
+    {
+      "file": "red_monica.semapa (1).csv",
+      "origin_rows": 71154,
+      "destination_rows": 71154,
+      "quality": {
+        "valid": 66271,
+        "zero": 3384,
+        "negative": 1499
+      },
+      "duplicates_in_file": 0,
+      "skipped_existing": 0,
+      "sha256": "da7fcc9732887412b70a4b62aba5a8a6389170cca8174a01a92d5a03e216d4be"
+    }
+  ],
+  "provenance": {
+    "unit": "ug/m3",
+    "unit_source": "Red MoniCA report 2021 PDF",
+    "timezone": null,
+    "coordinates": null,
+    "pm10_is_not_temperature": true,
+    "official_correction_policy": "Pending GAMC; reimport does not overwrite existing keys"
+  },
+  "backup": {
+    "archive": "data/backups/cocha-20261114.dump",
+    "restore_database": "cocha_restore_test",
+    "restoration_verified": true
+  }
+}

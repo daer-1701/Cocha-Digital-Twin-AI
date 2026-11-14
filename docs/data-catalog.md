@@ -102,16 +102,29 @@ versión, resolución y cobertura sobre Cochabamba antes de adoptarlas.
 Varios productos de GES DISC requieren Earthdata Login gratuito; la cuenta y
 sus credenciales deben gestionarse en el servidor, nunca en el frontend.
 
+## Capas socioambientales (EF06)
+
+| Capa | Estado | Notas |
+| --- | --- | --- |
+| Áreas Verdes (WMS) | Catalogada; requiere clave | Imagen, no vector descargado |
+| Población por Manzanas (WMS) | Catalogada; requiere clave | Fecha y unidades por verificar |
+| Limite Urbano (WMS) | Catalogada; requiere clave | Contexto |
+| `lineas_de_transporte.rar` | Catalogada; **no descargada** | Ajena a la ingesta MÓNICA; licencia no confirmada |
+| Equipamientos salud/colegios | **No identificados** | Reducir alcance si AF01 no los exige |
+
+No se importan capas socioambientales a PostGIS hasta tener archivo autorizado,
+fecha, unidades y licencia. Equivalencia temporal con Landsat/MÓNICA: pendiente.
+
 ## Pendientes y evidencia para Andrés
 
 | Tarea | Bloqueo | Acción sugerida |
 | --- | --- | --- |
-| A03 | No hay vector de 15 distritos en las descargas documentadas | Solicitar por canal autorizado GeoJSON/GPKG/Shapefile con versión y licencia |
-| A03 / L2 | No se identificaron capas de colegios ni salud | Confirmar si GAMC las publica; si no, reducir alcance de R10 |
-| A08 | Unidad, intervalo y zona horaria no declarados en CSV | Usar el informe 2021 [1] como evidencia de unidad y método, pero confirmar con GAMC antes de rotular µg/m³ |
-| A08 | Coordenadas oficiales ausentes; dirección de Kanata inconsistente | Pedir coordenadas oficiales; mantener estaciones fuera del mapa hasta tenerlas |
-| A08 | Licencia de redistribución no confirmada | No redistribuir CSV crudos; mantenerlos fuera de Git |
-| A09 | La descarga no contiene temperatura del aire | Solicitar variables meteorológicas de Semapa o redefinir objetivo |
+| EF02 / A03 | No hay vector de 15 distritos en las descargas documentadas | Usar `docs/gamc-vector-request.md`; solicitar GeoJSON/GPKG con versión y licencia |
+| EF06 / L2 | No se identificaron capas de colegios ni salud | Confirmar si GAMC las publica; si no, reducir alcance |
+| EF04 / A08 | Unidad, intervalo y zona horaria no declarados en CSV | Informe 2021 [1] como evidencia de unidad; confirmar huso con GAMC |
+| EF04 / A08 | Coordenadas oficiales ausentes; dirección de Kanata inconsistente | Pedir coordenadas oficiales; mantener estaciones fuera del mapa |
+| EF04 / A08 | Licencia de redistribución no confirmada | No redistribuir CSV crudos; mantenerlos fuera de Git |
+| EF08 / A09 | La descarga no contiene temperatura del aire | Ver `docs/ground-reference.md`; redefinir objetivo o solicitar Semapa meteo |
 | — | Enunciado oficial NASA no verificado | Consultar spaceappschallenge.org cuando responda |
 
 ## Referencias

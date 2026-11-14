@@ -13,14 +13,13 @@ Alcance local actual. No hay entorno de producción configurado en este repo.
   No cargarlos como límites oficiales.
 - Escrituras: `API_WRITE_TOKEN` existe, pero la API pública sigue en GET.
 - Historial de ejecuciones en `/procesamiento`, con estado y referencias.
-- `scripts/database_archive.py`: creación de dump y manifiesto SHA-256,
-  restauración únicamente hacia una base nueva `_restore_test`. Código preparado,
-  aún no ejecutado ni validado.
+- `scripts/database_archive.py`: dump + restore a `cocha_restore_test` **ensayados**
+  el 14/11/2026 tras import MÓNICA. Detalle: `docs/backup-recovery.md` (EF10).
+- PostGIS local del proyecto en host **5434** (ver `compose.yaml`).
 
 ## Sin hacer
 
-- Backups: falta ejecutar y comprobar el script, programar copias y ensayar
-  recuperación. El volumen `postgres_data` sigue siendo de desarrollo.
+- Programar copias externas y retención operativa más allá del ensayo local.
 - No hay HTTPS, monitoreo de costos ni despliegue fuera de la máquina local.
 
 ## Antes de producción
