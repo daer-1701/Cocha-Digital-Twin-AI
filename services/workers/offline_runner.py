@@ -9,17 +9,20 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
+from cocha_api.core.config import get_settings
 from cocha_api.db.models import ProcessingRun
 from cocha_api.db.session import get_engine
+from cocha_api.jobs import file_sha256, finish_run, idempotency_key, start_run
 from cocha_api.science.gamc_catalog import MONICA_PM10_UNIT
 from cocha_api.science.monica import parse_monica_csv
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+KIND = "offline_monica_qa"
 DEFAULT_FILES = (
     "red_monica.kanata (1).csv",
     "red_monica.semapa (1).csv",
@@ -80,6 +83,48 @@ def run_offline(paths: list[Path], session: Session | None) -> dict:
     return {"persisted": True, "run_id": str(run.id), "status": run.status, "qa": qa}
 
 
+def run_offline_idempotent(paths: list[Path], session: Session) -> dict:
+    """Same QA step keyed by input checksums: completed inputs are not re-run."""
+
+    settings = get_settings()
+    key = idempotency_key(KIND, *sorted(file_sha256(path) for path in paths))
+    outcome = start_run(
+        session,
+        kind=KIND,
+        key=key,
+        parameters={"dry": True, "analysis_enabled": False},
+        environment_version="0.1.0",
+        notes="Dry MONICA CSV QA. PM10 is not air temperature.",
+        max_attempts=settings.job_max_attempts,
+        stale_after=timedelta(seconds=settings.job_stale_after_seconds),
+    )
+    if not outcome.should_execute:
+        return {
+            "persisted": True,
+            "run_id": str(outcome.run_id),
+            "status": outcome.decision,
+            "attempt": outcome.attempt,
+        }
+    try:
+        qa = summarize_csvs(paths)
+    except (OSError, UnicodeError, ValueError):
+        finish_run(session, outcome.run_id, status="failed", error_code="qa_step_failed")
+        raise
+    finish_run(
+        session,
+        outcome.run_id,
+        status="completed",
+        parameters={"dry": True, "analysis_enabled": False, "qa": qa},
+    )
+    return {
+        "persisted": True,
+        "run_id": str(outcome.run_id),
+        "status": "completed",
+        "attempt": outcome.attempt,
+        "qa": qa,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-db", action="store_true", help="QA only; do not open a database")
@@ -102,7 +147,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         with Session(get_engine()) as session:
             session.connection()
-            payload = run_offline(paths, session)
+            payload = run_offline_idempotent(paths, session)
     except SQLAlchemyError:
         payload = run_offline(paths, None)
         payload["database"] = "unavailable"

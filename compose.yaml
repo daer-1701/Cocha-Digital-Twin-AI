@@ -15,6 +15,11 @@ x-api: &api
     LOG_LEVEL: ${LOG_LEVEL:-INFO}
     GAMC_WMS_API_KEY: ${GAMC_WMS_API_KEY:-}
     MONICA_REVIEW_ENABLED: ${MONICA_REVIEW_ENABLED:-false}
+    API_OPERATOR_TOKEN: ${API_OPERATOR_TOKEN:-}
+    API_REVIEWER_TOKEN: ${API_REVIEWER_TOKEN:-}
+    API_ASSISTANT_TOKEN: ${API_ASSISTANT_TOKEN:-}
+    GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    GEMINI_CALLS_ENABLED: ${GEMINI_CALLS_ENABLED:-false}
 
 services:
   db:
@@ -62,6 +67,7 @@ services:
       dockerfile: infrastructure/docker/web.Dockerfile
     environment:
       API_INTERNAL_URL: http://api:8000
+      API_REVIEWER_TOKEN: ${API_REVIEWER_TOKEN:-}
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:

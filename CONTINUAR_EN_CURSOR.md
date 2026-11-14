@@ -6,6 +6,11 @@ estado sustituye el traspaso antiguo que dejaba A01 y la migración 0002 pendien
 
 ## Primero
 
+Último avance de Andrés (AF01–AF11, sin commit ni validación): leer
+`docs/avance_andres.md`, sobre todo «Si se interrumpe, continuar desde aquí».
+Añade la migración `0003`, roles por capacidad, ciclo de vida de trabajos,
+API oficial filtrada y adaptador Gemini con las llamadas apagadas.
+
 Consultar también `docs/release-status.md`: equipo de cinco, nuevas rutas de
 procesamiento/revisión local MÓNICA, lectura guiada sin IA y respaldo preparado.
 Las pruebas web se retomaron el 14/11/2026 con fixtures (`docs/qa-report.md`);
@@ -25,8 +30,9 @@ escriben requieren una base exclusiva `_test`; nunca la de desarrollo.
 ## Implementado
 
 - Monorepo npm/uv; Next.js/React/TypeScript, FastAPI/Pydantic y PostGIS.
-- Alembic `0001` y `0002`: catálogo, distritos, ejecuciones, estaciones,
-  observaciones y tablas para resultados científicos. Tablas existentes no
+- Alembic `0001`, `0002` y `0003` (esta última sin probar): catálogo, distritos,
+  ejecuciones, estaciones, observaciones, tablas para resultados científicos,
+  estados de publicación y ledger central del asistente. Tablas existentes no
   equivalen a datos oficiales ni modelos entrenados.
 - Contratos generados en `packages/shared` desde OpenAPI.
 - Piloto Landsat LST/NDVI con QA y snapshots fuera de Git. El caso real actual

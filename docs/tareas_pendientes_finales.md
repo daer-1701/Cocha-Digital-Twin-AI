@@ -65,6 +65,12 @@ excluirse mediante decisión explícita del equipo. Un placeholder no las termin
 
 ## 4. Andrés — backend e integración, con Docker
 
+Avance del 14/11/2026, **sin validar** (sin pruebas ni migraciones ejecutadas):
+`docs/avance_andres.md`. Ninguna fila cambia de responsable. Nuevas entradas
+para el resto del equipo: carga de indicadores (`scripts/load_district_indicators.py`)
+y contrato de modelos (`docs/model-delivery.md`) para Mateo; `docs/api-compartida.md`
+para Diego y Julio; matriz AF01 en `docs/matriz-alcance.md` para todos.
+
 | ID | Prioridad | Tarea | Dependencias | Criterio de cierre |
 | --- | --- | --- | --- | --- |
 | AF01 | P0 | Acordar alcance y criterios de aceptación con los cinco | Ninguna | Matriz de funciones obligatorias, condicionales y excluidas, usuarios y entregables; aclarar qué experiencia interactiva se espera del producto 3D |

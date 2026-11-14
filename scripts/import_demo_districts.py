@@ -36,7 +36,12 @@ def upsert_demo_districts(
     inserted = 0
     updated = 0
     for polygon in polygons:
-        existing = session.scalar(select(District).where(District.number == polygon.number))
+        existing = session.scalar(
+            select(District).where(
+                District.number == polygon.number,
+                District.boundary_version == DEMO_BOUNDARY_VERSION,
+            )
+        )
         geometry = WKTElement(polygon.as_wkt(), srid=4326)
         if existing is None:
             session.add(

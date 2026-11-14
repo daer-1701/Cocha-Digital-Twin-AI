@@ -72,6 +72,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/territories/districts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Official Districts
+         * @description Official district boundaries. Demo rectangles are excluded by construction.
+         */
+        get: operations["list_official_districts_v1_territories_districts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/territories": {
         parameters: {
             query?: never;
@@ -113,7 +133,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Series */
+        /**
+         * List Series
+         * @description Accepted official zonal statistics. Demo rectangles never appear here.
+         */
         get: operations["list_series_v1_series_get"];
         put?: never;
         post?: never;
@@ -235,6 +258,9 @@ export interface paths {
         /**
          * Station Observations
          * @description Review imported records without publishing physical aggregates or calibration.
+         *
+         *     observed_from/observed_to compare against the naive source timestamps; the
+         *     station timezone is unverified, so do not send offsets.
          */
         get: operations["station_observations_v1_stations__station_id__observations_get"];
         put?: never;
@@ -273,6 +299,26 @@ export interface paths {
         get: operations["assistant_status_v1_assistant_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assistant/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask Assistant
+         * @description Server-to-server only. The web server holds API_ASSISTANT_TOKEN, never the browser.
+         */
+        post: operations["ask_assistant_v1_assistant_ask_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -334,14 +380,112 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AcceptedModelItem
+         * @description Model accepted with version, uncertainty and domain of use. Outputs are estimates.
+         */
+        AcceptedModelItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Objective */
+            objective: string;
+            /** Model Version */
+            model_version: string;
+            /** Variables */
+            variables?: unknown[] | null;
+            /** Validation Partition */
+            validation_partition?: string | null;
+            /** Metrics */
+            metrics?: {
+                [key: string]: unknown;
+            } | null;
+            /** Uncertainty */
+            uncertainty: {
+                [key: string]: unknown;
+            };
+            /** Domain Of Use */
+            domain_of_use: {
+                [key: string]: unknown;
+            };
+            /** Artifact Checksum Sha256 */
+            artifact_checksum_sha256: string;
+            /**
+             * Nature
+             * @default estimate
+             * @constant
+             */
+            nature: "estimate";
+            /** Accepted At */
+            accepted_at?: string | null;
+        };
+        /** AskCitation */
+        AskCitation: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "observation" | "estimate" | "scenario" | "demo";
+            /** Title */
+            title: string;
+            /** Source */
+            source: string;
+        };
+        /** AskRequest */
+        AskRequest: {
+            /** Request Id */
+            request_id: string;
+            /** Question */
+            question: string;
+        };
+        /** AskResponse */
+        AskResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "answered" | "ungrounded" | "unavailable" | "rejected" | "error";
+            /** Reason */
+            reason?: string | null;
+            /** Request Id */
+            request_id: string;
+            /** Answer */
+            answer?: string | null;
+            /** Citations */
+            citations?: components["schemas"]["AskCitation"][];
+            /**
+             * Nature
+             * @default generated_explanation
+             * @constant
+             */
+            nature: "generated_explanation";
+            /** Model */
+            model?: string | null;
+            /** Provider */
+            provider?: string | null;
+            /**
+             * Cached
+             * @default false
+             */
+            cached: boolean;
+            /**
+             * Replayed
+             * @default false
+             */
+            replayed: boolean;
+        };
         /** AssistantStatusResponse */
         AssistantStatusResponse: {
             /**
              * Status
              * @default unavailable
-             * @constant
+             * @enum {string}
              */
-            status: "unavailable";
+            status: "available" | "unavailable";
             /** Reason */
             reason: string;
             /** Model */
@@ -363,15 +507,20 @@ export interface components {
             /**
              * Calls Enabled
              * @default false
-             * @constant
              */
-            calls_enabled: false;
+            calls_enabled: boolean;
             /** Key Configured */
             key_configured: boolean;
             /** Spent Usd */
             spent_usd: number;
             /** Reserved Usd */
             reserved_usd: number;
+            /**
+             * Ledger
+             * @default local_file
+             * @enum {string}
+             */
+            ledger: "local_file" | "central_database";
         };
         /** Cell */
         Cell: {
@@ -515,6 +664,31 @@ export interface components {
             /** Note */
             note: string;
         };
+        /** DistrictsResponse */
+        DistrictsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Boundary Version */
+            boundary_version?: string | null;
+            /** Boundary Versions */
+            boundary_versions?: string[];
+            /** Items */
+            items?: components["schemas"]["OfficialDistrictItem"][];
+            /**
+             * Has More
+             * @default false
+             */
+            has_more: boolean;
+        };
         /** ExplorerResponse */
         ExplorerResponse: {
             /**
@@ -578,6 +752,12 @@ export interface components {
             started_at?: string | null;
             /** Finished At */
             finished_at?: string | null;
+            /** Attempt */
+            attempt?: number | null;
+            /** Heartbeat At */
+            heartbeat_at?: string | null;
+            /** Error Code */
+            error_code?: string | null;
         };
         /** JobsResponse */
         JobsResponse: {
@@ -615,6 +795,8 @@ export interface components {
             reason?: string | null;
             /** Items */
             items?: components["schemas"]["StoredModelRef"][];
+            /** Accepted Models */
+            accepted_models?: components["schemas"]["AcceptedModelItem"][];
             /** Viability Note */
             viability_note?: string | null;
             /** Blockers */
@@ -643,6 +825,131 @@ export interface components {
             /** Note */
             note: string;
             evidence: components["schemas"]["Snapshot"];
+        };
+        /** OfficialDistrictItem */
+        OfficialDistrictItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /** Name */
+            name: string;
+            /** Boundary Version */
+            boundary_version: string;
+            /** Source Url */
+            source_url: string;
+            /** Geometry */
+            geometry?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * OfficialIndicatorItem
+         * @description Accepted zonal statistic on an official boundary version.
+         *
+         *     Satellite-derived estimate; LST is land surface temperature, not air temperature.
+         */
+        OfficialIndicatorItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * District Id
+             * Format: uuid
+             */
+            district_id: string;
+            /** District Number */
+            district_number: number;
+            /** District Name */
+            district_name: string;
+            /** Boundary Version */
+            boundary_version: string;
+            /** Variable */
+            variable: string;
+            /** Statistic */
+            statistic: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Value */
+            value?: number | null;
+            /** Units */
+            units?: string | null;
+            /** Valid Fraction */
+            valid_fraction?: number | null;
+            /** N */
+            n?: number | null;
+            /**
+             * Nature
+             * @default satellite_derived
+             * @constant
+             */
+            nature: "satellite_derived";
+            /**
+             * Publication Status
+             * @default accepted
+             * @constant
+             */
+            publication_status: "accepted";
+            /** Accepted At */
+            accepted_at?: string | null;
+            /** Processing Run Id */
+            processing_run_id?: string | null;
+            /** Provenance */
+            provenance?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * OfficialTrendItem
+         * @description Trend accepted after scientific review. Association, not causation.
+         */
+        OfficialTrendItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Series Key */
+            series_key: string;
+            /** Method */
+            method: string;
+            /** Slope */
+            slope?: number | null;
+            /** Slope Units */
+            slope_units?: string | null;
+            /** Interval Low */
+            interval_low?: number | null;
+            /** Interval High */
+            interval_high?: number | null;
+            /** P Value */
+            p_value?: number | null;
+            /** P Adjusted */
+            p_adjusted?: number | null;
+            /** Hypothesis */
+            hypothesis?: string | null;
+            /**
+             * Publication Status
+             * @default accepted
+             * @constant
+             */
+            publication_status: "accepted";
+            /** Accepted At */
+            accepted_at?: string | null;
+            /** Processing Run Id */
+            processing_run_id?: string | null;
         };
         /** PilotTerritory */
         PilotTerritory: {
@@ -837,6 +1144,15 @@ export interface components {
             items?: {
                 [key: string]: unknown;
             }[];
+            /** Official Items */
+            official_items?: components["schemas"]["OfficialIndicatorItem"][];
+            /** Boundary Versions */
+            boundary_versions?: string[];
+            /**
+             * Has More
+             * @default false
+             */
+            has_more: boolean;
         };
         /** Snapshot */
         Snapshot: {
@@ -924,6 +1240,8 @@ export interface components {
              * Format: date-time
              */
             observed_at: string;
+            /** Observed At Raw */
+            observed_at_raw?: string | null;
             /** Value */
             value?: number | null;
             /** Unit */
@@ -1069,6 +1387,8 @@ export interface components {
             pilot_trends?: components["schemas"]["PilotTrendItem"][];
             /** Demo Trends */
             demo_trends?: components["schemas"]["DemoTrendItem"][];
+            /** Official Trends */
+            official_trends?: components["schemas"]["OfficialTrendItem"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -1218,6 +1538,40 @@ export interface operations {
             };
         };
     };
+    list_official_districts_v1_territories_districts_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                boundary_version?: string | null;
+                include_geometry?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistrictsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     territories_v1_territories_get: {
         parameters: {
             query?: never;
@@ -1276,6 +1630,12 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                boundary_version?: string | null;
+                district_number?: number | null;
+                variable?: string | null;
+                statistic?: string | null;
+                period_from?: string | null;
+                period_to?: string | null;
             };
             header?: never;
             path?: never;
@@ -1436,6 +1796,8 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                kind?: string | null;
+                status?: string | null;
             };
             header?: never;
             path?: never;
@@ -1499,8 +1861,13 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                quality_flag?: string | null;
+                observed_from?: string | null;
+                observed_to?: string | null;
             };
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 station_id: string;
             };
@@ -1576,6 +1943,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssistantStatusResponse"];
+                };
+            };
+        };
+    };
+    ask_assistant_v1_assistant_ask_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-cocha-client"?: string | null;
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

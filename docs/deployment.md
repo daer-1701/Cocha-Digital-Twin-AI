@@ -24,6 +24,79 @@ base se actualizan mediante reconstrucción y revisión.
 - Almacenamiento persistente de rásteres y política de retención.
 - Migración previa al cambio de versión y rollback de aplicación compatible.
 
+## Preparación de producción (AF10)
+
+Estado: **configuración y procedimientos preparados, nada desplegado ni
+ensayado**. El entorno final sigue siendo una decisión pendiente del equipo.
+
+### Red y HTTPS
+
+- Un proxy inverso (Caddy, Nginx o el del proveedor) termina TLS y reenvía a
+  `web:3000`. La API no se publica: la web la llama por red interna
+  (`API_INTERNAL_URL`). Si la API debe ser pública, exponerla solo detrás del
+  proxy con HTTPS y `CORS_ORIGINS` igual al dominio de la web.
+- PostgreSQL sin puerto público; en Compose se quita `ports` de `db` o se deja
+  ligado a `127.0.0.1` del host.
+
+### Base y privilegios mínimos
+
+`infrastructure/postgres/least_privilege.sql` es una plantilla, no ejecutada,
+con tres roles: `cocha_migrator` (Alembic), `cocha_api` (lectura y ledger del
+asistente) y `cocha_worker` (procesos offline). Cada servicio usa su propia
+credencial. La cuenta `POSTGRES_USER` de la imagen no se usa en producción.
+
+### Secretos y roles
+
+- Secretos solo en el gestor del proveedor o en `.env` del servidor, nunca en
+  Git ni en `NEXT_PUBLIC_*`: `POSTGRES_PASSWORD`, `GAMC_WMS_API_KEY`,
+  `GEMINI_API_KEY`, `API_OPERATOR_TOKEN`, `API_REVIEWER_TOKEN`,
+  `API_ASSISTANT_TOKEN`.
+- Los tokens por rol tienen al menos 24 caracteres y son secretos compartidos
+  entre servidores, no cuentas de usuario. Rotarlos implica reiniciar API y web.
+
+### Costos
+
+- `GEMINI_CALLS_ENABLED=false` hasta una autorización explícita. Con `true`,
+  el ledger central `assistant_requests` reserva antes de cada llamada y
+  rechaza al superar `GEMINI_BUDGET_USD`. Configurar además una alerta de
+  facturación en Google Cloud: el ledger no ve otros consumos de la cuenta.
+- La cuota por cliente del asistente y del proxy WMS vive en memoria por
+  proceso; con varias réplicas se multiplica. Usar una sola réplica de API o un
+  limitador compartido antes de escalar.
+
+### Salud y alertas
+
+- Comprobar `/health/ready` cada minuto desde fuera del host; alertar tras dos
+  fallos seguidos.
+- Alertar por disco (`data/`, volumen de PostgreSQL) por encima del 80 %.
+- Revisar `GET /v1/jobs?status=running` y ejecutar
+  `uv run python scripts/recover_jobs.py` (simulación) para detectar trabajos
+  sin latido. `--apply` solo con acuerdo del operador.
+- Registrar errores 5xx del proxy; los logs de la API no incluyen secretos ni
+  texto de excepciones del proveedor.
+
+### Despliegue y rollback
+
+1. Respaldo previo (procedimiento de Eduardo, abajo) y checksum anotado.
+2. `docker compose run --rm migrate` con la nueva imagen. La migración 0003
+   añade columnas y restricciones; falla si hay indicadores duplicados con
+   `processing_run_id` nulo o si demo y oficial comparten número en el
+   downgrade. Comprobar antes:
+   `SELECT district_id, boundary_version, variable, period_start, period_end, statistic, count(*) FROM district_indicators WHERE processing_run_id IS NULL GROUP BY 1,2,3,4,5,6 HAVING count(*) > 1;`
+3. Arrancar API y web nuevas; verificar `/health/ready`.
+4. Rollback de aplicación: volver a la imagen anterior. La 0003 es aditiva y
+   la API anterior ignora las columnas nuevas, así que no hace falta bajar el
+   esquema. `alembic downgrade 0002` solo si se decide expresamente y tras
+   respaldo: elimina `assistant_requests` y los estados de publicación.
+
+### Pendiente de decisión
+
+- Proveedor y región, dominio y certificado.
+- Gestor de secretos y política de rotación.
+- Almacenamiento externo cifrado de respaldos y retención (EF10).
+- Limitador compartido si se usa más de una réplica.
+- Monitoreo concreto (servicio de uptime, alertas de disco y facturación).
+
 ## Operación
 
 `/health/live` solo comprueba HTTP. `/health/ready` verifica conectividad a
@@ -35,7 +108,9 @@ No ejecutar migraciones en cada worker ni usar `create_all`. El servicio
 
 ## Backup local
 
-Herramienta preparada, todavía pendiente de pruebas:
+Procedimiento de Eduardo (EF10). Herramienta preparada, todavía pendiente de
+pruebas; el ensayo de restauración lo ejecuta Eduardo en una base nueva, nunca
+contra desarrollo. Esta entrega no afirma ninguna restauración exitosa.
 
 ```powershell
 uv run python scripts/database_archive.py backup data/local/backups/cocha-20261114.dump
@@ -53,7 +128,8 @@ Guardar copias cifradas fuera del equipo y configurar retención antes de produc
 En Windows, proteger la carpeta con permisos del usuario; `chmod` no sustituye ACL.
 
 La revisión de filas MÓNICA requiere `MONICA_REVIEW_ENABLED=true` en configuración
-local del servidor y reiniciar la API. Se mantiene apagada por defecto; no activar
+local del servidor, `API_REVIEWER_TOKEN` en la API y en el servidor web, y
+reiniciar ambos. Se mantiene apagada por defecto; no activar
 en un servicio público antes de confirmar licencia y controles de acceso.
 Compose pasa la clave WMS desde `GAMC_WMS_API_KEY` exclusivamente a la API.
 

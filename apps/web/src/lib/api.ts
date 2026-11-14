@@ -65,12 +65,14 @@ async function getJson<T>(
   path: string,
   isValid: (value: unknown) => boolean,
   timeoutMs = 5000,
+  headers?: HeadersInit,
 ): Promise<ApiResult<T>> {
   let demo: DemoState = "off";
   try {
     const response = await fetch(`${apiBaseUrl()}${path}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(timeoutMs),
+      headers,
     });
     demo = demoState(response);
     if (!response.ok || demo === "blocked") return { data: null, error: true, demo };
@@ -109,10 +111,16 @@ export const getStations = () =>
 export const getJobs = (offset = 0) =>
   getJson<Jobs>(`/v1/jobs?limit=20&offset=${offset}`,
     (b) => isEnvelope(b) && isObject(b) && Array.isArray(b.items));
+// Server-only secret: whoever can open this page sees the records it unlocks.
+const reviewerHeaders = (): HeadersInit | undefined => {
+  const token = process.env.API_REVIEWER_TOKEN;
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+};
 export const getStationObservations = (id: string, offset = 0) =>
   getJson<StationObservations>(`/v1/stations/${encodeURIComponent(id)}/observations?limit=50&offset=${offset}`,
     (b) => isEnvelope(b) && isObject(b) && Array.isArray(b.items) &&
-      b.scope === "imported_records_review" && b.analysis_enabled === false);
+      b.scope === "imported_records_review" && b.analysis_enabled === false,
+    5000, reviewerHeaders());
 export const getSeries = () =>
   getJson<Series>("/v1/series", (b) => isEnvelope(b) && hasArray(b, "items"));
 export const getTrends = () =>

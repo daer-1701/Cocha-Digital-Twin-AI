@@ -1,14 +1,24 @@
+import json
 from datetime import UTC, datetime
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from cocha_api.core.config import get_settings
+from cocha_api.core.pagination import LimitQuery, OffsetQuery
+from cocha_api.db.models import District
+from cocha_api.db.session import get_session
 from cocha_api.schemas.availability import (
+    DistrictsResponse,
+    OfficialDistrictItem,
     PilotTerritory,
     TerritoriesResponse,
     VectorDistrictsAvailability,
     WmsLayerAvailability,
 )
+from cocha_api.science.demo_districts import DEMO_BOUNDARY_VERSION
 from cocha_api.science.gamc_catalog import (
     GAMC_WMS_LAYERS,
     PILOT_BOUNDS_WGS84,
@@ -16,6 +26,88 @@ from cocha_api.science.gamc_catalog import (
 )
 
 router = APIRouter(prefix="/v1/territories", tags=["territories"])
+
+OFFICIAL_DISTRICTS_REASON = (
+    "Boundary versions imported from an authorized source. Check source_url and "
+    "boundary_version before comparing results across versions."
+)
+
+
+@router.get("/districts", response_model=DistrictsResponse)
+def list_official_districts(
+    session: Annotated[Session, Depends(get_session)],
+    limit: LimitQuery = 15,
+    offset: OffsetQuery = 0,
+    boundary_version: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
+    include_geometry: bool = False,
+) -> DistrictsResponse:
+    """Official district boundaries. Demo rectangles are excluded by construction."""
+
+    official = District.boundary_version != DEMO_BOUNDARY_VERSION
+    versions = list(
+        session.scalars(
+            select(District.boundary_version)
+            .where(official)
+            .distinct()
+            .order_by(District.boundary_version)
+        )
+    )
+    if not versions:
+        return DistrictsResponse(
+            status="unavailable",
+            reason=VECTOR_DISTRICTS_BLOCKER,
+            limit=limit,
+            offset=offset,
+        )
+    selected = boundary_version or (versions[0] if len(versions) == 1 else None)
+    if selected is None or selected not in versions:
+        return DistrictsResponse(
+            status="empty",
+            reason=(
+                "Several boundary versions are imported; pass boundary_version."
+                if selected is None
+                else "Requested boundary_version is not imported."
+            ),
+            boundary_versions=versions,
+            limit=limit,
+            offset=offset,
+        )
+    columns = [
+        District.id,
+        District.number,
+        District.name,
+        District.boundary_version,
+        District.source_url,
+    ]
+    if include_geometry:
+        columns.append(func.ST_AsGeoJSON(District.geometry).label("geojson"))
+    rows = session.execute(
+        select(*columns)
+        .where(District.boundary_version == selected)
+        .order_by(District.number, District.id)
+        .limit(limit + 1)
+        .offset(offset)
+    ).all()
+    return DistrictsResponse(
+        status="available" if rows else "empty",
+        reason=OFFICIAL_DISTRICTS_REASON,
+        boundary_version=selected,
+        boundary_versions=versions,
+        items=[
+            OfficialDistrictItem(
+                id=row.id,
+                number=row.number,
+                name=row.name,
+                boundary_version=row.boundary_version,
+                source_url=row.source_url,
+                geometry=json.loads(row.geojson) if include_geometry else None,
+            )
+            for row in rows[:limit]
+        ],
+        has_more=len(rows) > limit,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get("", response_model=TerritoriesResponse)

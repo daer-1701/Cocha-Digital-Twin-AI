@@ -255,9 +255,10 @@ export function valleyDomain(sceneId) {
       publishes_inference: false,
     };
   };
+  // Matches the API: demo slopes never make official trends available.
   const trends = {
-    status: "available",
-    reason: DEMO_REASON,
+    status: "unavailable",
+    reason: `${DEMO_REASON} demo_trends are descriptive slopes on synthetic rectangles only.`,
     ...PAGE,
     items: [],
     pilot_trends: [

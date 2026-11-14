@@ -21,7 +21,8 @@ def clear_settings_and_cache():
 
 
 def test_wms_endpoints_unavailable_without_api_key(monkeypatch):
-    monkeypatch.delenv("GAMC_WMS_API_KEY", raising=False)
+    # An empty variable overrides a key in a local .env file.
+    monkeypatch.setenv("GAMC_WMS_API_KEY", "")
     get_settings.cache_clear()
     with TestClient(create_app()) as client:
         response = client.get(

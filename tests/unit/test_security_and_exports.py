@@ -65,6 +65,9 @@ def test_jobs_list_and_missing_id(monkeypatch, tmp_path):
         status="succeeded",
         started_at=None,
         finished_at=None,
+        attempt=1,
+        heartbeat_at=None,
+        error_code=None,
     )
     app, session = _session_app(1, [row])
     session.get.return_value = None

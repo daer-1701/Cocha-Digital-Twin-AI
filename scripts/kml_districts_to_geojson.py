@@ -30,7 +30,11 @@ def parse_coords(text: str) -> list[list[float]]:
 
 def attr_from_description(html: str) -> dict[str, str]:
     text = unescape(html)
-    found = dict(re.findall(r'atr-name">([^<]+)</span>:\s*</strong>\s*<span class="atr-value">([^<]*)</span>', text))
+    found = dict(
+        re.findall(
+            r'atr-name">([^<]+)</span>:\s*</strong>\s*<span class="atr-value">([^<]*)</span>', text
+        )
+    )
     if not found:
         found = dict(re.findall(r"<strong>([^<:]+):</strong>\s*([^<]+)", text))
     return {key.strip().lower(): value.strip() for key, value in found.items()}
@@ -80,7 +84,9 @@ def main() -> None:
             number,
             {
                 "number": number,
-                "name": f"Distrito {number} — {display}" if display and not display.lower().startswith("distrito") else display,
+                "name": f"Distrito {number} — {display}"
+                if display and not display.lower().startswith("distrito")
+                else display,
                 "official_id": attrs.get("distrito") or f"D{number}",
                 "ogc_fid": attrs.get("ogc_fid"),
                 "comuna": attrs.get("comuna"),
@@ -128,7 +134,10 @@ def main() -> None:
             "layer": "limite_distritos",
             "service_id": "7eb13092-bf0e-493b-aae6-03c43eedda2c",
             "source_url": "https://serviciosgamc.cochabamba.bo/api/gs/wms",
-            "note": "Official GAMC district polygons retrieved as WMS KML (kmscore=100). Not a third-party reconstruction.",
+            "note": (
+                "Official GAMC district polygons retrieved as WMS KML (kmscore=100). "
+                "Not a third-party reconstruction."
+            ),
         },
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)

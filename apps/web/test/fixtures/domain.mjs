@@ -203,6 +203,16 @@ export function domainRoutes({ wms, evidence, districts = false, sceneId, monica
   if (valley["/v1/trends"]) valley["/v1/trends"].pilot_trends = pilotTrends(evidence);
   return {
     "/v1/territories": territories(wms),
+    // No synthetic "official" boundaries: they would look like accepted data.
+    "/v1/territories/districts": {
+      status: "unavailable",
+      reason: "Fixture: the official 15-district vector is not imported.",
+      items: [],
+      boundary_versions: [],
+      has_more: false,
+      limit: 15,
+      offset: 0,
+    },
     "/v1/jobs": monica
       ? { status: "available", reason: null, items: jobItems(), has_more: false, ...PAGE }
       : {

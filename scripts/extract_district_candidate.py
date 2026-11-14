@@ -47,7 +47,9 @@ def main() -> None:
         )
     features = sorted(features, key=lambda item: item["properties"]["number"])
     if [item["properties"]["number"] for item in features] != list(range(1, 16)):
-        raise SystemExit(f"Expected numbers 1..15, got {[f['properties']['number'] for f in features]}")
+        raise SystemExit(
+            f"Expected numbers 1..15, got {[f['properties']['number'] for f in features]}"
+        )
 
     document = {
         "type": "FeatureCollection",

@@ -1,7 +1,7 @@
 """Shared availability envelopes for unfinished or empty scientific resources."""
 
-from datetime import datetime
-from typing import Literal
+from datetime import date, datetime
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -65,8 +65,38 @@ class IndicatorsResponse(AvailabilityEnvelope, PaginationParams):
     pilot_window: PilotWindowSummary | None = None
 
 
+class OfficialIndicatorItem(AvailabilityModel):
+    """Accepted zonal statistic on an official boundary version.
+
+    Satellite-derived estimate; LST is land surface temperature, not air temperature.
+    """
+
+    id: UUID
+    district_id: UUID
+    district_number: int = Field(ge=1, le=15)
+    district_name: str
+    boundary_version: str
+    variable: str
+    statistic: str
+    period_start: date
+    period_end: date
+    value: float | None = None
+    units: str | None = None
+    valid_fraction: float | None = None
+    n: int | None = None
+    nature: Literal["satellite_derived"] = "satellite_derived"
+    publication_status: Literal["accepted"] = "accepted"
+    accepted_at: datetime | None = None
+    processing_run_id: UUID | None = None
+    provenance: dict[str, Any] | None = None
+
+
 class SeriesResponse(AvailabilityEnvelope, PaginationParams):
+    # Kept untyped for demo/fixture payloads; official rows use official_items.
     items: list[dict] = Field(default_factory=list)
+    official_items: list[OfficialIndicatorItem] = Field(default_factory=list)
+    boundary_versions: list[str] = Field(default_factory=list)
+    has_more: bool = False
 
 
 class PilotTrendItem(AvailabilityModel):
@@ -102,12 +132,31 @@ class DemoTrendItem(AvailabilityModel):
     note: str
 
 
+class OfficialTrendItem(AvailabilityModel):
+    """Trend accepted after scientific review. Association, not causation."""
+
+    id: UUID
+    series_key: str
+    method: str
+    slope: float | None = None
+    slope_units: str | None = None
+    interval_low: float | None = None
+    interval_high: float | None = None
+    p_value: float | None = None
+    p_adjusted: float | None = None
+    hypothesis: str | None = None
+    publication_status: Literal["accepted"] = "accepted"
+    accepted_at: datetime | None = None
+    processing_run_id: UUID | None = None
+
+
 class TrendsResponse(AvailabilityEnvelope, PaginationParams):
     items: list[dict] = Field(default_factory=list)
     # Pilot-only descriptive slopes from the explorer snapshot; never district trends.
     pilot_trends: list[PilotTrendItem] = Field(default_factory=list)
     # Present only when demo districts and pilot scenes were aggregated. Not official.
     demo_trends: list[DemoTrendItem] = Field(default_factory=list)
+    official_trends: list[OfficialTrendItem] = Field(default_factory=list)
 
 
 class StationItem(AvailabilityModel):
@@ -136,8 +185,25 @@ class StoredModelRef(AvailabilityModel):
     metrics_published: Literal[False] = False
 
 
+class AcceptedModelItem(AvailabilityModel):
+    """Model accepted with version, uncertainty and domain of use. Outputs are estimates."""
+
+    id: UUID
+    objective: str
+    model_version: str
+    variables: list[Any] | None = None
+    validation_partition: str | None = None
+    metrics: dict[str, Any] | None = None
+    uncertainty: dict[str, Any]
+    domain_of_use: dict[str, Any]
+    artifact_checksum_sha256: str
+    nature: Literal["estimate"] = "estimate"
+    accepted_at: datetime | None = None
+
+
 class ModelsResponse(AvailabilityEnvelope, PaginationParams):
     items: list[StoredModelRef] = Field(default_factory=list)
+    accepted_models: list[AcceptedModelItem] = Field(default_factory=list)
     viability_note: str | None = None
     blockers: list[str] = Field(default_factory=list)
 
@@ -159,6 +225,9 @@ class JobItem(AvailabilityModel):
     status: str
     started_at: datetime | None = None
     finished_at: datetime | None = None
+    attempt: int | None = None
+    heartbeat_at: datetime | None = None
+    error_code: str | None = None
 
 
 class JobsResponse(AvailabilityEnvelope, PaginationParams):
@@ -168,7 +237,9 @@ class JobsResponse(AvailabilityEnvelope, PaginationParams):
 
 class StationObservationItem(AvailabilityModel):
     id: UUID
+    # Naive local timestamp as parsed; timezone is unverified. observed_at_raw is the source text.
     observed_at: datetime
+    observed_at_raw: str | None = None
     value: float | None = None
     unit: str | None = None
     quality_flag: str
@@ -217,6 +288,23 @@ class WmsLayerAvailability(AvailabilityModel):
 class VectorDistrictsAvailability(AvailabilityModel):
     status: Literal["unavailable"] = "unavailable"
     reason: str
+
+
+class OfficialDistrictItem(AvailabilityModel):
+    id: UUID
+    number: int = Field(ge=1, le=15)
+    name: str
+    boundary_version: str
+    source_url: str
+    # GeoJSON MultiPolygon in EPSG:4326, only when include_geometry=true.
+    geometry: dict[str, Any] | None = None
+
+
+class DistrictsResponse(AvailabilityEnvelope, PaginationParams):
+    boundary_version: str | None = None
+    boundary_versions: list[str] = Field(default_factory=list)
+    items: list[OfficialDistrictItem] = Field(default_factory=list)
+    has_more: bool = False
 
 
 class TerritoriesResponse(AvailabilityEnvelope):

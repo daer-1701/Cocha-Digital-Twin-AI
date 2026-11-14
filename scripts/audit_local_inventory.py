@@ -115,9 +115,7 @@ def main() -> None:
                     "path": relative,
                     "bytes": path.stat().st_size,
                     "sha256": sha256(path),
-                    "modified_utc": datetime.fromtimestamp(
-                        path.stat().st_mtime, UTC
-                    ).isoformat(),
+                    "modified_utc": datetime.fromtimestamp(path.stat().st_mtime, UTC).isoformat(),
                     **meta,
                 }
             )

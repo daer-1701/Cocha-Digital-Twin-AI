@@ -139,6 +139,91 @@
         }
       }
     },
+    "/v1/territories/districts": {
+      "get": {
+        "tags": [
+          "territories"
+        ],
+        "summary": "List Official Districts",
+        "description": "Official district boundaries. Demo rectangles are excluded by construction.",
+        "operationId": "list_official_districts_v1_territories_districts_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 15,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "boundary_version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Boundary Version"
+            }
+          },
+          {
+            "name": "include_geometry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Geometry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistrictsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/territories": {
       "get": {
         "tags": [
@@ -240,6 +325,7 @@
           "domain"
         ],
         "summary": "List Series",
+        "description": "Accepted official zonal statistics. Demo rectangles never appear here.",
         "operationId": "list_series_v1_series_get",
         "parameters": [
           {
@@ -263,6 +349,112 @@
               "minimum": 0,
               "default": 0,
               "title": "Offset"
+            }
+          },
+          {
+            "name": "boundary_version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Boundary Version"
+            }
+          },
+          {
+            "name": "district_number",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 15,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "District Number"
+            }
+          },
+          {
+            "name": "variable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Variable"
+            }
+          },
+          {
+            "name": "statistic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Statistic"
+            }
+          },
+          {
+            "name": "period_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period From"
+            }
+          },
+          {
+            "name": "period_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period To"
             }
           }
         ],
@@ -544,6 +736,42 @@
               "default": 0,
               "title": "Offset"
             }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
           }
         ],
         "responses": {
@@ -619,7 +847,7 @@
           "domain"
         ],
         "summary": "Station Observations",
-        "description": "Review imported records without publishing physical aggregates or calibration.",
+        "description": "Review imported records without publishing physical aggregates or calibration.\n\nobserved_from/observed_to compare against the naive source timestamps; the\nstation timezone is unverified, so do not send offsets.",
         "operationId": "station_observations_v1_stations__station_id__observations_get",
         "parameters": [
           {
@@ -653,6 +881,74 @@
               "minimum": 0,
               "default": 0,
               "title": "Offset"
+            }
+          },
+          {
+            "name": "quality_flag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Quality Flag"
+            }
+          },
+          {
+            "name": "observed_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Observed From"
+            }
+          },
+          {
+            "name": "observed_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Observed To"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           }
         ],
@@ -750,6 +1046,83 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AssistantStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assistant/ask": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Ask Assistant",
+        "description": "Server-to-server only. The web server holds API_ASSISTANT_TOKEN, never the browser.",
+        "operationId": "ask_assistant_v1_assistant_ask_post",
+        "parameters": [
+          {
+            "name": "x-cocha-client",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Cocha-Client"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1025,11 +1398,260 @@
   },
   "components": {
     "schemas": {
+      "AcceptedModelItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "objective": {
+            "type": "string",
+            "title": "Objective"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "variables": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variables"
+          },
+          "validation_partition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Partition"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metrics"
+          },
+          "uncertainty": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Uncertainty"
+          },
+          "domain_of_use": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Domain Of Use"
+          },
+          "artifact_checksum_sha256": {
+            "type": "string",
+            "title": "Artifact Checksum Sha256"
+          },
+          "nature": {
+            "type": "string",
+            "const": "estimate",
+            "title": "Nature",
+            "default": "estimate"
+          },
+          "accepted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "objective",
+          "model_version",
+          "uncertainty",
+          "domain_of_use",
+          "artifact_checksum_sha256"
+        ],
+        "title": "AcceptedModelItem",
+        "description": "Model accepted with version, uncertainty and domain of use. Outputs are estimates."
+      },
+      "AskCitation": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observation",
+              "estimate",
+              "scenario",
+              "demo"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "source"
+        ],
+        "title": "AskCitation"
+      },
+      "AskRequest": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{8,100}$",
+            "title": "Request Id"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 3,
+            "title": "Question"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "question"
+        ],
+        "title": "AskRequest"
+      },
+      "AskResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "answered",
+              "ungrounded",
+              "unavailable",
+              "rejected",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/AskCitation"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "nature": {
+            "type": "string",
+            "const": "generated_explanation",
+            "title": "Nature",
+            "default": "generated_explanation"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "default": false
+          },
+          "replayed": {
+            "type": "boolean",
+            "title": "Replayed",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "title": "AskResponse"
+      },
       "AssistantStatusResponse": {
         "properties": {
           "status": {
             "type": "string",
-            "const": "unavailable",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
             "title": "Status",
             "default": "unavailable"
           },
@@ -1100,7 +1722,6 @@
           },
           "calls_enabled": {
             "type": "boolean",
-            "const": false,
             "title": "Calls Enabled",
             "default": false
           },
@@ -1117,6 +1738,15 @@
             "type": "number",
             "minimum": 0.0,
             "title": "Reserved Usd"
+          },
+          "ledger": {
+            "type": "string",
+            "enum": [
+              "local_file",
+              "central_database"
+            ],
+            "title": "Ledger",
+            "default": "local_file"
           }
         },
         "additionalProperties": false,
@@ -1452,6 +2082,79 @@
         "title": "DemoTrendItem",
         "description": "Descriptive slope on a demo rectangle series. Official inference stays blocked."
       },
+      "DistrictsResponse": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "empty",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "boundary_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boundary Version"
+          },
+          "boundary_versions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Boundary Versions"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OfficialDistrictItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "limit",
+          "offset",
+          "status"
+        ],
+        "title": "DistrictsResponse"
+      },
       "ExplorerResponse": {
         "properties": {
           "status": {
@@ -1620,6 +2323,40 @@
               }
             ],
             "title": "Finished At"
+          },
+          "attempt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt"
+          },
+          "heartbeat_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heartbeat At"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
           }
         },
         "additionalProperties": false,
@@ -1726,6 +2463,13 @@
             "type": "array",
             "title": "Items"
           },
+          "accepted_models": {
+            "items": {
+              "$ref": "#/components/schemas/AcceptedModelItem"
+            },
+            "type": "array",
+            "title": "Accepted Models"
+          },
           "viability_note": {
             "anyOf": [
               {
@@ -1789,6 +2533,341 @@
           "evidence"
         ],
         "title": "ObservationExport"
+      },
+      "OfficialDistrictItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "integer",
+            "maximum": 15.0,
+            "minimum": 1.0,
+            "title": "Number"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "boundary_version": {
+            "type": "string",
+            "title": "Boundary Version"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "name",
+          "boundary_version",
+          "source_url"
+        ],
+        "title": "OfficialDistrictItem"
+      },
+      "OfficialIndicatorItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "district_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "District Id"
+          },
+          "district_number": {
+            "type": "integer",
+            "maximum": 15.0,
+            "minimum": 1.0,
+            "title": "District Number"
+          },
+          "district_name": {
+            "type": "string",
+            "title": "District Name"
+          },
+          "boundary_version": {
+            "type": "string",
+            "title": "Boundary Version"
+          },
+          "variable": {
+            "type": "string",
+            "title": "Variable"
+          },
+          "statistic": {
+            "type": "string",
+            "title": "Statistic"
+          },
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date",
+            "title": "Period End"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "units": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Units"
+          },
+          "valid_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Fraction"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "nature": {
+            "type": "string",
+            "const": "satellite_derived",
+            "title": "Nature",
+            "default": "satellite_derived"
+          },
+          "publication_status": {
+            "type": "string",
+            "const": "accepted",
+            "title": "Publication Status",
+            "default": "accepted"
+          },
+          "accepted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted At"
+          },
+          "processing_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processing Run Id"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "district_id",
+          "district_number",
+          "district_name",
+          "boundary_version",
+          "variable",
+          "statistic",
+          "period_start",
+          "period_end"
+        ],
+        "title": "OfficialIndicatorItem",
+        "description": "Accepted zonal statistic on an official boundary version.\n\nSatellite-derived estimate; LST is land surface temperature, not air temperature."
+      },
+      "OfficialTrendItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "series_key": {
+            "type": "string",
+            "title": "Series Key"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "slope": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope"
+          },
+          "slope_units": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Units"
+          },
+          "interval_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Low"
+          },
+          "interval_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval High"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "p_adjusted": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Adjusted"
+          },
+          "hypothesis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hypothesis"
+          },
+          "publication_status": {
+            "type": "string",
+            "const": "accepted",
+            "title": "Publication Status",
+            "default": "accepted"
+          },
+          "accepted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted At"
+          },
+          "processing_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processing Run Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "series_key",
+          "method"
+        ],
+        "title": "OfficialTrendItem",
+        "description": "Trend accepted after scientific review. Association, not causation."
       },
       "PilotTerritory": {
         "properties": {
@@ -2267,6 +3346,25 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "official_items": {
+            "items": {
+              "$ref": "#/components/schemas/OfficialIndicatorItem"
+            },
+            "type": "array",
+            "title": "Official Items"
+          },
+          "boundary_versions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Boundary Versions"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -2498,6 +3596,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Observed At"
+          },
+          "observed_at_raw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At Raw"
           },
           "value": {
             "anyOf": [
@@ -2856,6 +3965,13 @@
             },
             "type": "array",
             "title": "Demo Trends"
+          },
+          "official_trends": {
+            "items": {
+              "$ref": "#/components/schemas/OfficialTrendItem"
+            },
+            "type": "array",
+            "title": "Official Trends"
           }
         },
         "additionalProperties": false,

@@ -132,9 +132,7 @@ def parse_official_feature_collection(
     allow_demo_labels: bool = False,
 ) -> list[OfficialPolygon]:
     if not boundary_version.startswith(OFFICIAL_BOUNDARY_PREFIX):
-        raise OfficialDistrictError(
-            f"boundary_version must start with {OFFICIAL_BOUNDARY_PREFIX}"
-        )
+        raise OfficialDistrictError(f"boundary_version must start with {OFFICIAL_BOUNDARY_PREFIX}")
     if payload.get("type") != "FeatureCollection":
         raise OfficialDistrictError("Expected a GeoJSON FeatureCollection")
     crs = payload.get("crs")

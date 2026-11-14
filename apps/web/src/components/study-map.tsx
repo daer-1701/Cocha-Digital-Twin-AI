@@ -5,9 +5,51 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { components } from "@cocha/shared";
 import type { Variable } from "../lib/filters";
+import {
+  GAMC_BLOCKS_ID,
+  GAMC_DISTRICTS_ID,
+  GAMC_EXTENT,
+  insideExtent,
+  intersectsExtent,
+  type FeatureInfoResponse,
+  type FeatureProperties,
+} from "../lib/gamc";
 
 type Scene = components["schemas"]["Scene"];
 export type MapMode = "3d" | "2d";
+type Place = {
+  status: "loading" | "ready" | "outside" | "error";
+  district?: FeatureProperties | null;
+  block?: FeatureProperties | null;
+};
+
+// Small box around the click so the queried pixel sits on the clicked point.
+const INFO_HALF_DEG = 0.0005;
+const INFO_SIZE = 101;
+
+const text = (value: string | number | null | undefined) =>
+  value == null || value === "" ? "Sin datos" : String(value);
+
+async function featureAt(
+  serviceId: string,
+  lng: number,
+  lat: number,
+  signal: AbortSignal,
+): Promise<FeatureProperties | null> {
+  const bbox = [lng - INFO_HALF_DEG, lat - INFO_HALF_DEG, lng + INFO_HALF_DEG, lat + INFO_HALF_DEG];
+  const query = new URLSearchParams({
+    service_id: serviceId,
+    bbox: bbox.map((n) => n.toFixed(6)).join(","),
+    width: String(INFO_SIZE),
+    height: String(INFO_SIZE),
+    x: String((INFO_SIZE - 1) / 2),
+    y: String((INFO_SIZE - 1) / 2),
+  });
+  const response = await fetch(`/api/gamc/wms/feature-info?${query}`, { signal });
+  const body = (await response.json()) as FeatureInfoResponse;
+  if (body.status === "unavailable") throw new Error(body.reason);
+  return body.features[0] ?? null;
+}
 
 const OVERLAY_PREFIX = "wms-";
 // Fixed scientific scales: same colors for every date, never auto-scaled.
@@ -97,6 +139,7 @@ export default function StudyMap({
   overlays = [],
   onOverlayError,
   synthetic = false,
+  placeInfo = false,
 }: {
   scene: Scene;
   variable: Variable;
@@ -105,6 +148,8 @@ export default function StudyMap({
   overlays?: string[];
   onOverlayError?: (serviceId: string) => void;
   synthetic?: boolean;
+  /** Query GAMC district and block attributes on click. */
+  placeInfo?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const shell = useRef<HTMLDivElement>(null);
@@ -120,17 +165,49 @@ export default function StudyMap({
   const [fullscreen, setFullscreen] = useState(false);
   const [fullscreenError, setFullscreenError] = useState(false);
   const [picked, setPicked] = useState<{ sceneId: string; index: number } | null>(null);
+  const [place, setPlace] = useState<Place | null>(null);
+  const [outsideCoverage, setOutsideCoverage] = useState(false);
+  const placeRequest = useRef<AbortController | null>(null);
   const sceneRef = useRef(scene.id);
   // Rendered only in the browser (dynamic import with ssr: false).
   const [unsupported] = useState(() => !supportsWebGL());
   const [west, south, east, north] = bounds;
   const overlayKey = overlays.join(",");
 
+  const lookup = (lng: number, lat: number) => {
+    placeRequest.current?.abort();
+    placeRequest.current = null;
+    if (!placeInfo) return setPlace(null);
+    if (!insideExtent(lng, lat)) return setPlace({ status: "outside" });
+    const controller = new AbortController();
+    placeRequest.current = controller;
+    setPlace({ status: "loading" });
+    Promise.all([
+      featureAt(GAMC_DISTRICTS_ID, lng, lat, controller.signal),
+      featureAt(GAMC_BLOCKS_ID, lng, lat, controller.signal),
+    ])
+      .then(([district, block]) => {
+        if (!controller.signal.aborted) setPlace({ status: "ready", district, block });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setPlace({ status: "error" });
+      });
+  };
+  const lookupRef = useRef(lookup);
+  const closeDetail = () => {
+    placeRequest.current?.abort();
+    setPicked(null);
+    setPlace(null);
+  };
+
   useEffect(() => {
     overlayErrorRef.current = onOverlayError;
     modeRef.current = mode;
     sceneRef.current = scene.id;
+    lookupRef.current = lookup;
   });
+
+  useEffect(() => () => placeRequest.current?.abort(), []);
 
   useEffect(() => {
     if (!container.current || unsupported) return;
@@ -238,12 +315,21 @@ export default function StudyMap({
           "fill-extrusion-vertical-gradient": true,
         },
       });
-      const popup = (event: maplibregl.MapLayerMouseEvent) => {
-        const index = event.features?.[0]?.properties?.index;
-        if (typeof index === "number") setPicked({ sceneId: sceneRef.current, index });
+      map.on("click", (event) => {
+        const layer = modeRef.current === "3d" ? "cells-3d" : "cells";
+        const index = map.queryRenderedFeatures(event.point, { layers: [layer] })[0]?.properties
+          ?.index;
+        setPicked(typeof index === "number" ? { sceneId: sceneRef.current, index } : null);
+        lookupRef.current(event.lngLat.lng, event.lngLat.lat);
+      });
+      const coverage = () => {
+        const view = map.getBounds();
+        setOutsideCoverage(
+          !intersectsExtent([view.getWest(), view.getSouth(), view.getEast(), view.getNorth()]),
+        );
       };
-      map.on("click", "cells", popup);
-      map.on("click", "cells-3d", popup);
+      coverage();
+      map.on("moveend", coverage);
       for (const layer of ["cells", "cells-3d"]) {
         map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
         map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
@@ -363,6 +449,14 @@ export default function StudyMap({
       duration: reducedMotion() ? 0 : 1200,
     });
   };
+  const showCoverage = () => {
+    setOrbiting(false);
+    const [w, s, e, n] = GAMC_EXTENT;
+    mapRef.current?.fitBounds([[w, s], [e, n]], {
+      padding: 40, ...(mode === "3d" ? VIEW_3D : { pitch: 0, bearing: 0 }),
+      duration: reducedMotion() ? 0 : 1200,
+    });
+  };
   const toggleFullscreen = async () => {
     setFullscreenError(false);
     try {
@@ -463,6 +557,9 @@ export default function StudyMap({
         <button type="button" disabled={!loaded || mode !== "3d"} aria-pressed={orbiting}
           onClick={() => setOrbiting(!orbiting)}>{orbiting ? "Detener giro" : "Girar el valle"}</button>
         <button type="button" disabled={!loaded} onClick={resetCamera}>Centrar vista</button>
+        {(overlayKey || placeInfo) && (
+          <button type="button" disabled={!loaded} onClick={showCoverage}>Cobertura GAMC</button>
+        )}
         <button type="button" onClick={toggleFullscreen}>{fullscreen ? "Salir de pantalla completa" : "Pantalla completa"}</button>
       </div>
       <div className="map-evidence-label">
@@ -472,16 +569,53 @@ export default function StudyMap({
       </div>
       {!loaded && <p className="map-loading" role="status">Preparando el relieve y las observaciones…</p>}
       {fullscreenError && <p className="map-warning" role="status">El navegador no permite pantalla completa en esta ventana.</p>}
-      {inspected && (
-        <aside className="cell-inspector" aria-label="Celda seleccionada">
-          <div><strong>Detalle de la superficie</strong><button type="button" onClick={() => setPicked(null)} aria-label="Cerrar detalle de celda">×</button></div>
-          <p>{scene.acquired_at.slice(0, 10)} · Media de celda</p>
-          <dl>
-            <div><dt>LST</dt><dd>{inspected.lst == null ? "Sin datos" : `${inspected.lst.toFixed(1)} °C`}</dd></div>
-            <div><dt>NDVI</dt><dd>{inspected.ndvi == null ? "Sin datos" : inspected.ndvi.toFixed(3)}</dd></div>
-          </dl>
-          <small>Temperatura de la superficie. La altura de la columna es una representación del valor.</small>
+      {(inspected || place) && (
+        <aside className="cell-inspector" aria-label={inspected ? "Celda seleccionada" : "Punto seleccionado"}>
+          <div>
+            <strong>{inspected ? "Detalle de la superficie" : "Contexto municipal"}</strong>
+            <button type="button" onClick={closeDetail} aria-label={inspected ? "Cerrar detalle de celda" : "Cerrar detalle del punto"}>×</button>
+          </div>
+          {inspected && (
+            <>
+              <p>{scene.acquired_at.slice(0, 10)} · Media de celda</p>
+              <dl>
+                <div><dt>LST</dt><dd>{inspected.lst == null ? "Sin datos" : `${inspected.lst.toFixed(1)} °C`}</dd></div>
+                <div><dt>NDVI</dt><dd>{inspected.ndvi == null ? "Sin datos" : inspected.ndvi.toFixed(3)}</dd></div>
+              </dl>
+              <small>Temperatura de la superficie. La altura de la columna es una representación del valor.</small>
+            </>
+          )}
+          {place && (
+            <section className="place-context" aria-live="polite">
+              {inspected && <strong>Contexto municipal</strong>}
+              {place.status === "loading" && <p>Consultando las capas del GAMC…</p>}
+              {place.status === "outside" && <p>Este punto está fuera de la cobertura publicada de las capas GAMC.</p>}
+              {place.status === "error" && <p>No se pudo consultar el servicio municipal en este punto.</p>}
+              {place.status === "ready" && (
+                <>
+                  <dl>
+                    <div><dt>Distrito</dt><dd>{text(place.district?.Distrito)}</dd></div>
+                    <div><dt>Comuna</dt><dd>{text(place.district?.Comuna)}</dd></div>
+                    <div><dt>Personas en la manzana</dt><dd>{text(place.block?.Personas)}</dd></div>
+                    <div><dt>Viviendas</dt><dd>{text(place.block?.Viviendas)}</dd></div>
+                    <div><dt>Densidad</dt><dd>{text(place.block?.Densidad)}</dd></div>
+                  </dl>
+                  <small>
+                    Fuente: GAMC, consulta WMS por punto. El servicio no publica el año
+                    del dato ni las unidades de superficie y densidad. Es contexto: no se
+                    usa para calcular ni explicar LST o NDVI.
+                  </small>
+                </>
+              )}
+            </section>
+          )}
         </aside>
+      )}
+      {overlayKey && outsideCoverage && (
+        <p className="map-warning" role="status">
+          La vista está fuera de la cobertura de las capas GAMC.{" "}
+          <button type="button" onClick={showCoverage}>Ir a la cobertura</button>
+        </p>
       )}
       {baseError && (
         <p className="map-warning" role="status">

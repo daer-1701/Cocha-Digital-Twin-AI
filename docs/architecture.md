@@ -80,11 +80,14 @@ La web añade `/procesamiento` y `/estaciones/[id]`. La lectura guiada de
 | GET | `/v1/explorer` | Snapshot Landsat validado; estado vacío si falta, 503 si es inválido |
 | GET | `/v1/territories` | Piloto disponible; capas WMS según clave; vector distrital `unavailable` |
 | GET | `/v1/indicators?scene_id=...&limit=100` | `unavailable` sin distritos demo; `empty` sin escenas. Solo una adquisición (la más reciente por defecto), seleccionada antes de paginar; `selected_scene_id` identifica la elegida y una inexistente responde 404. El vector GAMC sigue ausente |
-| GET | `/v1/series` | `unavailable`: no hay series distritales oficiales |
-| GET | `/v1/trends` | `unavailable` para publicación oficial. `pilot_trends` y, si hay indicadores demo, `demo_trends` descriptivos sin inferencia |
-| GET | `/v1/models` | `unavailable` con nota de viabilidad; sin métricas; filas de `model_runs` solo como referencia no publicada |
+| GET | `/v1/territories/districts` | Versiones territoriales oficiales (excluye demo), paginadas, GeoJSON opcional; `unavailable` sin vector importado; con varias versiones exige `boundary_version` |
+| GET | `/v1/series` | `official_items` solo de `district_indicators` aceptados sobre versiones oficiales, con filtros de versión, distrito, variable, estadístico y período; `unavailable` si no hay ninguna fila aceptada |
+| GET | `/v1/trends` | `official_trends` solo si hay `trend_results` aceptados; si no, `unavailable`. `pilot_trends` y `demo_trends` siguen descriptivos sin inferencia |
+| GET | `/v1/models` | `accepted_models` con versión, incertidumbre y dominio si hay modelos aceptados; si no, `unavailable` con nota de viabilidad |
 | GET | `/v1/scenarios` | `unavailable` con blockers; sin escenarios evaluados |
-| GET | `/v1/jobs` | Lectura de `processing_runs` o `empty`; `GET /v1/jobs/{id}` responde 404 si no existe; sin escritura |
+| GET | `/v1/jobs?kind=&status=` | Lectura de `processing_runs` con intento, latido y código de error, o `empty`; `GET /v1/jobs/{id}` responde 404 si no existe |
+| GET | `/v1/stations/{id}/observations` | Revisión de registros con `MONICA_REVIEW_ENABLED` y rol `reviewer`; filtros por flag y fecha naive; conserva `observed_at_raw` |
+| POST | `/v1/assistant/ask` | Rol `assistant`; `unavailable` mientras `GEMINI_CALLS_ENABLED=false`; con autorización: evidencia citada, límites, caché, cuota y ledger central |
 | GET | `/v1/reports` | Informes formales `unavailable`. Si hay snapshot, `observation_export` es la ventana piloto, no un informe distrital |
 | GET | `/v1/assistant` | Estado de presupuesto; no llama a Gemini; precios verificados el 14/11/2026 y llamadas apagadas; la clave no sale en la respuesta |
 | GET | `/v1/stations` | Estaciones DB si existen; si no, perfil vacío con metadatos pendientes |
@@ -93,9 +96,10 @@ La web añade `/procesamiento` y `/estaciones/[id]`. La lectura guiada de
 Cada recurso de dominio incluye un sobre de disponibilidad
 (`available` \| `empty` \| `unavailable` y `reason` opcional). No se inventan
 mediciones. Readiness no garantiza calidad científica.
-No hay endpoints de escritura públicos. `require_write_token` existe y está
-probado, pero no hay POST bajo `/v1`: CORS sigue limitado a GET. `GET /v1/assistant`
-informa el presupuesto y no llama a Gemini. El modelo `gemini-3.6-flash` y las
+El único POST bajo `/v1` es `/v1/assistant/ask`, protegido por el rol
+`assistant` y pensado para llamarse desde el servidor web; CORS sigue limitado
+a GET. Los roles (`core/auth.py`) son secretos compartidos por capacidad, no
+cuentas de usuario. `GET /v1/assistant` informa el presupuesto y no llama a Gemini. El modelo `gemini-3.6-flash` y las
 tarifas 0.75/3.75 USD por millón de tokens (hasta 2026-12-31) se contrastaron
 el 14/11/2026; una llamada real sigue exigiendo autorización explícita.
 La ingesta multitemporal sigue fuera de HTTP. La ventana piloto y los
@@ -122,6 +126,23 @@ y Linux. No borrar el lock durante la ejecución ni usar copias independientes
 del ledger. Un despliegue con varios hosts o sistemas de archivos de red exige
 un almacén transaccional central antes de habilitar gasto. Sin `path`, el ledger
 es solo memoria de una instancia. Esto no activa llamadas reales a Gemini.
+
+El almacén central ya existe: `CentralBudgetLedger` (`science/gemini.py`) usa la
+tabla `assistant_requests` y un `pg_advisory_xact_lock` común a todos los hosts.
+Reserva antes de llamar, concilia con los tokens informados (o cobra la reserva
+completa si el costo es desconocido) y guarda la respuesta para que repetir un
+`request_id` la reproduzca sin pagar dos veces. El ledger JSON queda para el
+estado local cuando las llamadas están apagadas.
+
+## Ciclo de vida de trabajos
+
+`cocha_api/jobs.py` gestiona `processing_runs` sin cola: `start_run` reclama
+una clave de idempotencia y confirma la decisión antes de trabajar
+(`started`, `retrying`, `already_completed`, `already_running`, `exhausted`);
+`heartbeat` y `finish_run` registran el avance; `recover_stale` marca como
+`interrupted` los trabajos sin latido; `publish_file` publica artefactos con
+enlace duro, sin sobrescribir uno distinto. No se añadió una cola: los procesos
+son lotes offline lanzados por un operador, y la necesidad no está demostrada.
 
 ## Referencias de implementación
 

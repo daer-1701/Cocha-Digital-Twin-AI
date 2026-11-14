@@ -10,6 +10,7 @@ import {
   type ExplorerFilters,
   type Variable,
 } from "../lib/filters";
+import { GAMC_BLOCKS_ID, GAMC_DISTRICTS_ID } from "../lib/gamc";
 import { territoryOptions } from "../lib/territory";
 import { ComparisonPanel } from "./comparison-panel";
 import { SceneTimeline } from "./scene-timeline";
@@ -156,6 +157,10 @@ export function Explorer({
   const overlayFailed = (id: string) =>
     setFailedOverlays((current) => (current.includes(id) ? current : [...current, id]));
 
+  const placeInfo = [GAMC_DISTRICTS_ID, GAMC_BLOCKS_ID].every((id) =>
+    catalog?.wms_layers.some((layer) => layer.service_id === id && layer.status === "available"),
+  );
+
   const { variable } = filters;
   const selected = Math.max(
     0,
@@ -182,6 +187,7 @@ export function Explorer({
           overlays={overlays}
           onOverlayError={overlayFailed}
           synthetic={synthetic}
+          placeInfo={placeInfo}
         />
         <div className="hud">
           <div className="hud-context"><span className="observatory-mark" aria-hidden="true" />Ventana piloto de Cochabamba</div>

@@ -1,8 +1,9 @@
 """Import an authorized GAMC district GeoJSON into PostGIS (EF03).
 
-Refuses demo fixtures and non-official boundary versions. Never overwrites a
-row whose boundary_version does not match the requested official version unless
---replace-same-version is set. Coordinates with Andrés before migrations.
+Refuses demo fixtures and non-official boundary versions. Each boundary_version
+is stored alongside demo rows and earlier versions; nothing of another version
+is overwritten. Rows of the same version are updated only with
+--replace-same-version.
 """
 
 from __future__ import annotations
@@ -61,7 +62,13 @@ def main(argv: list[str] | None = None) -> None:
     updated = 0
     with Session(get_engine()) as session:
         for polygon in polygons:
-            existing = session.scalar(select(District).where(District.number == polygon.number))
+            # Unique key is (boundary_version, number): demo rows and other versions coexist.
+            existing = session.scalar(
+                select(District).where(
+                    District.boundary_version == polygon.boundary_version,
+                    District.number == polygon.number,
+                )
+            )
             geometry = WKTElement(polygon.as_wkt(), srid=4326)
             if existing is None:
                 session.add(
@@ -76,22 +83,10 @@ def main(argv: list[str] | None = None) -> None:
                 )
                 inserted += 1
                 continue
-            version = str(existing.boundary_version)
-            if version.startswith(DEMO_BOUNDARY_PREFIX):
-                raise SystemExit(
-                    f"District {polygon.number} still has demo version {version}. "
-                    "Clear or migrate demo rows explicitly with Andrés before replacing."
-                )
-            if version != polygon.boundary_version and not args.replace_same_version:
-                raise SystemExit(
-                    f"District {polygon.number} has boundary_version {version}; "
-                    "refusing silent overwrite of a different official version"
-                )
-            if version == polygon.boundary_version and not args.replace_same_version:
+            if not args.replace_same_version:
                 continue
             existing.name = polygon.name
             existing.source_url = polygon.source_url
-            existing.boundary_version = polygon.boundary_version
             existing.geometry = geometry
             updated += 1
         session.commit()
