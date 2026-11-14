@@ -11,4 +11,5 @@ CRS, unidades, calidad y parámetros de consulta. Credenciales fuera de manifies
 y diagnóstico inicial de archivos. Los originales MÓNICA, CSV extraídos y sus
 manifiestos de descarga están en `raw/gamc/monica/`, fuera de Git.
 Descarga reproducible: `python scripts/download_gamc.py`.
-Ver `docs/gamc-resources.md` para la diferencia entre WMS y vector distrital completo.
+Ver `docs/gamc-resources.md` para la diferencia entre WMS, vector oficial y el
+fixture sintético `fixtures/demo_districts.geojson` (no es un límite GAMC).

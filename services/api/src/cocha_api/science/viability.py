@@ -6,9 +6,9 @@ FUSION_BLOCKERS = (
     "MONICA CSV observations are PM10, not air temperature.",
     "LST cannot be calibrated with PM10.",
     "Two stations are not sufficient for spatial validation across 15 districts.",
-    "Verified district geometries are not available.",
-    "PM10 unit, timezone, and station coordinates remain unverified.",
-    "No trained model artifact exists.",
+    "Verified GAMC district geometries are not available.",
+    "PM10 timezone and coordinates remain unverified, so analysis_enabled stays false.",
+    "No compatible target variable is available and no trained model artifact exists.",
 )
 FUSION_NOTE = "Fusion and ML are blocked. No calibration and no metrics are reported. " + " ".join(
     FUSION_BLOCKERS

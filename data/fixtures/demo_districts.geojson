@@ -1,0 +1,591 @@
+{
+  "type": "FeatureCollection",
+  "name": "demo-synthetic-v1",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 1,
+        "name": "Demo 01",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.185,
+                -17.415
+              ],
+              [
+                -66.176,
+                -17.415
+              ],
+              [
+                -66.176,
+                -17.4
+              ],
+              [
+                -66.185,
+                -17.4
+              ],
+              [
+                -66.185,
+                -17.415
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 2,
+        "name": "Demo 02",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.176,
+                -17.415
+              ],
+              [
+                -66.167,
+                -17.415
+              ],
+              [
+                -66.167,
+                -17.4
+              ],
+              [
+                -66.176,
+                -17.4
+              ],
+              [
+                -66.176,
+                -17.415
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 3,
+        "name": "Demo 03",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.167,
+                -17.415
+              ],
+              [
+                -66.158,
+                -17.415
+              ],
+              [
+                -66.158,
+                -17.4
+              ],
+              [
+                -66.167,
+                -17.4
+              ],
+              [
+                -66.167,
+                -17.415
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 4,
+        "name": "Demo 04",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.158,
+                -17.415
+              ],
+              [
+                -66.149,
+                -17.415
+              ],
+              [
+                -66.149,
+                -17.4
+              ],
+              [
+                -66.158,
+                -17.4
+              ],
+              [
+                -66.158,
+                -17.415
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 5,
+        "name": "Demo 05",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.149,
+                -17.415
+              ],
+              [
+                -66.14,
+                -17.415
+              ],
+              [
+                -66.14,
+                -17.4
+              ],
+              [
+                -66.149,
+                -17.4
+              ],
+              [
+                -66.149,
+                -17.415
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 6,
+        "name": "Demo 06",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.185,
+                -17.4
+              ],
+              [
+                -66.176,
+                -17.4
+              ],
+              [
+                -66.176,
+                -17.385
+              ],
+              [
+                -66.185,
+                -17.385
+              ],
+              [
+                -66.185,
+                -17.4
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 7,
+        "name": "Demo 07",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.176,
+                -17.4
+              ],
+              [
+                -66.167,
+                -17.4
+              ],
+              [
+                -66.167,
+                -17.385
+              ],
+              [
+                -66.176,
+                -17.385
+              ],
+              [
+                -66.176,
+                -17.4
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 8,
+        "name": "Demo 08",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.167,
+                -17.4
+              ],
+              [
+                -66.158,
+                -17.4
+              ],
+              [
+                -66.158,
+                -17.385
+              ],
+              [
+                -66.167,
+                -17.385
+              ],
+              [
+                -66.167,
+                -17.4
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 9,
+        "name": "Demo 09",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.158,
+                -17.4
+              ],
+              [
+                -66.149,
+                -17.4
+              ],
+              [
+                -66.149,
+                -17.385
+              ],
+              [
+                -66.158,
+                -17.385
+              ],
+              [
+                -66.158,
+                -17.4
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 10,
+        "name": "Demo 10",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.149,
+                -17.4
+              ],
+              [
+                -66.14,
+                -17.4
+              ],
+              [
+                -66.14,
+                -17.385
+              ],
+              [
+                -66.149,
+                -17.385
+              ],
+              [
+                -66.149,
+                -17.4
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 11,
+        "name": "Demo 11",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.185,
+                -17.385
+              ],
+              [
+                -66.176,
+                -17.385
+              ],
+              [
+                -66.176,
+                -17.37
+              ],
+              [
+                -66.185,
+                -17.37
+              ],
+              [
+                -66.185,
+                -17.385
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 12,
+        "name": "Demo 12",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.176,
+                -17.385
+              ],
+              [
+                -66.167,
+                -17.385
+              ],
+              [
+                -66.167,
+                -17.37
+              ],
+              [
+                -66.176,
+                -17.37
+              ],
+              [
+                -66.176,
+                -17.385
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 13,
+        "name": "Demo 13",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.167,
+                -17.385
+              ],
+              [
+                -66.158,
+                -17.385
+              ],
+              [
+                -66.158,
+                -17.37
+              ],
+              [
+                -66.167,
+                -17.37
+              ],
+              [
+                -66.167,
+                -17.385
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 14,
+        "name": "Demo 14",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.158,
+                -17.385
+              ],
+              [
+                -66.149,
+                -17.385
+              ],
+              [
+                -66.149,
+                -17.37
+              ],
+              [
+                -66.158,
+                -17.37
+              ],
+              [
+                -66.158,
+                -17.385
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 15,
+        "name": "Demo 15",
+        "synthetic": true,
+        "demo": true,
+        "source": "DEMO fixture — not GAMC official"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -66.149,
+                -17.385
+              ],
+              [
+                -66.14,
+                -17.385
+              ],
+              [
+                -66.14,
+                -17.37
+              ],
+              [
+                -66.149,
+                -17.37
+              ],
+              [
+                -66.149,
+                -17.385
+              ]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

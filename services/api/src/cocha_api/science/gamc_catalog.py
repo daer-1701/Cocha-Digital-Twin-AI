@@ -43,7 +43,9 @@ VECTOR_DISTRICTS_BLOCKER: Final[str] = (
     "Complete district vector geometries are not available from an authorized "
     "GAMC source. WMS GetMap/GetFeatureInfo and documented BBOX extents are not "
     "a complete vector dataset. Third-party GeoJSON/Shapefile candidates exist "
-    "but are not verified as the official 15 municipal districts."
+    "but are not verified as the official 15 municipal districts. "
+    "A demo-synthetic-v1 fixture may be imported for UI development only and "
+    "is not a GAMC boundary."
 )
 
 # Pilot bounds from the Landsat MVP; not municipal district polygons.

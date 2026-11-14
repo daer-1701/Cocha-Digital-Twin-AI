@@ -1,14 +1,17 @@
 """District aggregation guards and pilot-window descriptions.
 
 Point means inside a ring are not area-weighted zonal statistics and are not
-served as district indicators. Official publication requires a verified
-district geometry. Missing samples stay missing.
+served as official district indicators. Official publication requires a verified
+district geometry. Demo rectangles stay labeled synthetic. Missing samples stay
+missing.
 """
 
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
+
+from cocha_api.science.demo_districts import DemoPolygon
 
 DISTRICT_VECTOR_REASON = (
     "District indicators are unavailable because verified district geometries are missing. "
@@ -21,6 +24,14 @@ SERIES_REASON = (
 PILOT_WINDOW_NOTE = (
     "Descriptive means from the Landsat pilot window only. "
     "This is not a district indicator. Missing means stay null."
+)
+DEMO_INDICATORS_REASON = (
+    "Available only as demo synthetic indicators. "
+    "The official GAMC district vector is still missing. "
+    "Rectangles are not municipal boundaries. "
+    "Values are means of pilot-cell centroids inside each rectangle, "
+    "not area-weighted zonal statistics and not official district indicators. "
+    "LST is the pilot surface-temperature product in Celsius, not air temperature."
 )
 
 
@@ -172,6 +183,96 @@ def aggregate_verified_district(
         scope="verified_district",
         publishable=True,
     )
+
+
+@dataclass(frozen=True)
+class DemoCellMean:
+    district_number: int
+    district_name: str
+    boundary_version: str
+    scene_id: str
+    variable: Literal["lst_celsius", "ndvi"]
+    nature: Literal["demo_synthetic"]
+    district_indicator: Literal["demo"]
+    value: float | None
+    units: Literal["celsius", "dimensionless"]
+    n_valid: int
+    n_missing: int
+    valid_fraction: float | None
+    statistic: Literal["pilot_cell_centroid_mean"]
+
+
+def _centroid_samples(cells: Sequence[object], attribute: str) -> list[PointSample]:
+    samples: list[PointSample] = []
+    for cell in cells:
+        bounds = getattr(cell, "bounds", None)
+        if not isinstance(bounds, (tuple, list)) or len(bounds) != 4:
+            continue
+        west, south, east, north = (float(item) for item in bounds)
+        raw = getattr(cell, attribute, None)
+        value = None if raw is None else float(raw)
+        samples.append(PointSample(x=(west + east) / 2.0, y=(south + north) / 2.0, value=value))
+    return samples
+
+
+def demo_indicator_means(
+    districts: Sequence[DemoPolygon], scenes: Sequence[object]
+) -> list[DemoCellMean]:
+    """Centroid means of pilot cells inside demo rectangles.
+
+    Missing cell values stay null. This is not an official zonal statistic.
+    """
+
+    variables = (
+        ("lst", "lst_celsius", "celsius"),
+        ("ndvi", "ndvi", "dimensionless"),
+    )
+    means: list[DemoCellMean] = []
+    for district in districts:
+        geometry = AreaGeometry(
+            provenance="synthetic",
+            ring=district.ring,
+            source=district.source,
+            version=district.boundary_version,
+        )
+        for scene in scenes:
+            scene_id = getattr(scene, "id", None)
+            if scene_id is None:
+                scene_id = getattr(scene, "scene_id", None)
+            if scene_id is None:
+                continue
+            cells = getattr(scene, "cells", ()) or ()
+            for attribute, variable, units in variables:
+                result = mean_points_in_geometry(
+                    _centroid_samples(cells, attribute),
+                    geometry,
+                    variable=variable,
+                    units=units,
+                )
+                public_variable: Literal["lst_celsius", "ndvi"] = (
+                    "lst_celsius" if variable == "lst_celsius" else "ndvi"
+                )
+                public_units: Literal["celsius", "dimensionless"] = (
+                    "celsius" if units == "celsius" else "dimensionless"
+                )
+                means.append(
+                    DemoCellMean(
+                        district_number=district.number,
+                        district_name=district.name,
+                        boundary_version=district.boundary_version,
+                        scene_id=str(scene_id),
+                        variable=public_variable,
+                        nature="demo_synthetic",
+                        district_indicator="demo",
+                        value=result.mean,
+                        units=public_units,
+                        n_valid=result.n_valid,
+                        n_missing=result.n_missing,
+                        valid_fraction=result.valid_fraction,
+                        statistic="pilot_cell_centroid_mean",
+                    )
+                )
+    return means
 
 
 def pilot_window_from_scenes(scenes: Sequence[object]) -> PilotWindowView:

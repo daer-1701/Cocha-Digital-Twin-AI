@@ -127,14 +127,30 @@ automáticamente. El pipeline piloto conserva su área explícita mientras tanto
 - `/v1/territories` expone el piloto Landsat como disponible, el estado WMS
   según configuración de clave, y `vector_districts.status=unavailable` con el
   bloqueo documentado: **WMS/BBOX no es un vector distrital completo**.
-- La importación PostGIS de los 15 distritos permanece bloqueada hasta obtener
-  un archivo o servicio de features autorizado.
+- La importación PostGIS de los 15 distritos **oficiales** permanece bloqueada
+  hasta obtener un archivo o servicio de features autorizado.
 - Candidatos de terceros **no autorizados como oficiales** (solo inventario):
   [ciudatoslab/20-distritos](https://github.com/ciudatoslab/20-distritos-en-cochabamba)
   (habla de 20 distritos; el alcance municipal del proyecto es 15) y
   [hogaria distritos.geojson](https://hogaria.com/geo/datos/distritos.geojson)
   (ODbL). No importarlos a PostGIS como límites oficiales sin verificación
   GAMC de licencia, versión, IDs y completitud.
+
+### Fixture demo (no oficial)
+
+`data/fixtures/demo_districts.geojson` trae 15 rectángulos sintéticos cerca de
+la ventana piloto Landsat. Cada feature marca `synthetic`, `demo` y
+`source = "DEMO fixture — not GAMC official"`. No son distritos GAMC.
+
+```powershell
+uv run --no-sync python scripts/import_demo_districts.py --i-understand-demo-only
+```
+
+El script no corre sin esa bandera, es idempotente sobre
+`boundary_version=demo-synthetic-v1` y no pisa una versión que no sea demo.
+Si esas filas existen, `/v1/indicators` responde `available` solo como demo y
+el `reason` dice que el vector GAMC sigue ausente. Sin ellas, el estado sigue
+`unavailable`. `/v1/territories` mantiene el vector oficial en `unavailable`.
 
 ## Reparto actualizado
 

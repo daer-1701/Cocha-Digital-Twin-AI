@@ -142,6 +142,27 @@ def test_assistant_status_does_not_leak_the_key_or_call_gemini(monkeypatch, tmp_
     get_settings.cache_clear()
 
 
+def test_verified_prices_stay_visible_while_calls_stay_off(monkeypatch, tmp_path):
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-3.6-flash")
+    monkeypatch.setenv("GEMINI_INPUT_USD_PER_MILLION_TOKENS", "0.75")
+    monkeypatch.setenv("GEMINI_OUTPUT_USD_PER_MILLION_TOKENS", "3.75")
+    monkeypatch.setenv("GEMINI_PRICES_VERIFIED_ON", "2026-11-14")
+    monkeypatch.setenv("GEMINI_PRICES_SOURCE_URL", "https://ai.google.dev/gemini-api/docs/pricing")
+    monkeypatch.setenv("GEMINI_LEDGER_PATH", str(tmp_path / "ledger.json"))
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    get_settings.cache_clear()
+    with TestClient(create_app()) as client:
+        body = client.get("/v1/assistant").json()
+    assert body["status"] == "unavailable"
+    assert body["calls_enabled"] is False
+    assert body["prices_verified"] is True
+    assert body["input_price_usd_per_million_tokens"] == 0.75
+    assert body["output_price_usd_per_million_tokens"] == 3.75
+    assert "disabled" in body["reason"].lower()
+    assert "authorization" in body["reason"].lower()
+    get_settings.cache_clear()
+
+
 def test_corrupt_ledger_does_not_echo_file_contents(monkeypatch, tmp_path):
     secret = "super-secret-gemini-key"
     ledger = tmp_path / "ledger.json"

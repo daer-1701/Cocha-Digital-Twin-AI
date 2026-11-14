@@ -114,12 +114,15 @@ erDiagram
 - `stations`: coordenadas y elevación nullable (MÓNICA aún sin coords oficiales).
 - `observations`: unicidad `(station_id, variable, observed_at)`; `observed_at`
   es timestamp naive porque los CSV no declaran zona horaria; no etiquetar UTC.
-  `unit` nullable: no inventar µg/m³. `quality_flag` distingue valid/zero/
+  `unit` puede guardarse como `ug/m3` cuando la importación usa la declaración
+  del informe Red MoniCA citado en el catálogo; el encabezado del CSV no trae
+  unidad. No inventar huso ni coordenadas. `quality_flag` distingue valid/zero/
   negative/invalid/duplicate.
 - `district_indicators`, `trend_results`, `model_runs`, `scenario_runs`: tablas
   listas para A06–A12; todavía sin cálculos poblados por la API.
-- `analysis_enabled` en estaciones permanece en `false` mientras falten
-  metadatos MÓNICA (unidad, huso, coordenadas, licencia).
+- `analysis_enabled` en estaciones permanece en `false` mientras falten huso,
+  coordenadas, códigos de calidad y licencia. La unidad declarada no basta
+  para activar agregados.
 
 Indicadores deben referenciar el límite territorial utilizado; si cambian los
 límites, conservar versiones históricas antes de comparar. No mezclar

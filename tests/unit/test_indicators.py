@@ -6,6 +6,7 @@ from cocha_api.science.indicators import (
     DistrictGeometryError,
     PointSample,
     aggregate_verified_district,
+    demo_indicator_means,
     mean_points_in_geometry,
     pilot_window_from_scenes,
 )
@@ -76,6 +77,43 @@ def test_verified_label_still_names_its_source():
     assert result.publishable_as_district is True
     assert "not a GAMC" in result.source
     assert result.mean == pytest.approx(4.0)
+
+
+def test_demo_centroid_mean_keeps_missing_values_null():
+    from pathlib import Path
+
+    from cocha_api.science.demo_districts import load_demo_fixture
+
+    district = load_demo_fixture(
+        Path(__file__).resolve().parents[2] / "data" / "fixtures" / "demo_districts.geojson"
+    )[0]
+    west, south = district.ring[0]
+    east, north = district.ring[2]
+    scene = type(
+        "Scene",
+        (),
+        {
+            "id": "synthetic-scene",
+            "cells": [
+                type(
+                    "Cell",
+                    (),
+                    {"bounds": (west, south, east, north), "lst": 21.5, "ndvi": None},
+                )(),
+                type("Cell", (), {"bounds": (0.0, 0.0, 1.0, 1.0), "lst": 0.0, "ndvi": 0.0})(),
+            ],
+        },
+    )()
+    means = demo_indicator_means([district], [scene])
+    by_variable = {item.variable: item for item in means}
+    assert by_variable["lst_celsius"].nature == "demo_synthetic"
+    assert by_variable["lst_celsius"].district_indicator == "demo"
+    assert by_variable["lst_celsius"].value == pytest.approx(21.5)
+    assert by_variable["lst_celsius"].n_valid == 1
+    assert by_variable["lst_celsius"].n_missing == 0
+    assert by_variable["ndvi"].value is None
+    assert by_variable["ndvi"].n_missing == 1
+    assert by_variable["ndvi"].value != 0
 
 
 def test_pilot_window_preserves_missing_means():

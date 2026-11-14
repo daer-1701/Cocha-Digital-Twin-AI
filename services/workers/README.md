@@ -1,10 +1,16 @@
-# Procesamiento científico — planificado
+# Procesamiento científico
 
-Todavía no hay worker ejecutable ni dependencias Celery/Redis instaladas.
-El lote piloto se ejecuta con `uv run --group science python scripts/ingest_landsat.py`
-desde la raíz. El cálculo puro vive en `cocha_api.science.landsat`, independiente
-de HTTP. Publica snapshots; todavía no hay cola ni agregación distrital.
-La primera etapa será un pipeline por lotes. Cuando requiera cola:
+No hay cola Celery/Redis. El paso local es `services/workers/offline_runner.py`:
+resume el QA de un CSV MÓNICA y, si hay base, crea un `processing_run`. Sin base
+sigue en local y no finge persistencia. No analiza físicamente el PM10 ni calibra LST.
+
+```powershell
+uv run --no-sync python services/workers/offline_runner.py --no-db --input-dir data/raw/gamc/monica
+```
+
+El lote piloto Landsat sigue en `uv run --group science python scripts/ingest_landsat.py`.
+El cálculo puro vive en `cocha_api.science.landsat`, independiente de HTTP.
+Cuando haga falta una cola:
 
 - Extraer cálculos a módulos Python independientes de FastAPI y Celery.
 - Identificar cada trabajo mediante UUID y clave idempotente de entradas/parámetros.

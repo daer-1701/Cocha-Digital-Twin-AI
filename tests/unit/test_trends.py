@@ -1,7 +1,8 @@
 """Descriptive slopes on synthetic series. Not official trends."""
 
 import pytest
-from cocha_api.science.trends import descriptive_slope
+from cocha_api.science.indicators import DemoCellMean
+from cocha_api.science.trends import demo_series_slopes, descriptive_slope
 
 
 def test_constant_series_has_zero_slope_without_inference():
@@ -17,6 +18,39 @@ def test_short_series_is_inconclusive():
     assert result.status == "inconclusive"
     assert result.n_finite == 3
     assert result.publishes_inference is False
+
+
+def _demo_mean(index: int, value: float | None) -> DemoCellMean:
+    return DemoCellMean(
+        district_number=1,
+        district_name="Demo 01",
+        boundary_version="demo-synthetic-v1",
+        scene_id=f"scene-{index}",
+        variable="lst_celsius",
+        nature="demo_synthetic",
+        district_indicator="demo",
+        value=value,
+        units="celsius",
+        n_valid=0 if value is None else 1,
+        n_missing=1 if value is None else 0,
+        valid_fraction=None if value is None else 1.0,
+        statistic="pilot_cell_centroid_mean",
+    )
+
+
+def test_demo_series_slope_is_labeled_and_does_not_infer():
+    series = [_demo_mean(index, float(index)) for index in range(8)]
+    series[3] = _demo_mean(3, None)
+    slopes = demo_series_slopes(series)
+    assert len(slopes) == 1
+    slope = slopes[0]
+    assert slope.nature == "demo_synthetic"
+    assert slope.district_trend == "demo"
+    assert slope.publishes_inference is False
+    assert slope.status == "inconclusive"
+    assert slope.n_finite == 7
+    assert None in slope.values
+    assert "Official trend publication remains blocked" in slope.note
 
 
 def test_synthetic_slope_and_missing_values():

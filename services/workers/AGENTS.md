@@ -2,7 +2,7 @@
 
 Aplicar también `AGENTS.md` de la raíz y `docs/science.md`.
 
-- Actualmente este directorio contiene un diseño, no un worker ejecutable.
+- Hay un runner local (`offline_runner.py`) sin Celery/Redis. No es una cola de producción.
 - Extraer cálculos a funciones/módulos independientes del framework de colas.
   Empezar con lotes reproducibles; Celery/Redis cuando exista necesidad real.
 - Manifestar entradas, versiones, parámetros, commit y checksum. Reintentos

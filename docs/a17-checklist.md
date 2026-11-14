@@ -1,15 +1,25 @@
-# A17 — checklist de validación integral (pendiente de ejecución completa)
+# A17 — checklist de validación integral
 
-No sustituye una corrida independiente. Marcar solo lo verificado.
+No sustituye una corrida independiente con datos oficiales. Marcar solo lo
+verificado en local el 14 de noviembre de 2026.
 
 | Ítem | Estado |
 | --- | --- |
-| `./scripts/check_containers.ps1` | Hecho 14/11/2026 |
-| `uv run --group science pytest -q` | Hecho en desarrollo |
-| Ingesta Landsat piloto + `/v1/explorer` | Hecho en MVP previo |
-| Vector oficial 15 distritos | Pendiente |
-| Indicadores/tendencias distritales | Pendiente |
-| Import MÓNICA con huso/coords | Pendiente |
-| Gemini con llamada real acotada | Pendiente (off a propósito) |
+| A01 `./scripts/check_containers.ps1` | Hecho: 67 passed el 14/11/2026 (`docs/a01-validation.md`) |
+| Contratos de disponibilidad y OpenAPI | Hecho en local, regenerar tras cambios de esquema |
+| Ingesta Landsat piloto + `/v1/explorer` | Hecho en el MVP previo |
+| WMS GAMC (proxy, allowlist, sin clave = 503) | Hecho en código; no probado contra el servicio real en esta pasada |
+| Vector oficial de 15 distritos | Bloqueado. Falta el archivo o servicio de features autorizado |
+| Fixture demo `demo-synthetic-v1` | Hecho como fixture. No es un límite GAMC |
+| Indicadores y tendencias oficiales | Bloqueados. La API solo publica medias y pendientes demo si esas filas existen |
+| Import MÓNICA | Parcial: unidad `ug/m3` declarada; huso, coordenadas y licencia pendientes |
+| Modelos y escenarios (A10–A12) | Cerrados como bloqueados (`docs/andres-blockers.md`) |
+| Runner local sin Celery | Hecho: `services/workers/offline_runner.py`. No es una cola de producción |
+| Gemini con llamada real acotada | Pendiente a propósito. Precios verificados; llamadas apagadas |
+| `require_write_token` | Probado. No hay POST público; CORS solo GET |
 | Pruebas de navegador Diego (D15) | Pendiente |
 | Despliegue no local (A18) | Pendiente |
+
+Pendiente de una reproducción con PostGIS de prueba: importar el fixture demo
+y los CSV MÓNICA, y comprobar las filas. Las pruebas unitarias no abren la
+base de desarrollo.

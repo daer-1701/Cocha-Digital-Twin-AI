@@ -40,8 +40,26 @@ class PilotWindowSummary(AvailabilityModel):
     scenes: list[PilotWindowScene] = Field(default_factory=list)
 
 
+class DemoIndicatorItem(AvailabilityModel):
+    """Centroid mean inside a synthetic rectangle. Not an official district indicator."""
+
+    district_number: int = Field(ge=1, le=15)
+    district_name: str
+    scene_id: str
+    variable: Literal["lst_celsius", "ndvi"]
+    nature: Literal["demo_synthetic"] = "demo_synthetic"
+    district_indicator: Literal["demo"] = "demo"
+    boundary_version: str
+    value: float | None = None
+    units: Literal["celsius", "dimensionless"]
+    n_valid: int = Field(ge=0)
+    n_missing: int = Field(ge=0)
+    valid_fraction: float | None = None
+    statistic: Literal["pilot_cell_centroid_mean"] = "pilot_cell_centroid_mean"
+
+
 class IndicatorsResponse(AvailabilityEnvelope, PaginationParams):
-    items: list[dict] = Field(default_factory=list)
+    items: list[DemoIndicatorItem] = Field(default_factory=list)
     pilot_window: PilotWindowSummary | None = None
 
 
@@ -62,10 +80,32 @@ class PilotTrendItem(AvailabilityModel):
     note: str
 
 
+class DemoTrendItem(AvailabilityModel):
+    """Descriptive slope on a demo rectangle series. Official inference stays blocked."""
+
+    district_number: int = Field(ge=1, le=15)
+    district_name: str
+    variable: Literal["lst_celsius", "ndvi"]
+    nature: Literal["demo_synthetic"] = "demo_synthetic"
+    district_trend: Literal["demo"] = "demo"
+    boundary_version: str
+    scene_ids: list[str]
+    values: list[float | None]
+    n_finite: int = Field(ge=0)
+    min_n: int = Field(ge=2)
+    status: Literal["descriptive", "inconclusive"]
+    slope_per_step: float | None
+    method: str
+    publishes_inference: Literal[False] = False
+    note: str
+
+
 class TrendsResponse(AvailabilityEnvelope, PaginationParams):
     items: list[dict] = Field(default_factory=list)
     # Pilot-only descriptive slopes from the explorer snapshot; never district trends.
     pilot_trends: list[PilotTrendItem] = Field(default_factory=list)
+    # Present only when demo districts and pilot scenes were aggregated. Not official.
+    demo_trends: list[DemoTrendItem] = Field(default_factory=list)
 
 
 class StationItem(AvailabilityModel):

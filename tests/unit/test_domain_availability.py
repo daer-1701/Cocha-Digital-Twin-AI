@@ -111,4 +111,95 @@ def test_territories_exposes_pilot_and_vector_blocker():
     assert body["pilot"]["status"] == "available"
     assert body["vector_districts"]["status"] == "unavailable"
     assert "not a complete vector" in body["vector_districts"]["reason"].lower()
+    assert "not a gamc boundary" in body["vector_districts"]["reason"].lower()
     assert all(layer["status"] == "unavailable" for layer in body["wms_layers"])
+
+
+def test_demo_indicators_are_available_and_official_trends_stay_blocked(monkeypatch, tmp_path):
+    import json
+    from datetime import UTC, datetime
+    from types import SimpleNamespace
+
+    from cocha_api.schemas.explorer import Cell, Scene, Snapshot
+
+    west, south, east, north = -66.185, -17.415, -66.176, -17.4
+    snapshot = Snapshot(
+        generated_at=datetime(2024, 7, 15, tzinfo=UTC),
+        area_name="synthetic pilot window",
+        bounds=(west, south, east, north),
+        product_version="fixture",
+        license="fixture",
+        method="fixture",
+        limitations=["demo rectangles are not districts"],
+        scenes=[
+            Scene(
+                id="fixture-scene",
+                acquired_at=datetime(2024, 7, 15, 14, tzinfo=UTC),
+                platform="landsat-8",
+                source_url="https://example.invalid/item",
+                valid_fraction=1,
+                valid_pixels=1,
+                total_pixels=1,
+                lst_mean=21.5,
+                ndvi_mean=None,
+                cells=[
+                    Cell(bounds=(west, south, east, north), lst=21.5, ndvi=None),
+                    Cell(bounds=(0.0, 0.0, 1.0, 1.0), lst=0.0, ndvi=0.0),
+                ],
+            )
+        ],
+    )
+    path = tmp_path / "explorer.json"
+    path.write_text(snapshot.model_dump_json(), encoding="utf-8")
+    monkeypatch.setenv("EVIDENCE_PATH", str(path))
+    from cocha_api.core.config import get_settings
+
+    get_settings.cache_clear()
+    ring = [
+        [west, south],
+        [east, south],
+        [east, north],
+        [west, north],
+        [west, south],
+    ]
+    row = SimpleNamespace(
+        number=1,
+        name="Demo 01",
+        boundary_version="demo-synthetic-v1",
+        geojson=json.dumps(
+            {
+                "type": "MultiPolygon",
+                "coordinates": [[ring]],
+            }
+        ),
+    )
+    app = create_app()
+    session = _override_empty_session(app)
+    session.execute.return_value.all.return_value = [row]
+    with TestClient(app) as client:
+        indicators = client.get("/v1/indicators")
+        trends = client.get("/v1/trends")
+        models = client.get("/v1/models")
+        scenarios = client.get("/v1/scenarios")
+    indicator_body = indicators.json()
+    assert indicator_body["status"] == "available"
+    assert "official gamc district vector is still missing" in indicator_body["reason"].lower()
+    assert indicator_body["items"]
+    lst = next(item for item in indicator_body["items"] if item["variable"] == "lst_celsius")
+    ndvi = next(item for item in indicator_body["items"] if item["variable"] == "ndvi")
+    assert lst["nature"] == "demo_synthetic"
+    assert lst["district_indicator"] == "demo"
+    assert lst["value"] == 21.5
+    assert ndvi["value"] is None
+    trend_body = trends.json()
+    assert trend_body["status"] == "unavailable"
+    assert trend_body["items"] == []
+    assert trend_body["demo_trends"]
+    assert trend_body["demo_trends"][0]["district_trend"] == "demo"
+    assert trend_body["demo_trends"][0]["nature"] == "demo_synthetic"
+    assert trend_body["demo_trends"][0]["publishes_inference"] is False
+    assert trend_body["pilot_trends"]
+    assert trend_body["pilot_trends"][0]["district_trend"] is False
+    assert models.json()["status"] == "unavailable"
+    assert scenarios.json()["status"] == "unavailable"
+    get_settings.cache_clear()

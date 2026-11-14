@@ -127,7 +127,8 @@ class Observation(Base):
         ForeignKey("processing_runs.id", ondelete="SET NULL"), nullable=True
     )
     variable: Mapped[str] = mapped_column(String(64))
-    # Unit stays null until a verified declaration exists; do not invent µg/m³.
+    # ug/m3 may be stored from the Red MoniCA report catalog, not the CSV header.
+    # Timezone stays absent: observed_at is naive and must not be labeled UTC.
     unit: Mapped[str | None] = mapped_column(String(64), nullable=True)
     # Naive timestamp: source CSVs have no timezone offset; do not label as UTC.
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=False))

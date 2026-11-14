@@ -1,7 +1,8 @@
 """Pure MONICA PM10 CSV QA helpers.
 
 These data are particulate matter (PM10), not air temperature, and must never be
-used to calibrate LST. Units and timezone remain undeclared until verified.
+used to calibrate LST. The catalog declares ug/m3 from a Red MoniCA report.
+Timezone and coordinates stay undeclared. analysis_enabled stays false.
 """
 
 from __future__ import annotations
@@ -13,6 +14,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Literal
+
+from cocha_api.science.gamc_catalog import (
+    MONICA_METADATA_PENDING,
+    MONICA_PM10_UNIT,
+    STATION_CATALOG_PROFILE,
+)
 
 QualityFlag = Literal[
     "valid", "zero", "negative", "invalid_value", "invalid_timestamp", "duplicate"
@@ -135,3 +142,35 @@ def parse_monica_csv(
 def analysis_eligible(flag: QualityFlag) -> bool:
     """Physical analysis remains disabled while metadata is pending; helpers only."""
     return flag == "valid"
+
+
+@dataclass(frozen=True)
+class StationImportProfile:
+    source_id: str
+    name: str
+    unit_declared: str
+    timezone_declared: None
+    analysis_enabled: Literal[False]
+    metadata_pending: tuple[str, ...]
+    latitude: None
+    longitude: None
+
+
+def station_import_profile(source_id: str) -> StationImportProfile:
+    """Declared PM10 unit from the catalog. Does not invent timezone or coordinates."""
+
+    catalog = next(
+        (profile for profile in STATION_CATALOG_PROFILE if profile["source_id"] == source_id),
+        None,
+    )
+    name = catalog["name"] if catalog else source_id
+    return StationImportProfile(
+        source_id=source_id,
+        name=name,
+        unit_declared=MONICA_PM10_UNIT,
+        timezone_declared=None,
+        analysis_enabled=False,
+        metadata_pending=MONICA_METADATA_PENDING,
+        latitude=None,
+        longitude=None,
+    )

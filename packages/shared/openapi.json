@@ -1145,6 +1145,228 @@
         ],
         "title": "DatasetResponse"
       },
+      "DemoIndicatorItem": {
+        "properties": {
+          "district_number": {
+            "type": "integer",
+            "maximum": 15.0,
+            "minimum": 1.0,
+            "title": "District Number"
+          },
+          "district_name": {
+            "type": "string",
+            "title": "District Name"
+          },
+          "scene_id": {
+            "type": "string",
+            "title": "Scene Id"
+          },
+          "variable": {
+            "type": "string",
+            "enum": [
+              "lst_celsius",
+              "ndvi"
+            ],
+            "title": "Variable"
+          },
+          "nature": {
+            "type": "string",
+            "const": "demo_synthetic",
+            "title": "Nature",
+            "default": "demo_synthetic"
+          },
+          "district_indicator": {
+            "type": "string",
+            "const": "demo",
+            "title": "District Indicator",
+            "default": "demo"
+          },
+          "boundary_version": {
+            "type": "string",
+            "title": "Boundary Version"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "units": {
+            "type": "string",
+            "enum": [
+              "celsius",
+              "dimensionless"
+            ],
+            "title": "Units"
+          },
+          "n_valid": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "N Valid"
+          },
+          "n_missing": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "N Missing"
+          },
+          "valid_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Fraction"
+          },
+          "statistic": {
+            "type": "string",
+            "const": "pilot_cell_centroid_mean",
+            "title": "Statistic",
+            "default": "pilot_cell_centroid_mean"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "district_number",
+          "district_name",
+          "scene_id",
+          "variable",
+          "boundary_version",
+          "units",
+          "n_valid",
+          "n_missing"
+        ],
+        "title": "DemoIndicatorItem",
+        "description": "Centroid mean inside a synthetic rectangle. Not an official district indicator."
+      },
+      "DemoTrendItem": {
+        "properties": {
+          "district_number": {
+            "type": "integer",
+            "maximum": 15.0,
+            "minimum": 1.0,
+            "title": "District Number"
+          },
+          "district_name": {
+            "type": "string",
+            "title": "District Name"
+          },
+          "variable": {
+            "type": "string",
+            "enum": [
+              "lst_celsius",
+              "ndvi"
+            ],
+            "title": "Variable"
+          },
+          "nature": {
+            "type": "string",
+            "const": "demo_synthetic",
+            "title": "Nature",
+            "default": "demo_synthetic"
+          },
+          "district_trend": {
+            "type": "string",
+            "const": "demo",
+            "title": "District Trend",
+            "default": "demo"
+          },
+          "boundary_version": {
+            "type": "string",
+            "title": "Boundary Version"
+          },
+          "scene_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scene Ids"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "n_finite": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "N Finite"
+          },
+          "min_n": {
+            "type": "integer",
+            "minimum": 2.0,
+            "title": "Min N"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "descriptive",
+              "inconclusive"
+            ],
+            "title": "Status"
+          },
+          "slope_per_step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Per Step"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "publishes_inference": {
+            "type": "boolean",
+            "const": false,
+            "title": "Publishes Inference",
+            "default": false
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "district_number",
+          "district_name",
+          "variable",
+          "boundary_version",
+          "scene_ids",
+          "values",
+          "n_finite",
+          "min_n",
+          "status",
+          "slope_per_step",
+          "method",
+          "note"
+        ],
+        "title": "DemoTrendItem",
+        "description": "Descriptive slope on a demo rectangle series. Official inference stays blocked."
+      },
       "ExplorerResponse": {
         "properties": {
           "status": {
@@ -1239,8 +1461,7 @@
           },
           "items": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/DemoIndicatorItem"
             },
             "type": "array",
             "title": "Items"
@@ -2360,6 +2581,13 @@
             },
             "type": "array",
             "title": "Pilot Trends"
+          },
+          "demo_trends": {
+            "items": {
+              "$ref": "#/components/schemas/DemoTrendItem"
+            },
+            "type": "array",
+            "title": "Demo Trends"
           }
         },
         "additionalProperties": false,

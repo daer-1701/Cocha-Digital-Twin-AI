@@ -7,9 +7,9 @@ documento no informa métricas.
 
 Los CSV descargados tienen las columnas `estacion`, `pm10` y `fecha_medicion`.
 Son observaciones de PM10 de dos estaciones (Kanata y Semapa). No son
-temperatura del aire. La unidad, la zona horaria y las coordenadas siguen sin
-verificar; el análisis físico permanece deshabilitado. Ver
-`docs/gamc-resources.md`.
+temperatura del aire. La unidad se declara como µg/m³ desde un informe de la
+red; la zona horaria y las coordenadas siguen sin verificar. El análisis físico
+permanece deshabilitado. Ver `docs/monica-status.md` y `docs/gamc-resources.md`.
 
 ## Qué no se puede calibrar
 
@@ -27,7 +27,8 @@ con las que construir un conjunto de entrenamiento defendible.
 
 ## Estado de A10–A12
 
-No se entrenó baseline, Random Forest ni otro modelo. `/v1/models` y
+No se entrenó baseline, Random Forest ni otro modelo. A10–A12 quedan cerrados
+como bloqueados hasta tener una variable objetivo compatible. `/v1/models` y
 `/v1/scenarios` permanecen `unavailable` y no publican métricas ni resultados
 de intervención. Cambiar NDVI en un regresor no está evaluado como efecto de
-plantar árboles.
+plantar árboles. Detalle en `docs/andres-blockers.md`.

@@ -1,8 +1,8 @@
 """Idempotent MONICA PM10 import into stations/observations.
 
-Does not invent units, timezone, or coordinates. Keeps analysis_enabled=false
-while metadata remains pending. PM10 is not air temperature and must not
-calibrate LST.
+Sets unit_declared from the catalog source (ug/m3). Does not invent timezone
+or coordinates. Keeps analysis_enabled=false while metadata remains pending.
+PM10 is not air temperature and must not calibrate LST.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ from uuid import uuid4
 
 from cocha_api.db.models import Observation, ProcessingRun, Station
 from cocha_api.db.session import get_engine
-from cocha_api.science.gamc_catalog import MONICA_METADATA_PENDING
-from cocha_api.science.monica import MonicaRow, parse_monica_csv
+from cocha_api.science.gamc_catalog import MONICA_PM10_UNIT, MONICA_PM10_UNIT_SOURCE
+from cocha_api.science.monica import MonicaRow, parse_monica_csv, station_import_profile
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -35,26 +35,28 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def ensure_station(session: Session, source_id: str, name: str) -> Station:
+def ensure_station(session: Session, source_id: str) -> Station:
+    profile = station_import_profile(source_id)
     existing = session.scalar(select(Station).where(Station.source_id == source_id))
     if existing is not None:
+        existing.name = profile.name
         existing.analysis_enabled = False
-        existing.unit_declared = None
+        existing.unit_declared = profile.unit_declared
         existing.timezone_declared = None
-        existing.metadata_pending = list(MONICA_METADATA_PENDING)
+        existing.metadata_pending = list(profile.metadata_pending)
         return existing
     station = Station(
         id=uuid4(),
         source_id=source_id,
-        name=name,
+        name=profile.name,
         network="monica",
         latitude=None,
         longitude=None,
         elevation_m=None,
-        unit_declared=None,
+        unit_declared=profile.unit_declared,
         timezone_declared=None,
         analysis_enabled=False,
-        metadata_pending=list(MONICA_METADATA_PENDING),
+        metadata_pending=list(profile.metadata_pending),
     )
     session.add(station)
     session.flush()
@@ -66,6 +68,8 @@ def upsert_observations(
     station: Station,
     rows: list[MonicaRow],
     processing_run_id,
+    *,
+    unit: str,
 ) -> tuple[int, int]:
     inserted = 0
     updated = 0
@@ -79,7 +83,7 @@ def upsert_observations(
                 station_id=station.id,
                 processing_run_id=processing_run_id,
                 variable="pm10",
-                unit=None,
+                unit=unit,
                 observed_at=row.observed_at,
                 observed_at_raw=row.observed_at_raw,
                 value=row.value,
@@ -92,7 +96,7 @@ def upsert_observations(
                     "observed_at_raw": row.observed_at_raw,
                     "value": row.value,
                     "quality_flag": row.quality_flag,
-                    "unit": None,
+                    "unit": unit,
                 },
             )
             .returning(Observation.id, Observation.created_at)
@@ -114,11 +118,17 @@ def import_file(session: Session, path: Path, processing_run: ProcessingRun) -> 
 
     totals = {"rows": len(summary.rows), "upserted": 0, "skipped_invalid_time": 0}
     for source_id in station_ids:
-        station = ensure_station(session, source_id, source_id)
+        station = ensure_station(session, source_id)
         station_rows = [row for row in summary.rows if row.source_id == source_id]
         valid_time_rows = [row for row in station_rows if row.observed_at is not None]
         totals["skipped_invalid_time"] += len(station_rows) - len(valid_time_rows)
-        upserted, _ = upsert_observations(session, station, valid_time_rows, processing_run.id)
+        upserted, _ = upsert_observations(
+            session,
+            station,
+            valid_time_rows,
+            processing_run.id,
+            unit=station.unit_declared or MONICA_PM10_UNIT,
+        )
         totals["upserted"] += upserted
 
     return {
@@ -161,8 +171,12 @@ def main() -> None:
                 "input_dir": str(folder),
                 "files": list(args.files),
                 "analysis_enabled": False,
+                "unit_declared": MONICA_PM10_UNIT,
+                "unit_source": MONICA_PM10_UNIT_SOURCE,
+                "timezone_declared": None,
                 "notes": (
-                    "PM10 import only; units/timezone/coordinates pending; not for LST calibration"
+                    "PM10 import only; unit declared from the catalog report; "
+                    "timezone and coordinates still pending; not for LST calibration"
                 ),
             },
             started_at=started,

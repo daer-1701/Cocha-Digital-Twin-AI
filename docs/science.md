@@ -4,13 +4,15 @@
 
 El piloto descarga ventanas reales Landsat C2 L2 mediante Planetary Computer,
 aplica escalas USGS y una máscara QA compartida para LST/NDVI. Ver `docs/mvp.md`
-para alcance y limitaciones. MODIS, MÓNICA y límites GAMC siguen pendientes.
+para alcance y limitaciones. MODIS sigue pendiente. MÓNICA tiene PM10 con unidad
+declarada desde un informe y sin huso ni coordenadas (`docs/monica-status.md`).
+El vector distrital GAMC sigue bloqueado; el fixture demo no lo sustituye.
 
 | Fuente | Uso candidato | Verificación pendiente |
 | --- | --- | --- |
 | Landsat Collection 2 Level-2 | LST y NDVI a partir de reflectancia | Cobertura local, QA, escala, nubes, huecos y acceso |
 | MODIS | Contexto temporal de mayor frecuencia | Producto y versión exactos, resolución y cobertura distrital |
-| Red MÓNICA | Observaciones terrestres de variables disponibles | Archivos, variables, unidades, sensores, fechas, calidad y licencia |
+| Red MÓNICA | PM10 de Kanata y Semapa | Huso, coordenadas, calidad de ceros/negativos y licencia; unidad declarada aparte |
 | GAMC | Límites de los distritos | Fuente oficial, versión, CRS y permiso de uso |
 
 No usar temperatura superficial como equivalente a temperatura del aire.
@@ -56,8 +58,9 @@ idempotente con checksum y manifiesto. Reintentos no deben duplicar indicadores.
 - Producto LST: https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature
 
 La revisión del 14 de noviembre de 2026 confirmó y descargó los CSV MÓNICA de
-Kanata/Semapa con PM10, fechas sin zona horaria y unidades por verificar.
-El catálogo GAMC anuncia límites distritales WMS, pero todavía no se obtuvo
-un vector completo. Ver `docs/gamc-resources.md` y `data/catalog/gamc.json`.
+Kanata/Semapa con PM10 y fechas sin zona horaria. La unidad µg/m³ se declara
+desde un informe oficial, no desde el CSV. El catálogo GAMC anuncia límites
+distritales WMS, pero todavía no se obtuvo un vector completo. Ver
+`docs/gamc-resources.md`, `docs/monica-status.md` y `data/catalog/gamc.json`.
 La descarga no equivale a validación ni calibración de LST. Confirmar criterios
 oficiales antes de presentar; el stack es una decisión del proyecto.

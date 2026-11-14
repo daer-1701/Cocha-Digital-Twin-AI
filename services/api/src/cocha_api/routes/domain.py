@@ -9,9 +9,11 @@ from sqlalchemy.orm import Session
 
 from cocha_api.core.config import get_settings
 from cocha_api.core.pagination import LimitQuery, OffsetQuery
-from cocha_api.db.models import ModelRun, ProcessingRun, ScenarioRun, Station
+from cocha_api.db.models import District, ModelRun, ProcessingRun, ScenarioRun, Station
 from cocha_api.db.session import get_session
 from cocha_api.schemas.availability import (
+    DemoIndicatorItem,
+    DemoTrendItem,
     IndicatorsResponse,
     JobItem,
     JobsResponse,
@@ -29,14 +31,23 @@ from cocha_api.schemas.availability import (
     StoredScenarioRef,
     TrendsResponse,
 )
+from cocha_api.science.demo_districts import DEMO_BOUNDARY_VERSION, geometries_from_query_rows
 from cocha_api.science.evidence import load_snapshot
 from cocha_api.science.gamc_catalog import MONICA_METADATA_PENDING, STATION_CATALOG_PROFILE
 from cocha_api.science.indicators import (
+    DEMO_INDICATORS_REASON,
     DISTRICT_VECTOR_REASON,
     SERIES_REASON,
+    DemoCellMean,
+    demo_indicator_means,
     pilot_window_from_scenes,
 )
-from cocha_api.science.trends import TREND_PUBLICATION_REASON, descriptive_slope
+from cocha_api.science.trends import (
+    TREND_PUBLICATION_REASON,
+    DemoSeriesSlope,
+    demo_series_slopes,
+    descriptive_slope,
+)
 from cocha_api.science.viability import (
     FUSION_BLOCKERS,
     FUSION_NOTE,
@@ -53,6 +64,66 @@ REPORTS_REASON = (
 )
 OBSERVATION_EXPORT_NOTE = "Observation export of the Landsat pilot window. Not a district report."
 JOBS_EMPTY_REASON = "No processing runs are recorded."
+
+
+def _demo_geometries(session: Session):
+    result = session.execute(
+        select(
+            District.number,
+            District.name,
+            District.boundary_version,
+            func.ST_AsGeoJSON(District.geometry).label("geojson"),
+        )
+        .where(District.boundary_version == DEMO_BOUNDARY_VERSION)
+        .order_by(District.number, District.id)
+    )
+    rows = result.all() if hasattr(result, "all") else None
+    return geometries_from_query_rows(rows)
+
+
+def _snapshot_scenes() -> list[object]:
+    snapshot = load_snapshot(get_settings().evidence_path)
+    if snapshot is None:
+        return []
+    return list(snapshot.scenes)
+
+
+def _indicator_item(item: DemoCellMean) -> DemoIndicatorItem:
+    return DemoIndicatorItem(
+        district_number=item.district_number,
+        district_name=item.district_name,
+        scene_id=item.scene_id,
+        variable=item.variable,
+        nature=item.nature,
+        district_indicator=item.district_indicator,
+        boundary_version=item.boundary_version,
+        value=item.value,
+        units=item.units,
+        n_valid=item.n_valid,
+        n_missing=item.n_missing,
+        valid_fraction=item.valid_fraction,
+        statistic=item.statistic,
+    )
+
+
+def _demo_trend_item(item: DemoSeriesSlope) -> DemoTrendItem:
+    return DemoTrendItem(
+        district_number=item.district_number,
+        district_name=item.district_name,
+        variable=item.variable,
+        nature=item.nature,
+        district_trend=item.district_trend,
+        boundary_version=item.boundary_version,
+        scene_ids=list(item.scene_ids),
+        values=list(item.values),
+        n_finite=item.n_finite,
+        min_n=item.min_n,
+        status=item.status,
+        slope_per_step=item.slope_per_step,
+        method=item.method,
+        publishes_inference=False,
+        note=item.note,
+    )
 
 
 def _pilot_window() -> PilotWindowSummary | None:
@@ -72,11 +143,26 @@ def _pilot_window() -> PilotWindowSummary | None:
 
 
 @router.get("/indicators", response_model=IndicatorsResponse)
-def list_indicators(limit: LimitQuery = 50, offset: OffsetQuery = 0) -> IndicatorsResponse:
+def list_indicators(
+    session: Annotated[Session, Depends(get_session)],
+    limit: LimitQuery = 50,
+    offset: OffsetQuery = 0,
+) -> IndicatorsResponse:
+    geometries = _demo_geometries(session)
+    if not geometries:
+        return IndicatorsResponse(
+            status="unavailable",
+            reason=DISTRICT_VECTOR_REASON,
+            items=[],
+            limit=limit,
+            offset=offset,
+            pilot_window=_pilot_window(),
+        )
+    means = demo_indicator_means(geometries, _snapshot_scenes())
     return IndicatorsResponse(
-        status="unavailable",
-        reason=DISTRICT_VECTOR_REASON,
-        items=[],
+        status="available",
+        reason=DEMO_INDICATORS_REASON,
+        items=[_indicator_item(item) for item in means[offset : offset + limit]],
         limit=limit,
         offset=offset,
         pilot_window=_pilot_window(),
@@ -95,8 +181,12 @@ def list_series(limit: LimitQuery = 50, offset: OffsetQuery = 0) -> SeriesRespon
 
 
 @router.get("/trends", response_model=TrendsResponse)
-def list_trends(limit: LimitQuery = 50, offset: OffsetQuery = 0) -> TrendsResponse:
-    # Official district trends stay unavailable. Pilot slopes are descriptive only.
+def list_trends(
+    session: Annotated[Session, Depends(get_session)],
+    limit: LimitQuery = 50,
+    offset: OffsetQuery = 0,
+) -> TrendsResponse:
+    # Official district trends stay unavailable. Pilot and demo slopes are descriptive only.
     pilot_trends: list[PilotTrendItem] = []
     snapshot = load_snapshot(get_settings().evidence_path)
     if snapshot is not None:
@@ -119,13 +209,27 @@ def list_trends(limit: LimitQuery = 50, offset: OffsetQuery = 0) -> TrendsRespon
                     ),
                 )
             )
+    geometries = _demo_geometries(session)
+    demo_trends: list[DemoTrendItem] = []
+    if geometries:
+        means = demo_indicator_means(geometries, _snapshot_scenes())
+        demo_trends = [
+            _demo_trend_item(item) for item in demo_series_slopes(means)[offset : offset + limit]
+        ]
+    reason = TREND_PUBLICATION_REASON
+    if demo_trends:
+        reason = (
+            f"{TREND_PUBLICATION_REASON} "
+            "demo_trends are descriptive slopes on synthetic rectangles only."
+        )
     return TrendsResponse(
         status="unavailable",
-        reason=TREND_PUBLICATION_REASON,
+        reason=reason,
         items=[],
         limit=limit,
         offset=offset,
         pilot_trends=pilot_trends,
+        demo_trends=demo_trends,
     )
 
 

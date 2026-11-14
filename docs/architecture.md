@@ -72,25 +72,27 @@ Revisarlo al actualizar typescript-eslint; no es dependencia del runtime web.
 | GET | `/openapi.json` | Contrato generado |
 | GET | `/v1/explorer` | Snapshot Landsat validado; estado vacío si falta, 503 si es inválido |
 | GET | `/v1/territories` | Piloto disponible; capas WMS según clave; vector distrital `unavailable` |
-| GET | `/v1/indicators` | Distritos `unavailable` (falta el vector). `pilot_window` opcional, etiquetado como ventana piloto |
-| GET | `/v1/series` | `unavailable`: no hay series distritales |
-| GET | `/v1/trends` | `unavailable` para publicación oficial; la pendiente descriptiva no se sirve como resultado |
+| GET | `/v1/indicators` | `unavailable` sin distritos. `available` solo si hay rectángulos `demo-synthetic-v1`; el `reason` dice que el vector GAMC sigue ausente. `pilot_window` sigue etiquetado como ventana piloto |
+| GET | `/v1/series` | `unavailable`: no hay series distritales oficiales |
+| GET | `/v1/trends` | `unavailable` para publicación oficial. `pilot_trends` y, si hay indicadores demo, `demo_trends` descriptivos sin inferencia |
 | GET | `/v1/models` | `unavailable` con nota de viabilidad; sin métricas; filas de `model_runs` solo como referencia no publicada |
 | GET | `/v1/scenarios` | `unavailable` con blockers; sin escenarios evaluados |
 | GET | `/v1/jobs` | Lectura de `processing_runs` o `empty`; `GET /v1/jobs/{id}` responde 404 si no existe; sin escritura |
 | GET | `/v1/reports` | Informes formales `unavailable`. Si hay snapshot, `observation_export` es la ventana piloto, no un informe distrital |
-| GET | `/v1/assistant` | Estado de presupuesto; no llama a Gemini; precios sin verificar; la clave no sale en la respuesta |
+| GET | `/v1/assistant` | Estado de presupuesto; no llama a Gemini; precios verificados el 14/11/2026 y llamadas apagadas; la clave no sale en la respuesta |
 | GET | `/v1/stations` | Estaciones DB si existen; si no, perfil vacío con metadatos pendientes |
 | GET | `/v1/gamc/wms/map`, `/legend`, `/feature-info` | Proxy WMS servidor; 503 sin clave; allowlist; límite de tasa en memoria; la clave no sale en la respuesta |
 
 Cada recurso de dominio incluye un sobre de disponibilidad
 (`available` \| `empty` \| `unavailable` y `reason` opcional). No se inventan
 mediciones. Readiness no garantiza calidad científica.
-No hay endpoints de escritura públicos ni autenticación. `GET /v1/assistant`
-informa el presupuesto y no llama a Gemini. Los precios de token configurables
-son marcadores de posición: hay que verificar las tarifas oficiales antes de
-un uso real. La ingesta multitemporal sigue fuera de HTTP y la ventana piloto
-no sustituye distritos. CORS sigue limitado a GET.
+No hay endpoints de escritura públicos. `require_write_token` existe y está
+probado, pero no hay POST bajo `/v1`: CORS sigue limitado a GET. `GET /v1/assistant`
+informa el presupuesto y no llama a Gemini. El modelo `gemini-3.6-flash` y las
+tarifas 0.75/3.75 USD por millón de tokens (hasta 2026-12-31) se contrastaron
+el 14/11/2026; una llamada real sigue exigiendo autorización explícita.
+La ingesta multitemporal sigue fuera de HTTP. La ventana piloto y los
+rectángulos demo no sustituyen distritos municipales.
 
 ## Referencias de implementación
 

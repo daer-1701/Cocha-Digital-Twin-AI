@@ -113,20 +113,25 @@ para Diego. ★ indica las tareas científicas o técnicas más difíciles.
 | --- | --- | --- |
 | A01 | Completado | `check_containers.ps1` OK (67 passed) el 14/11/2026 |
 | A02 | Completado | Contratos de disponibilidad |
-| A03 | Parcial | WMS listo; vector oficial bloqueado (candidatos de terceros no importados) |
+| A03 | Parcial | WMS listo. Vector oficial GAMC bloqueado. Fixture demo `demo-synthetic-v1` solo para UI/dev; no es un límite municipal |
 | A04 | Completado | Migración `0002` |
 | A05 | Completado (piloto) | Landsat modular |
-| A06 | Bloqueado | Sin vector oficial |
-| A07 | Parcial | `pilot_trends` descriptivos; tendencia distrital oficial bloqueada |
-| A08 | Parcial | Unidad µg/m³ + identidad; huso/coords/licencia pendientes |
+| A06 | Parcial (demo) | `/v1/indicators` `available` solo con distritos demo y reason de vector oficial ausente. Sin distritos: `unavailable` |
+| A07 | Parcial | `pilot_trends` y, si hay indicadores demo, pendientes en `demo_trends`. Inferencia oficial bloqueada |
+| A08 | Parcial | `unit_declared=ug/m3` desde el informe citado; `analysis_enabled=false`. Huso, coordenadas y licencia pendientes (`docs/monica-status.md`) |
 | A09 | Completado | Viabilidad negativa LST↔PM10 |
-| A10–A12 | Bloqueado | Sin modelo defendible / PM10 ≠ temperatura del aire |
-| A13 | Parcial | Lectura jobs + `scripts/register_processing_run.py` (sin worker) |
-| A14 | Parcial | Precios/modelo verificados; llamadas reales off |
+| A10–A12 | Cerrado como bloqueado | Sin variable objetivo compatible. `/v1/models` y `/v1/scenarios` siguen `unavailable` (`docs/andres-blockers.md`) |
+| A13 | Parcial | Lectura de jobs, registro y `services/workers/offline_runner.py` (QA local, sin Celery/Redis) |
+| A14 | Parcial | Precios verificados el 14/11/2026; llamadas reales apagadas hasta autorización explícita |
 | A15 | Completado (piloto) | Export de observación; informe distrital formal bloqueado |
-| A16 | Parcial | Rate limit WMS + `API_WRITE_TOKEN`; sin roles de usuario |
-| A17 | Parcial | Checklist en `docs/a17-checklist.md`; falta validación end-to-end con datos oficiales |
-| A18 | Parcial | Borrador en `docs/a18-operations.md`; sin despliegue productivo |
+| A16 | Parcial | `require_write_token` documentado y probado. API pública solo GET. Sin roles de usuario |
+| A17 | Parcial | Checklist actualizado con A01 en pass y bloqueos restantes. Sin validación e2e con datos oficiales |
+| A18 | Parcial | Borrador de operación actualizado. Sin despliegue productivo ni backup probado |
+
+El vector oficial de A03 sigue bloqueado. `data/fixtures/demo_districts.geojson`
+y `scripts/import_demo_districts.py` sirven 15 rectángulos sintéticos
+(`boundary_version=demo-synthetic-v1`) solo para interfaz y desarrollo. No son
+distritos municipales. Sin esas filas, `/v1/indicators` permanece `unavailable`.
 
 ### Estado Diego — 14/11/2026
 

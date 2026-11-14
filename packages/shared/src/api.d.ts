@@ -391,6 +391,110 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * DemoIndicatorItem
+         * @description Centroid mean inside a synthetic rectangle. Not an official district indicator.
+         */
+        DemoIndicatorItem: {
+            /** District Number */
+            district_number: number;
+            /** District Name */
+            district_name: string;
+            /** Scene Id */
+            scene_id: string;
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "lst_celsius" | "ndvi";
+            /**
+             * Nature
+             * @default demo_synthetic
+             * @constant
+             */
+            nature: "demo_synthetic";
+            /**
+             * District Indicator
+             * @default demo
+             * @constant
+             */
+            district_indicator: "demo";
+            /** Boundary Version */
+            boundary_version: string;
+            /** Value */
+            value?: number | null;
+            /**
+             * Units
+             * @enum {string}
+             */
+            units: "celsius" | "dimensionless";
+            /** N Valid */
+            n_valid: number;
+            /** N Missing */
+            n_missing: number;
+            /** Valid Fraction */
+            valid_fraction?: number | null;
+            /**
+             * Statistic
+             * @default pilot_cell_centroid_mean
+             * @constant
+             */
+            statistic: "pilot_cell_centroid_mean";
+        };
+        /**
+         * DemoTrendItem
+         * @description Descriptive slope on a demo rectangle series. Official inference stays blocked.
+         */
+        DemoTrendItem: {
+            /** District Number */
+            district_number: number;
+            /** District Name */
+            district_name: string;
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "lst_celsius" | "ndvi";
+            /**
+             * Nature
+             * @default demo_synthetic
+             * @constant
+             */
+            nature: "demo_synthetic";
+            /**
+             * District Trend
+             * @default demo
+             * @constant
+             */
+            district_trend: "demo";
+            /** Boundary Version */
+            boundary_version: string;
+            /** Scene Ids */
+            scene_ids: string[];
+            /** Values */
+            values: (number | null)[];
+            /** N Finite */
+            n_finite: number;
+            /** Min N */
+            min_n: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "descriptive" | "inconclusive";
+            /** Slope Per Step */
+            slope_per_step: number | null;
+            /** Method */
+            method: string;
+            /**
+             * Publishes Inference
+             * @default false
+             * @constant
+             */
+            publishes_inference: false;
+            /** Note */
+            note: string;
+        };
         /** ExplorerResponse */
         ExplorerResponse: {
             /**
@@ -434,9 +538,7 @@ export interface components {
             /** Reason */
             reason?: string | null;
             /** Items */
-            items?: {
-                [key: string]: unknown;
-            }[];
+            items?: components["schemas"]["DemoIndicatorItem"][];
             pilot_window?: components["schemas"]["PilotWindowSummary"] | null;
         };
         /** JobItem */
@@ -867,6 +969,8 @@ export interface components {
             }[];
             /** Pilot Trends */
             pilot_trends?: components["schemas"]["PilotTrendItem"][];
+            /** Demo Trends */
+            demo_trends?: components["schemas"]["DemoTrendItem"][];
         };
         /** ValidationError */
         ValidationError: {

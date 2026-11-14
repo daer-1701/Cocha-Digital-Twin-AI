@@ -1,7 +1,7 @@
 """Server-side Gemini budget adapter. Paid calls are not enabled.
 
-Price settings are placeholders. Official Google prices must be verified
-before any real request. Tests use FakeProvider only.
+Token prices for gemini-3.6-flash were checked on 2026-11-14. Live requests
+stay disabled until an explicit authorization. Tests use FakeProvider only.
 """
 
 import json
@@ -12,7 +12,7 @@ from typing import Literal
 
 
 class PriceNotVerified(RuntimeError):
-    """Token prices have not been checked against official documentation."""
+    """Live Gemini calls stay blocked even when token prices have been checked."""
 
 
 @dataclass(frozen=True)
@@ -128,7 +128,7 @@ class AskResult:
 
 def placeholder_token_reserve(*_args: object, **_kwargs: object) -> None:
     raise PriceNotVerified(
-        "Token prices are placeholders and have not been checked against official Google pricing."
+        "Live Gemini calls are not authorized. Verified token prices do not enable a request."
     )
 
 

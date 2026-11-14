@@ -8,7 +8,9 @@ sustituye una auditoría ni añade autenticación completa de usuarios.
 - La API pública sigue en GET. CORS con métodos GET no es autenticación.
 - No hay escritura pública de jobs, modelos, escenarios ni del asistente.
 - `require_write_token` (`API_WRITE_TOKEN`) bloquea rutas mutadoras futuras:
-  sin token configurado responde 503; token ausente/ inválido 401/403.
+  sin token configurado responde 503; token ausente o inválido, 401/403.
+  No se montó `POST /v1/admin/ping`: CORS solo permite GET y la API pública
+  sigue siendo de lectura. El helper se prueba en `tests/unit/test_auth.py`.
 - `GAMC_WMS_API_KEY` y `GEMINI_API_KEY` se leen solo en el servidor. Las
   respuestas de error del proxy WMS redactan la clave, y `GET /v1/assistant`
   informa si hay clave sin devolverla.
@@ -20,7 +22,7 @@ sustituye una auditoría ni añade autenticación completa de usuarios.
   del proyecto, no un saldo verificado. Modelo `gemini-3.6-flash` y tarifas
   pagadas 0.75/3.75 USD por 1M tokens (hasta 2026-12-31) verificadas el
   14/11/2026 en https://ai.google.dev/gemini-api/docs/pricing. Las llamadas
-  reales siguen deshabilitadas.
+  reales siguen deshabilitadas y requieren autorización explícita.
 - Los jobs publicados no incluyen el JSON de parámetros, para no exponer
   valores que alguien hubiera guardado ahí.
 
