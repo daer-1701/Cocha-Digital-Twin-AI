@@ -1,6 +1,6 @@
 FROM ghcr.io/astral-sh/uv:0.12.3 AS uv
 
-FROM python:3.12-slim AS builder
+FROM python:3.15-slim AS builder
 WORKDIR /build
 COPY --from=uv /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
@@ -22,7 +22,7 @@ COPY services/workers services/workers
 COPY data/fixtures data/fixtures
 CMD ["python", "-m", "pytest", "-q"]
 
-FROM python:3.12-slim AS runtime
+FROM python:3.15-slim AS runtime
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 RUN groupadd --gid 10001 cocha && useradd --uid 10001 --gid cocha --create-home cocha
