@@ -50,8 +50,8 @@ cierre, marcar cuáles quedan fuera del alcance en lugar de borrarlas.
 | AC23 | Accesibilidad WCAG 2.2 AA | Sin incumplimientos axe; teclado, foco, nombres, h1 único | Ninguno | Diego (DF10), Julio verifica | `axe.spec.ts`, `accessibility.spec.ts` | Lector de pantalla real pendiente | En curso: QA-01, QA-02, QA-05, QA-10, QA-11 |
 | AC24 | Responsive 320 y 390 px | Sin desbordamiento global; tablas desplazables | Ninguno | Diego | `accessibility.spec.ts` | Dispositivos reales pendientes | En curso: QA-06 |
 | AC25 | Rótulos de naturaleza del dato | Observación, estimación, simulación y sintético distinguidos | Ninguno | Diego | Varias pruebas (`expectDemo`) | — | En curso: QA-09 |
-| AC26 | Datos sintéticos bloqueados en producción | Un build de producción sin `ALLOW_SYNTHETIC_FIXTURES` rechaza fixtures | Ninguno | Andrés, Diego | **Sin prueba**: Playwright siempre habilita las fixtures | — | Pendiente |
-| AC27 | Secretos solo en servidor | Ninguna clave ni URL interna en el cliente | Ninguno | Andrés | `layers.spec.ts` comprueba el proxy; falta revisar el bundle | — | Pendiente |
+| AC26 | Datos sintéticos bloqueados en producción | Un build de producción sin `ALLOW_SYNTHETIC_FIXTURES` rechaza fixtures | Ninguno | Andrés, Diego | `production.spec.ts`: 8 secciones y descargas | Despliegue real pendiente (JF10) | En revisión |
+| AC27 | Secretos solo en servidor | Ninguna clave ni URL interna en el cliente | Ninguno | Andrés (AF08) | `production.spec.ts`: bundle y peticiones del navegador; `layers.spec.ts`: proxy | Revisión de código AF08 pendiente | En revisión |
 
 ## Verificaciones de otros responsables
 

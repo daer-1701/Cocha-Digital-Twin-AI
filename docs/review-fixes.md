@@ -30,7 +30,7 @@ línea temporal y caché de snapshots quedan pendientes de validación. No tomar
 resultados parciales anteriores como aprobación del estado actual.
 
 Validación web retomada el 14/11/2026 (Julio, sin Docker) sobre `9bbbe8f`:
-lint, tipos y build correctos; Playwright con 97 pruebas que pasan y 7
+lint, tipos y build correctos; Playwright con 108 pruebas que pasan y 7
 incidencias abiertas como `test.fixme`. Cubre también la revisión MÓNICA, el
 historial de procesamiento, la lectura guiada y la interacción 3D, siempre con
 fixtures. Detalle en [informe de QA](qa-report.md). Las pruebas Python,

@@ -16,7 +16,7 @@ Cochabamba ni la integración con la API compartida de Andrés (JF05).
 | `npm run lint` | Sin errores |
 | `npm run typecheck` | Sin errores |
 | `npm run build` | Compila; 13 rutas |
-| `npm run test:e2e -w @cocha/web` | 97 pasan, 0 fallan, 7 omitidas (`test.fixme`, una por incidencia abierta) |
+| `npm run test:e2e -w @cocha/web` | 108 pasan, 0 fallan, 7 omitidas (`test.fixme`, una por incidencia abierta) |
 
 Antes de esta revisión la suite tenía 46 pruebas y 1 fallaba: el selector de
 `explorer.spec.ts` encontraba dos regiones con la fecha tras el rediseño del
@@ -109,3 +109,21 @@ pestaña y la salida de pantalla completa en un navegador con interfaz.
   existentes).
 
 Pendiente: repetir la comparación con un snapshot Landsat real (JF05).
+
+## Datos sintéticos en producción y secretos (AC26, AC27)
+
+`production.spec.ts` arranca un segundo `next start` (puerto 3111) con el mismo
+build de producción, sin `ALLOW_SYNTHETIC_FIXTURES`, apuntando a las fixtures.
+
+- **AC26:** las ocho secciones muestran «Producción los bloquea», no muestran
+  escenas, estaciones ni métricas sintéticas, y las descargas CSV/JSON responden
+  503 sin valores.
+- **AC27:** el JavaScript de `.next/static` no contiene los nombres de las
+  variables sensibles de `.env.example` (`GEMINI_API_KEY`, `GAMC_WMS_API_KEY`,
+  `API_WRITE_TOKEN`, `DATABASE_URL`, `POSTGRES_PASSWORD`), ni `API_INTERNAL_URL`
+  o la URL de la API. Al recorrer las ocho secciones y activar una capa WMS, el
+  navegador nunca pide nada directamente a la API y el HTML no expone su URL.
+
+Límite: la búsqueda por nombre no detecta un valor secreto copiado a mano en el
+código cliente; para eso hace falta revisión de código (AF08). No se comprobó
+un despliegue real (JF10).

@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 // Dedicated ports so the suite does not reuse a developer's fixtures or Next.js server.
-import { FIXTURES_PORT, FIXTURES_URL, WEB_PORT } from "./test/e2e/helpers";
+import { FIXTURES_PORT, FIXTURES_URL, STRICT_WEB_PORT, WEB_PORT } from "./test/e2e/helpers";
 
 export default defineConfig({
   testDir: "./test/e2e",
@@ -35,6 +35,13 @@ export default defineConfig({
         ALLOW_SYNTHETIC_FIXTURES: "1",
         NEXT_TELEMETRY_DISABLED: "1",
       },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: `npx next start --port ${STRICT_WEB_PORT} --hostname 127.0.0.1`,
+      url: `http://127.0.0.1:${STRICT_WEB_PORT}/informes`,
+      env: { API_INTERNAL_URL: FIXTURES_URL, NEXT_TELEMETRY_DISABLED: "1" },
       reuseExistingServer: false,
       timeout: 60_000,
     },
