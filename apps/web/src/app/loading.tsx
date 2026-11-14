@@ -1,9 +1,5 @@
+import { StatusPanel } from "../components/ui/status-panel";
+
 export default function Loading() {
-  return (
-    <main>
-      <section className="empty" role="status">
-        Consultando evidencia ambiental…
-      </section>
-    </main>
-  );
+  return <StatusPanel status="loading" title="Consultando la evidencia publicada…" />;
 }

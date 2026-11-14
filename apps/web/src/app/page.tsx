@@ -1,60 +1,71 @@
 import Link from "next/link";
 import { getEvidence } from "../lib/api";
+import {
+  filtersToQuery,
+  parseFilters,
+  type SearchParams,
+} from "../lib/filters";
+import { section } from "../lib/navigation";
+import { territoryOptions } from "../lib/territory";
 import { Explorer } from "../components/explorer";
+import { DemoBanner } from "../components/ui/demo-banner";
+import { PageHeader } from "../components/ui/page-header";
+import { StatusPanel } from "../components/ui/status-panel";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const { data, error } = await getEvidence();
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const [{ data, error, demo }, params] = await Promise.all([
+    getEvidence(),
+    searchParams,
+  ]);
+  const current = section("/");
+  const parsed =
+    data &&
+    parseFilters(
+      params,
+      data.scenes.map((scene) => scene.id),
+      territoryOptions(data)
+        .filter((option) => option.available)
+        .map((option) => option.id),
+    );
   return (
-    <main>
-      <header className="topbar">
-        <Link href="/" className="brand">
-          COCHA<span> / DIGITAL TWIN AI</span>
-        </Link>
-        <span className="badge">MVP · OBSERVACIÓN TERRESTRE</span>
-      </header>
-      <div className="heading">
-        <div>
-          <p className="eyebrow">COCHABAMBA, BOLIVIA · 17.39° S / 66.16° O</p>
-          <h1>La ciudad, bajo otra mirada.</h1>
-          <p className="intro">
-            Explora temperatura superficial y vegetación a partir de
-            observaciones Landsat. Cada cifra tiene una fuente y un límite.
-          </p>
-        </div>
-        <div className="mission">
-          01 / EXPLORADOR
-          <br />
-          <strong>Evidencia antes que predicción.</strong>
-        </div>
-      </div>
-      {data ? (
-        <Explorer evidence={data} />
-      ) : (
-        <section className="empty" role="status">
-          <p className="eyebrow">
-            {error ? "CONEXIÓN PENDIENTE" : "SIN OBSERVACIONES PUBLICADAS"}
-          </p>
-          <h2>
-            {error
-              ? "No pudimos consultar la evidencia."
-              : "El explorador está listo para recibir datos."}
-          </h2>
+    <>
+      <DemoBanner state={demo} />
+      <PageHeader title={current.title}>
+        <p>{current.summary}</p>
+      </PageHeader>
+      {data && parsed ? (
+        <Explorer
+          key={filtersToQuery(parsed.filters)}
+          evidence={data}
+          synthetic={demo === "active"}
+          initial={parsed.filters}
+          notices={parsed.notices}
+        />
+      ) : error ? (
+        <StatusPanel
+          status="error"
+          title="No se pudo consultar la evidencia"
+          action={<Link href="/">Volver a intentar</Link>}
+        >
           <p>
-            {error
-              ? "Comprueba que la API esté disponible y vuelve a cargar la página."
-              : "Ejecuta la ingesta Landsat documentada en el README. No se muestran valores de ejemplo."}
+            La API no respondió o devolvió un error. Comprueba que esté en marcha y
+            que <code>API_INTERNAL_URL</code> apunte a ella.
           </p>
-          <Link href="/">Volver a intentar →</Link>
-        </section>
+        </StatusPanel>
+      ) : (
+        <StatusPanel status="empty" title="Todavía no hay observaciones publicadas">
+          <p>
+            Ejecuta la ingesta Landsat descrita en el README para publicar un
+            snapshot. No se muestran valores de ejemplo.
+          </p>
+        </StatusPanel>
       )}
-      <footer>
-        COCHA DIGITAL TWIN AI{" "}
-        <span>
-          Datos Landsat · USGS / NASA · Exploración científica reproducible
-        </span>
-      </footer>
-    </main>
+    </>
   );
 }
