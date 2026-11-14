@@ -145,3 +145,4 @@ de publicar código para reutilización. Las licencias de datos son independient
 - [Despliegue y operación](docs/deployment.md)
 - [Cómo contribuir](CONTRIBUTING.md)
 - [Seguridad](SECURITY.md)
+- [Skills y reglas para Codex y Cursor](docs/ai-workflow.md)

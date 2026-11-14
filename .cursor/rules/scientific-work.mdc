@@ -1,0 +1,10 @@
+---
+description: Ingesta satelital, GIS, tendencias, validación ML y escenarios ambientales
+globs: services/workers/**,data/**,notebooks/**,docs/science.md
+alwaysApply: false
+---
+
+Leer `docs/science.md` y seleccionar la skill pertinente:
+`.agents/skills/cocha-geospatial-ingestion/SKILL.md` para ingesta/QA,
+`.agents/skills/cocha-scientific-validation/SKILL.md` para análisis/modelos.
+No presentar datos ausentes o sintéticos como observaciones reales.

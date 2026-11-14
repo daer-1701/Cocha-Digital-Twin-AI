@@ -1,0 +1,11 @@
+---
+description: Reglas compartidas y coordinación de Cocha Digital Twin AI
+alwaysApply: true
+---
+
+Aplicar las instrucciones de `AGENTS.md` en la raíz y en el subdirectorio
+afectado. Es la fuente común con Codex; no duplicar ni contradecir sus políticas.
+Leer los archivos referenciados cuando la tarea los requiera.
+
+Las skills compartidas están en `.agents/skills/`. Cargar solo las pertinentes.
+Antes de editar, revisar el estado de Git y conservar cambios del otro editor.

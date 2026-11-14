@@ -30,6 +30,12 @@ markers = ["integration: requires a migrated PostGIS database and RUN_DB_TESTS=1
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+extend-exclude = [
+    ".agents/skills/gh-fix-ci",
+    ".agents/skills/jupyter-notebook",
+    ".agents/skills/playwright",
+    ".agents/skills/security-best-practices",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

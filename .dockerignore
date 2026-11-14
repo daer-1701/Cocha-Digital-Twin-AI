@@ -13,6 +13,8 @@ data/raw
 data/processed
 data/models
 notebooks
+.agents
+.cursor
 secrets
 **/*.pem
 **/*.key
