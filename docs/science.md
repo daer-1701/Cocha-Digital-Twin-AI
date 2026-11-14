@@ -55,6 +55,9 @@ idempotente con checksum y manifiesto. Reintentos no deben duplicar indicadores.
 - Portal municipal: https://recursosgamc.cochabamba.bo/
 - Producto LST: https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature
 
-La revisión inicial encontró el enfoque local publicado, pero no pudo verificar
-archivos municipales descargables. Confirmar los recursos y criterios oficiales
-antes de presentar; el stack de este repositorio es una decisión del proyecto.
+La revisión del 14 de noviembre de 2026 confirmó y descargó los CSV MÓNICA de
+Kanata/Semapa con PM10, fechas sin zona horaria y unidades por verificar.
+El catálogo GAMC anuncia límites distritales WMS, pero todavía no se obtuvo
+un vector completo. Ver `docs/gamc-resources.md` y `data/catalog/gamc.json`.
+La descarga no equivale a validación ni calibración de LST. Confirmar criterios
+oficiales antes de presentar; el stack es una decisión del proyecto.

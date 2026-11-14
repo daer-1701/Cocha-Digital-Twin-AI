@@ -17,6 +17,19 @@ El alcance completo incluye los siete módulos del documento original. Las
 capacidades dependientes de datos solo se consideran implementadas y validadas
 cuando hay evidencia suficiente; una interfaz vacía no equivale a integración.
 
+## Recursos GAMC confirmados — actualización del 14/11/2026
+
+Consultar [entrega GAMC](gamc-resources.md) y `data/catalog/gamc.json` antes de
+A03, A08, A09, D01, D04, D05 y D09. El ZIP y los CSV MÓNICA ya están descargados
+en `data/raw/gamc/monica/`; no repetir descarga ni sobrescribirlos.
+Comando idempotente para otro clon: `python scripts/download_gamc.py`.
+
+La adquisición local está completada; la limpieza e integración siguen pendientes.
+La capa distrital anunciada es WMS y aún no se obtuvo un vector completo.
+Los CSV son PM10 de Kanata/Semapa, con ceros y negativos; unidad, horario y
+coordenadas deben confirmarse. No son temperatura del aire para calibrar LST.
+Diego sigue trabajando sin Docker ni claves municipales en frontend.
+
 ## Cómo usar los prompts
 
 Cada bloque es un prompt para pegar en Codex o Cursor desde la raíz del proyecto.
@@ -90,20 +103,20 @@ ingesta por lotes ya necesita orquestación. D08 puede empezar sobre fixtures.
 
 ## Lista maestra
 
-Todas las tareas empiezan **pendientes**; una parte del código reutilizable
-puede existir. «Depende» identifica resultados previos, no instalación de Docker
+La integración de las tareas permanece **pendiente**; la adquisición MÓNICA
+ya está completada y una parte del código reutilizable puede existir. «Depende» identifica resultados previos, no instalación de Docker
 para Diego. ★ indica las tareas científicas o técnicas más difíciles.
 
 | ID | Responsable | Tarea | Depende |
 | --- | --- | --- | --- |
 | A01 | Andrés | Estabilizar base, contenedores y CI | — |
 | A02 | Andrés | Contratos completos y estados de disponibilidad | D01 |
-| A03 ★ | Andrés | Verificar e importar límites distritales | D01 |
+| A03 ★ | Andrés | Adaptador WMS GAMC y vector distrital completo | D01; importación DB tras A04 |
 | A04 ★ | Andrés | Persistencia y trazabilidad en PostGIS | A02 |
 | A05 ★ | Andrés | Ingesta multitemporal y QA robusto | A01, A03, A04 |
 | A06 ★ | Andrés | Indicadores por distrito y anomalías | A05 |
 | A07 ★ | Andrés | Tendencias e inferencia estadística | A06 |
-| A08 | Andrés | Ingesta y calidad de Red MÓNICA | D01, A04 |
+| A08 | Andrés | QA e ingesta PM10 Kanata/Semapa (archivos descargados) | D01, A04 |
 | A09 ★ | Andrés | Fusión espacio-temporal y baseline | A06, A08 |
 | A10 ★ | Andrés | ML, validación bloqueada e incertidumbre | A09 |
 | A11 | Andrés | Registro de modelos y API de estimaciones | A10, A02 |
@@ -162,19 +175,27 @@ regenera OpenAPI y tipos desde el backend y prueba límites de contrato.
 Aceptación: contratos utilizables por frontend y estados pendientes inequívocos.
 ```
 
-### A03 — Límites distritales verificados
+### A03 — Límites distritales GAMC: WMS y vector completo
 
 ```text
-Implementa A03 de docs/team-plan.md. Lee AGENTS.md y usa
-cocha-geospatial-ingestion. Revisa el catálogo de D01 y consigue una fuente
-verificable de límites de los 15 distritos del municipio de Cochabamba.
-Documenta procedencia, permiso, versión y CRS; valida geometrías, identificadores,
-solapamientos y cobertura municipal. Conserva originales y checksums. Implementa
-un importador idempotente y acceso territorial según A02. No uses dibujos,
-límites metropolitanos ni geometrías aproximadas como distritos oficiales.
-Si no hay fuente válida, entrega el importador probado con fixtures identificadas
-y un informe del bloqueo, sin declarar integración oficial completada.
-Aceptación: geometrías reales verificadas o indisponibilidad documentada.
+Implementa A03 de docs/team-plan.md. Lee AGENTS.md, docs/gamc-resources.md y
+data/catalog/gamc.json; usa cocha-geospatial-ingestion. El servicio distrital es
+7eb13092-bf0e-493b-aae6-03c43eedda2c en
+https://serviciosgamc.cochabamba.bo/api/gs/wms. Entrega por separado:
+1) Adaptador backend WMS para GetMap, GetLegendGraphic y GetFeatureInfo según
+la documentación, con clave de entorno solo servidor, allowlist de service_id,
+CRS y dimensiones acotadas, timeout, caché y respuestas/logs sin claves.
+No propagues URLs arbitrarias ni las credenciales del visor al frontend.
+2) Obtención e importación idempotente de un vector completo autorizado con
+los 15 distritos. WMS/PNG/BBOX no constituyen ese vector. Verifica un enlace de
+archivo o servicio de features documentado, licencia, CRS, versión, IDs,
+geometrías, solapamientos y completitud. No asumas WFS ni reconstruyas polígonos
+desde imágenes o consultas puntuales. Conserva originales y hashes; importa a
+PostGIS después de A04. Mientras falte vector, conserva el piloto y un estado
+expreso de indisponibilidad para estadísticas distritales. No envíes solicitudes
+a terceros automáticamente. Regenera contratos y deja ejemplos para Diego.
+Aceptación: pruebas del proxy y de su protección de claves; vector verificado
+o bloqueo explícito. La parte WMS no permite marcar completada la parte vectorial.
 ```
 
 ### A04 — Persistencia científica y trazabilidad
@@ -234,32 +255,50 @@ temporal y casos constantes/faltantes, y valida un caso real reproducible.
 Aceptación: cada conclusión tiene magnitud, incertidumbre y supuestos verificables.
 ```
 
-### A08 — Red MÓNICA
+### A08 — Red MÓNICA: integrar los CSV PM10 descargados
 
 ```text
-Implementa A08 de docs/team-plan.md con cocha-geospatial-ingestion. Parte de
-las fuentes disponibles de D01. Verifica archivos, variables reales, unidades,
-coordenadas, tiempo UTC/local, frecuencia, mantenimiento y flags de estaciones.
-Crea importadores idempotentes, control de duplicados, huecos y valores inválidos;
-preserva los registros originales y su calidad. Expón estaciones y series con
-permisos de uso documentados. No deduzcas temperatura del aire a partir de
-contaminantes. Si solo existen PDFs o no hay acceso, documenta lo disponible,
-prepara adaptadores y devuelve indisponibilidad; no inventes registros.
-Aceptación: una serie terrestre trazable o un bloqueo de acceso bien delimitado.
+Implementa A08 de docs/team-plan.md con cocha-geospatial-ingestion y
+cocha-scientific-validation. Lee docs/gamc-resources.md, data/catalog/gamc.json
+y los manifiestos locales de data/raw/gamc/monica/. Ya están red_monica.zip,
+red_monica.kanata (1).csv y red_monica.semapa (1).csv. No los sobrescribas.
+Si faltan en este clon ejecuta python scripts/download_gamc.py.
+Los campos son estacion, pm10, fecha_medicion. Comprueba hashes y documenta
+perfil temporal, huecos, frecuencia, duplicados, valores no finitos y calidad.
+Existen 721 negativos en Kanata y 1.499 en Semapa en la descarga inicial;
+marcarlos para revisión y excluirlos del análisis físico, preservando originales.
+No truncarlos a cero ni eliminar todos los ceros sin conocer los códigos.
+Confirma unidad, zona horaria, coordenadas, elevación, instrumentos y licencia.
+Reconcilia nombres Kanata/Semapa con las ubicaciones descritas en el portal.
+No asignes µg/m³, UTC o coordenadas inventadas. Conserva fecha original y estado
+de metadatos; impide publicar agregados físicos mientras esos datos sean ambiguos.
+Implementa staging e importación transaccional/idempotente con flags de calidad,
+procedencia y API de estaciones/series conforme a A02/A04. Añade agregaciones
+solo con mínimos de cobertura justificados. Prueba reimportación, duplicados,
+negativos, ceros, fechas inválidas, horario desconocido y faltantes.
+No uses PM10 para calibrar LST ni lo presentes como temperatura del aire.
+Aceptación: observaciones trazables y QA probado; análisis no habilitado si
+faltan metadatos esenciales. Publica para Diego el estado de cada estación.
 ```
 
-### A09 — Fusión y baseline
+### A09 — Fusión y baseline con objetivo compatible
 
 ```text
 Implementa A09 de docs/team-plan.md usando cocha-scientific-validation.
-Con A06 y A08 define una variable objetivo realmente medible y el uso esperado
-en zonas sin sensores. Justifica emparejamiento temporal, soporte espacial,
-predictores, elevación y compatibilidad entre estación y satélite. Construye
-un baseline simple y particiones bloqueadas por tiempo y espacio/estación,
-sin fuga en transformaciones. Documenta sesgo de selección y extrapolación.
-Si faltan estaciones compatibles, conserva un objetivo satelital explícito o
-declara bloqueada la calibración terrestre; no cambies silenciosamente el objetivo.
-Aceptación: dataset de entrenamiento reproducible y baseline fuera de muestra.
+Lee docs/gamc-resources.md y los resultados A06/A08. Los archivos municipales
+actuales son PM10 de dos estaciones; no proporcionan temperatura del aire.
+Define explícitamente si el objetivo es estimar PM10 u otra variable con
+referencia independiente válida. Mantén LST/NDVI como observaciones o predictores
+según el objetivo; no valides LST contra PM10 ni cambies el objetivo en silencio.
+Confirma unidades, calidad, coordenadas y horario antes de emparejar datos.
+Justifica soporte temporal/espacial, elevación y disponibilidad de predictores
+al momento de la predicción. Construye baseline y evaluación bloqueada con
+preprocesamiento ajustado solo en train. Dos estaciones limitan fuertemente
+la validación espacial: evalúa suficiencia y no afirmes cobertura fiable para
+15 distritos solo por tener muchas fechas en dos lugares.
+Si los datos no permiten validación fuera de muestra útil, entrega análisis
+de viabilidad y conserva ML como pendiente. No inventes métricas ni intervalos.
+Aceptación: objetivo compatible, dataset reproducible y límites de generalización explícitos.
 ```
 
 ### A10 — ML e incertidumbre
@@ -387,18 +426,20 @@ Aceptación: entrega operable y recuperable, con costos y pendientes explícitos
 
 ## Prompts para Diego — todos sin Docker
 
-### D01 — Requisitos y fuentes
+### D01 — Actualizar requisitos y catálogo con la entrega GAMC
 
 ```text
-Implementa D01 de docs/team-plan.md sin Docker. Lee AGENTS.md y docs/mvp.md.
-Investiga en fuentes primarias el reto NASA, enfoque local y datos disponibles.
-Separa requisitos oficiales de ideas del proyecto. Crea una matriz de preguntas,
-funcionalidades, criterios de aceptación y estado actual. Cataloga límites,
-MÓNICA y productos satelitales con URL, fecha de verificación, licencia, variables,
-unidades y acceso confirmado o pendiente. No envíes solicitudes a terceros ni
-inventes disponibilidad. Entrega docs/requirements.md y docs/data-catalog.md
-con bloqueos y una propuesta priorizada para Andrés.
-Aceptación: alcance verificable y fuentes que permiten decidir qué integrar.
+Implementa D01 de docs/team-plan.md sin Docker. Lee AGENTS.md,
+docs/gamc-resources.md y data/catalog/gamc.json. No empieces la investigación
+municipal desde cero: el ZIP MÓNICA ya está verificado y descargado; el catálogo
+incluye IDs de límites, áreas verdes, límite urbano, cota y población.
+Actualiza docs/requirements.md y docs/data-catalog.md con acceso comprobado,
+permisos, fechas, variable, formato y metadatos pendientes. Distingue WMS de
+vector distrital completo y descarga de integración/QA. MÓNICA contiene PM10;
+no lo llames temperatura del aire. Investiga en fuentes primarias unidades,
+zona horaria, coordenadas e identidad de Kanata/Semapa y condiciones de uso,
+sin mandar mensajes a terceros. Entrega a Andrés evidencia y bloqueos concretos.
+Aceptación: catálogo coherente con los archivos reales y fuentes para cada metadato confirmado.
 ```
 
 ### D02 — Frontend autónomo sin Docker
@@ -428,30 +469,34 @@ aportan funcionalidad real. Documenta las decisiones y verifica lint/tipos/build
 Aceptación: interfaz coherente y reutilizable, con estados vacío/error/loading.
 ```
 
-### D04 — Distritos y filtros territoriales
+### D04 — Distritos GAMC y filtros sin geometrías ficticias
 
 ```text
-Implementa D04 de docs/team-plan.md sin Docker. Consume contratos de A02 y
-trabaja con D02 mientras Andrés completa A03. Añade selector territorial,
-resumen del área y filtros sincronizados con URL para compartir la consulta.
-Diferencia municipio, distrito y ventana piloto; no muestres los polígonos
-de prueba como oficiales. Conserva estado pendiente si falta geometría real.
-Respeta teclado, carga y errores de selección. No edites los tipos generados;
-documenta a Andrés cualquier dato que falte en el contrato.
-Aceptación: navegación territorial coherente y lista para geometrías verificadas.
+Implementa D04 de docs/team-plan.md sin Docker. Lee reglas del frontend y
+docs/gamc-resources.md. Usa contratos A02/A03 y fixtures rotuladas de D02.
+Distingue la ventana piloto, la capa distrital WMS y un catálogo vectorial
+completo. Añade selector, ficha y filtros compartibles por URL; habilita
+análisis distrital solo cuando el backend confirme geometrías y resultados.
+Un BBOX de capa no es un polígono ni prueba que estén los 15 distritos.
+No incrustes claves GAMC ni dibujes límites aproximados como oficiales.
+Permite avanzar con el estado vector pendiente mientras el WMS se visualiza.
+Aceptación: selección territorial accesible sin aparentar análisis no disponible.
 ```
 
-### D05 — Mapa y comparación temporal
+### D05 — Mapa Landsat y capas municipales GAMC
 
 ```text
-Implementa D05 de docs/team-plan.md sin Docker. Extiende MapLibre existente
-con capas LST/NDVI, límites verificados cuando existan, leyendas, información al
-seleccionar una zona y controles temporales. Añade comparación entre fechas
-con escalas de color y soporte comparables; no sugieras cambios debidos solo a
-autoescalado. Identifica huecos, resolución, cobertura y naturaleza del dato.
-Libera mapas, workers y listeners al desmontarse. Trabaja con D02 y luego A06.
-Usa playwright para revisar selecciones y cambio de capas.
-Aceptación: mapa correcto, alternativa tabular y errores visibles sin datos ficticios.
+Implementa D05 de docs/team-plan.md sin Docker. Lee docs/gamc-resources.md
+y extiende MapLibre existente mediante la API/proxy de Andrés. Capas candidatas:
+Limite Distritos, Limite Urbano, Áreas Verdes y Población por Manzanas; Cota 2750
+solo como contexto documentado, nunca como DEM. Consume imágenes, leyendas y
+atributos WMS según contrato. No envíes claves municipales al navegador ni copies
+las credenciales del visor. Usa fixtures de D02 hasta disponer del proxy.
+Separa las capas municipales contextuales de los resultados LST/NDVI, con
+fuente, fecha, tipo de dato y resolución. Añade comparación temporal con escala
+fija y tabla alternativa. Maneja WMS no disponible sin perder el piloto.
+Prueba cambio de capas/fechas y limpieza de mapas/workers con playwright.
+Aceptación: capas correctamente identificadas, sin falsa geometría distrital ni claves expuestas.
 ```
 
 ### D06 — Series y resultados estadísticos
@@ -494,16 +539,20 @@ Verifica con fixtures completas e incompletas y después con un resultado real.
 Aceptación: el usuario puede saber de dónde sale cada cifra y cuándo no confiar en ella.
 ```
 
-### D09 — Estaciones terrestres
+### D09 — Series PM10 y fichas Kanata/Semapa
 
 ```text
-Implementa D09 de docs/team-plan.md sin Docker. Añade a D05 una capa de
-estaciones con ubicación, variables realmente medidas, unidades, última
-observación y calidad según A02/A08. Crea ficha y serie por estación y muestra
-cobertura temporal, mantenimiento y ausencia de datos. No inventes estaciones
-ni relaciones de calibración. Usa fixtures rotuladas mientras no existan datos
-MÓNICA válidos; la aplicación real debe comunicar indisponibilidad.
-Aceptación: visualización terrestre honesta y compatible con la futura ingesta.
+Implementa D09 de docs/team-plan.md sin Docker. Lee docs/gamc-resources.md
+y consume A02/A08 con fixtures identificadas de D02 mientras se integra la API.
+Crea lista, ficha y series PM10 para Kanata/Semapa, con procedencia, cobertura,
+calidad y estados de unidad/horario pendientes. No añadas marcadores al mapa
+hasta disponer de coordenadas oficiales; no los adivines por nombre.
+Muestra negativos como observaciones marcadas para revisión y no los mezcles
+con agregados válidos; no conviertas faltantes en cero ni ocultes ceros sin
+regla QA. Evita categorías de salud y etiquetas µg/m³ sin metadatos confirmados.
+Los timestamps originales sin offset no deben rotularse UTC automáticamente.
+Diferencia contaminación PM10 y LST/NDVI; no muestres calibración térmica ficticia.
+Aceptación: series y fichas honestas, con calidad y metadatos visibles, sin Docker.
 ```
 
 ### D10 — Estimaciones y modelos

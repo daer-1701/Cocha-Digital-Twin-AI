@@ -1,0 +1,122 @@
+{
+  "verified_on": "2026-11-14",
+  "documentation_url": "https://recursosgamc.cochabamba.bo/api-doc",
+  "wms_endpoint": "https://serviciosgamc.cochabamba.bo/api/gs/wms",
+  "wms_version": "1.1.1",
+  "documented_operations": [
+    "GetMap",
+    "GetLegendGraphic",
+    "GetFeatureInfo"
+  ],
+  "authentication": "Project key required; not included in this catalog",
+  "layers": [
+    {
+      "name": "Limite Urbano",
+      "style": "Simple",
+      "service_id": "fd77d463-9729-4c66-b686-23dccbb4ab8f",
+      "documented_bounds_wgs84": [
+        -66.251426,
+        -17.50846,
+        -66.084188,
+        -17.332785
+      ]
+    },
+    {
+      "name": "Cota 2750",
+      "style": "Categorizado",
+      "service_id": "297cefa4-0832-42bb-a98e-2cbea989fd9d",
+      "documented_bounds_wgs84": [
+        -66.193763,
+        -17.367136,
+        -66.103902,
+        -17.257306
+      ]
+    },
+    {
+      "name": "Áreas Verdes",
+      "style": "Simple",
+      "service_id": "47360ddc-e35f-4ece-a995-59e90eb79cc6",
+      "documented_bounds_wgs84": [
+        -66.2493,
+        -17.502865,
+        -66.085546,
+        -17.335849
+      ]
+    },
+    {
+      "name": "Limite Distritos",
+      "style": "Simple",
+      "service_id": "7eb13092-bf0e-493b-aae6-03c43eedda2c",
+      "documented_bounds_wgs84": [
+        -66.280703,
+        -17.53119,
+        -66.06952,
+        -17.257306
+      ]
+    },
+    {
+      "name": "Población por Manzanas",
+      "style": "Simple",
+      "service_id": "194a02a0-a73a-48c1-a260-82847c5c905d",
+      "documented_bounds_wgs84": [
+        -66.280703,
+        -17.53119,
+        -66.06952,
+        -17.257306
+      ]
+    }
+  ],
+  "district_vector_download_status": "No complete vector download identified in project-1 documented resource links; WMS is not a complete polygon dataset",
+  "documented_downloads": [
+    "https://recursosgamc.cochabamba.bo/assets/geo/lineas_de_transporte.rar",
+    "https://recursosgamc.cochabamba.bo/assets/geo/red_monica.zip"
+  ],
+  "monica_csv_inspection": [
+    {
+      "file": "red_monica.kanata (1).csv",
+      "sha256": "f60846899967a700ca60c9f5b5d4757b97545e7c0d19c39febfb5a170575f888",
+      "columns": [
+        "estacion",
+        "pm10",
+        "fecha_medicion"
+      ],
+      "rows": 54711,
+      "station_values": [
+        "kanata"
+      ],
+      "min_timestamp_naive": "2022-07-06 17:30:00.000",
+      "max_timestamp_naive": "2026-10-23 10:30:00.000",
+      "zero_pm10": 2697,
+      "negative_pm10": 721,
+      "invalid_numeric_pm10": 0,
+      "duplicate_station_timestamp_keys": 0
+    },
+    {
+      "file": "red_monica.semapa (1).csv",
+      "sha256": "da7fcc9732887412b70a4b62aba5a8a6389170cca8174a01a92d5a03e216d4be",
+      "columns": [
+        "estacion",
+        "pm10",
+        "fecha_medicion"
+      ],
+      "rows": 71154,
+      "station_values": [
+        "semapa"
+      ],
+      "min_timestamp_naive": "2022-08-24 03:30:00.000",
+      "max_timestamp_naive": "2026-10-23 10:00:00.000",
+      "zero_pm10": 3384,
+      "negative_pm10": 1499,
+      "invalid_numeric_pm10": 0,
+      "duplicate_station_timestamp_keys": 0
+    }
+  ],
+  "metadata_pending": [
+    "PM10 units",
+    "timezone",
+    "station coordinates and identity reconciliation",
+    "measurement QA codes and zero interpretation",
+    "data redistribution license",
+    "district vector completeness and boundary vintage"
+  ]
+}
