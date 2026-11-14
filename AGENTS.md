@@ -94,6 +94,8 @@ Descubrir `.agents/skills/*/SKILL.md` y cargar solo la skill pertinente:
 - `security-best-practices`: revisión de seguridad solicitada.
 - `jupyter-notebook`: crear o editar notebooks.
 - `playwright`: comprobar flujos en un navegador real.
+- `frontend-design`: dirección visual y redacción de interfaz; subordinada a
+ la precisión científica y a `apps/web/AGENTS.md`.
 - `gh-fix-ci`: diagnosticar fallos de GitHub Actions.
 
 Ver `docs/ai-workflow.md` para invocación, requisitos y procedencia. Una skill

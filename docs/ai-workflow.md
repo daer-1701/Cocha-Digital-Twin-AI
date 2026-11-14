@@ -8,7 +8,7 @@ Cursor tiene además un adaptador en `.cursor/rules/project.mdc` y una regla
 de contexto científico. No hay que copiar estas instrucciones a preferencias
 globales de cada editor.
 
-Las siete skills están en `.agents/skills/`, ubicación de proyecto reconocida
+Las ocho skills están en `.agents/skills/`, ubicación de proyecto reconocida
 por ambos productos en su documentación vigente. Se versionan junto al código,
 para que otra persona obtenga las mismas instrucciones al clonar el repositorio.
 No se modificó la configuración global de Codex ni de Cursor.
@@ -31,6 +31,7 @@ las instrucciones y skills disponibles antes de comenzar.
 | `jupyter-notebook` | Notebooks de experimentación reproducibles | Catálogo de OpenAI |
 | `playwright` | Explorar y verificar flujos en navegador real | Catálogo de OpenAI |
 | `gh-fix-ci` | Diagnosticar checks fallidos de GitHub Actions | Catálogo de OpenAI |
+| `frontend-design` | Dirección visual, tipografía y redacción de interfaz | Repositorio de skills de Anthropic |
 
 Se revisó el catálogo curado de OpenAI y se eligieron capacidades relevantes
 para el stack existente. No se incorporaron skills de AWS, Vercel, Figma u otros
@@ -110,6 +111,12 @@ Las cuatro skills externas provienen de `openai/skills`, revisión:
 Se instalaron con el helper de skill-installer fijando esa revisión. Se
 conservaron scripts, referencias, assets y licencias Apache-2.0 de cada skill.
 No se ejecutaron los scripts importados para operar servicios externos.
+
+`frontend-design` proviene de `anthropics/skills`, revisión
+`1780c5e5a552fd4d1c9d6a7b0cab26b0c2bef064`, con su licencia Apache-2.0. Se
+incorporó para D03 porque el catálogo de OpenAI solo ofrecía skills de diseño
+dependientes de Figma. Sus criterios estéticos no prevalecen sobre la precisión
+científica ni sobre las reglas de `apps/web/AGENTS.md`.
 
 `.agents/skills.lock.json` registra origen, revisión y SHA-256 de los archivos
 externos. Es un manifiesto de procedencia para revisión; los editores no lo
