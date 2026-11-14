@@ -190,6 +190,24 @@
               "default": 0,
               "title": "Offset"
             }
+          },
+          {
+            "name": "scene_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scene Id"
+            }
           }
         ],
         "responses": {
@@ -1466,6 +1484,17 @@
             "type": "array",
             "title": "Items"
           },
+          "selected_scene_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Scene Id"
+          },
           "pilot_window": {
             "anyOf": [
               {
@@ -1822,6 +1851,18 @@
           "scene_id": {
             "type": "string",
             "title": "Scene Id"
+          },
+          "acquired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquired At"
           },
           "lst_mean": {
             "anyOf": [

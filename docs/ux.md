@@ -263,28 +263,27 @@ formal sigue bloqueado y la página lo dice.
 Pendiente: comparar un informe real con los valores de la pantalla cuando
 exista un snapshot Landsat publicado.
 
-## Visualización 3D (D17): se omite
+## Visualización 3D (D17): implementada con límites explícitos
 
-Decisión: no se implementa 3D por ahora. Motivos:
+El explorador usa MapLibre con relieve de referencia Terrain Tiles de AWS Open
+Data (codificación Terrarium), sombreado y alternativa 2D. La exageración del
+terreno es 1,5; el relieve no es una medición de LST ni valida los indicadores.
+La atribución enlaza al proveedor. La carga del relieve exige acceso externo.
 
-- Los datos publicados son una cuadrícula de celdas de unos 360 m con LST y
-  NDVI medios. Extruirlas añadiría altura sin significado físico: la LST no es
-  una altura, y un eje vertical distorsiona la lectura de valores frente a la
-  escala de color fija y la tabla.
-- No hay alturas de edificios ni un modelo digital de elevación integrado. La
-  capa «Cota 2750» del GAMC es una imagen de referencia, no un DEM, y la regla
-  del proyecto prohíbe inventar alturas.
-- deck.gl o Three.js añadirían peso y dependencia de WebGL a una vista que hoy
-  ya degrada a tabla cuando WebGL falla.
+Las columnas representan el valor de LST/NDVI en una escala visual con tope de
+900 m. Esa altura es una codificación gráfica, no un edificio, elevación urbana
+ni medición ambiental adicional. Se conserva la escala de color fija y la
+alternativa tabular. No se incorporaron deck.gl ni Three.js.
 
-Se reconsiderará si se integra un DEM con fuente, resolución y licencia (para
-mostrar el relieve del valle bajo la LST) o datos de altura urbana verificados,
-siempre con alternativa 2D y tabular.
+Los controles permiten volver a 2D. El código considera equipos limitados,
+movimiento reducido y libera recursos del mapa al desmontarse. Las pruebas
+con fixtures comprueban interfaz; la precisión o disponibilidad del DEM y del
+WMS externo no quedan certificadas por ellas. Ver `review-fixes.md`.
 
 ## Pendiente
 
 - Mostrar series, tendencias e indicadores distritales cuando sus `items` tengan esquema.
-- D07: comparación de distritos cuando exista el vector y A06/A07.
+- D07: comparación oficial cuando exista el vector y A06/A07; el tablero sintético ya permite elegir adquisición.
 - Series PM10 por estación cuando la API las publique (A08).
 - Probar contra la API real de Andrés y el WMS municipal real (las pruebas usan fixtures).
 - Revisar la dirección visual completa cuando existan las secciones reales.

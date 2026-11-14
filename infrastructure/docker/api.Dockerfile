@@ -17,6 +17,9 @@ RUN uv sync --frozen --group science --no-editable
 COPY alembic.ini ./
 COPY services/api/migrations services/api/migrations
 COPY tests tests
+COPY scripts scripts
+COPY services/workers services/workers
+COPY data/fixtures data/fixtures
 CMD ["python", "-m", "pytest", "-q"]
 
 FROM python:3.12-slim AS runtime

@@ -18,8 +18,10 @@ asistente con llamadas reales.
 | Estado | Qué incluye |
 | --- | --- |
 | **Implementado y probado con datos reales** | Ingesta Landsat (STAC → QA → snapshot) y explorador en el MVP previo; ver `docs/mvp.md` |
-| **Implementado, probado solo con fixtures sintéticas** | Capas WMS municipales por proxy, comparación de dos fechas, pendiente descriptiva del piloto, fichas MÓNICA, informes CSV/JSON, estado del asistente; 45 pruebas de navegador |
-| **Bloqueado o planificado** | Comparar distritos (falta vector oficial), series PM10, estimaciones ML (no viables con los datos actuales), escenarios, asistente Gemini con llamadas, 3D (descartado por ahora) |
+| **Implementado con verificación de interfaz mediante fixtures** | Capas WMS por proxy, comparación de fechas, pendiente descriptiva del piloto, fichas MÓNICA, informes CSV/JSON, estado del asistente y comparación de 15 rectángulos sintéticos. Explorador 3D con alternativa 2D; el relieve externo no valida indicadores |
+| **Bloqueado o planificado** | Indicadores por distritos oficiales (falta vector), series PM10, estimaciones ML, escenarios y asistente Gemini con llamadas |
+
+Resultados y alcance de las pruebas actuales: `docs/review-fixes.md`.
 
 ## Manual de uso
 
@@ -42,6 +44,19 @@ asistente con llamadas reales.
 8. **Calidad y procedencia.** Revisar siempre la cobertura válida. Si es menor
    al 70 % aparece un aviso; las celdas sin datos se ven como huecos y en la
    tabla como «Sin datos», nunca como cero.
+9. **Vista 2D/3D.** El relieve de referencia usa Terrain Tiles de AWS Open Data,
+   con exageración vertical de 1,5. Las columnas codifican LST o NDVI (tope
+   visual de 900 m): no son edificios ni alturas medidas. Usar 2D o la tabla
+   para consultar valores; el relieve requiere conexión y WebGL.
+
+### Comparación de prueba (`/comparar`)
+
+Si se importó explícitamente `demo-synthetic-v1`, muestra 15 rectángulos de
+desarrollo, nunca distritos oficiales. Por defecto usa la adquisición más
+reciente; «Fecha de la comparación de prueba» y «Ver fecha» permiten cambiarla.
+LST y NDVI corresponden a esa misma escena. Las pendientes resumen la serie
+disponible y siguen siendo descriptivas, por adquisición, sin inferencia.
+Sin el fixture importado, la comparación permanece bloqueada.
 
 ### Estaciones (`/estaciones`)
 
@@ -60,7 +75,7 @@ vacíos. Es la exportación de la ventana piloto, no un informe distrital.
 
 ### Secciones en preparación
 
-`/comparar`, `/modelos`, `/escenarios` y `/asistente` explican qué falta para
+`/modelos`, `/escenarios` y `/asistente` explican qué falta para
 mostrar resultados. No muestran valores de ejemplo. El asistente informa el
 presupuesto (USD 4), si los precios se verificaron y que las llamadas están
 desactivadas.

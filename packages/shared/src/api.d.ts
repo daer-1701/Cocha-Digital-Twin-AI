@@ -539,6 +539,8 @@ export interface components {
             reason?: string | null;
             /** Items */
             items?: components["schemas"]["DemoIndicatorItem"][];
+            /** Selected Scene Id */
+            selected_scene_id?: string | null;
             pilot_window?: components["schemas"]["PilotWindowSummary"] | null;
         };
         /** JobItem */
@@ -684,6 +686,8 @@ export interface components {
         PilotWindowScene: {
             /** Scene Id */
             scene_id: string;
+            /** Acquired At */
+            acquired_at?: string | null;
             /** Lst Mean */
             lst_mean?: number | null;
             /** Ndvi Mean */
@@ -1145,6 +1149,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                scene_id?: string | null;
             };
             header?: never;
             path?: never;

@@ -38,11 +38,12 @@ for (const [name, scenario] of Object.entries(scenarios)) {
   if (responseSchema("/v1/explorer", scenario.status))
     assertContract(`Scenario "${name}"`, "/v1/explorer", scenario.status, scenario.body);
 }
-const scenarioDomain = (scenario) =>
+const scenarioDomain = (scenario, sceneId) =>
   domainRoutes({
     wms: Boolean(scenario.wms),
     evidence: scenario.status === 200 ? (scenario.body.evidence ?? null) : null,
     districts: Boolean(scenario.districts),
+    sceneId,
   });
 
 for (const [name, scenario] of Object.entries(scenarios))
@@ -109,8 +110,15 @@ const server = createServer((request, response) => {
   if (fixed[pathname]) return send(response, fixed[pathname].status, fixed[pathname].body);
   if (pathname === "/v1/gamc/wms/map" || pathname === "/v1/gamc/wms/legend")
     return sendWms(response, pathname, searchParams);
-  const domain = scenarioDomain(scenarios[active])[pathname];
-  if (domain) return send(response, 200, domain);
+  const domain = scenarioDomain(scenarios[active], searchParams.get("scene_id"))[pathname];
+  if (domain) {
+    if (pathname === "/v1/indicators" && domain.status === "available") {
+      const limit = Number(searchParams.get("limit") ?? 50);
+      const offset = Number(searchParams.get("offset") ?? 0);
+      return send(response, 200, { ...domain, limit, offset, items: domain.items.slice(offset, offset + limit) });
+    }
+    return send(response, 200, domain);
+  }
   if (pathname !== "/v1/explorer") return send(response, 404, { detail: "Not Found" });
 
   const scenario = scenarios[active];

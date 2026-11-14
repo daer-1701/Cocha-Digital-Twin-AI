@@ -1,5 +1,39 @@
 import { expect, test } from "@playwright/test";
-import { expectDemo, useScenario } from "./helpers";
+import { expectDemo, FIXTURES_URL, useScenario } from "./helpers";
+
+test("comparación demo: los 15 rectángulos usan la fecha elegida", async ({ page, request }) => {
+  await useScenario("valle");
+  await page.goto("/comparar");
+  await expectDemo(page);
+  const selector = page.getByLabel("Fecha de la comparación de prueba");
+  const options = selector.locator("option");
+  const oldest = await options.first().getAttribute("value");
+  const newest = await options.last().getAttribute("value");
+  expect(oldest).toBeTruthy();
+  expect(newest).not.toBe(oldest);
+  await expect(selector).toHaveValue(newest!);
+  const board = page.locator(".district-board");
+  await expect(board.locator("tbody tr")).toHaveCount(15);
+  await expect(board).toContainText(newest!);
+  await selector.selectOption(oldest!);
+  await page.getByRole("button", { name: "Ver fecha", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`scene_id=${encodeURIComponent(oldest!)}`));
+  await expect(selector).toHaveValue(oldest!);
+  await expect(board.locator("tbody tr")).toHaveCount(15);
+  await expect(board).toContainText(oldest!);
+  const response = await request.get(
+    `${FIXTURES_URL}/v1/indicators?limit=100&scene_id=${encodeURIComponent(oldest!)}`,
+  );
+  const body = await response.json();
+  expect(body.selected_scene_id).toBe(oldest);
+  expect(body.items).toHaveLength(30);
+  const item = body.items.find(
+    (item: { district_number: number; variable: string }) =>
+      item.district_number === 1 && item.variable === "lst_celsius",
+  );
+  const row = board.getByRole("row").filter({ hasText: item.district_name });
+  await expect(row.locator("td").first()).toContainText(item.value.toFixed(1));
+});
 
 test.describe("secciones sin resultados del servidor", () => {
   test.beforeEach(() => useScenario("available"));

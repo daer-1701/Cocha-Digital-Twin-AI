@@ -20,8 +20,9 @@ con fuente, unidad, QA y cobertura, sin intervención manual en notebooks.
 
 ## 2. Dashboard científico
 
-Añadir MapLibre, selección distrital, series y comparación temporal. Mostrar
-datos ausentes e incertidumbre. Criterio: recorrer fuente → indicador → mapa
+Implementados MapLibre 2D/3D, comparación temporal, informes y tablero demo
+con selector de adquisición. Faltan selección y series distritales oficiales.
+Mostrar datos ausentes e incertidumbre. Criterio: recorrer fuente → indicador → mapa
 sin confundir temperatura superficial con temperatura del aire.
 
 ## 3. Tendencias y validación

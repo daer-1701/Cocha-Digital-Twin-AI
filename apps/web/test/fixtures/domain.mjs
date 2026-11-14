@@ -99,8 +99,8 @@ const unavailable = (reason, extra = {}) => ({
  * `evidence` is the active scenario snapshot, or null when none is published;
  * `districts` adds demo-rectangle indicators, series and trends.
  */
-export function domainRoutes({ wms, evidence, districts = false }) {
-  const valley = districts ? valleyDomain() : {};
+export function domainRoutes({ wms, evidence, districts = false, sceneId }) {
+  const valley = districts ? valleyDomain(sceneId) : {};
   if (valley["/v1/trends"]) valley["/v1/trends"].pilot_trends = pilotTrends(evidence);
   return {
     "/v1/territories": territories(wms),

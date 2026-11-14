@@ -31,6 +31,7 @@ def test_domain_endpoints_report_unavailable_without_faking_science(monkeypatch,
     from cocha_api.core.config import get_settings
 
     get_settings.cache_clear()
+
     app = create_app()
     _override_empty_session(app)
     reasons = {
@@ -203,3 +204,79 @@ def test_demo_indicators_are_available_and_official_trends_stay_blocked(monkeypa
     assert models.json()["status"] == "unavailable"
     assert scenarios.json()["status"] == "unavailable"
     get_settings.cache_clear()
+
+
+def test_demo_comparison_selects_one_scene_before_pagination(monkeypatch, tmp_path):
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from cocha_api.core.config import get_settings
+    from cocha_api.schemas.explorer import Cell, Scene, Snapshot
+    from cocha_api.science.demo_districts import load_demo_fixture
+
+    polygons = load_demo_fixture(
+        Path(__file__).resolve().parents[2] / "data/fixtures/demo_districts.geojson"
+    )
+    scenes = [
+        Scene(
+            id=scene_id,
+            acquired_at=datetime(year, 7, 10, tzinfo=UTC),
+            platform="synthetic",
+            source_url="https://example.invalid/synthetic",
+            valid_fraction=1,
+            valid_pixels=15,
+            total_pixels=15,
+            lst_mean=float(year - 2000),
+            ndvi_mean=0.3,
+            cells=[
+                Cell(
+                    bounds=(
+                        min(x for x, _ in polygon.ring),
+                        min(y for _, y in polygon.ring),
+                        max(x for x, _ in polygon.ring),
+                        max(y for _, y in polygon.ring),
+                    ),
+                    lst=float(year - 2000),
+                    ndvi=0.3,
+                )
+                for polygon in polygons
+            ],
+        )
+        for scene_id, year in [("a-new", 2024), ("z-old", 2022), ("m-middle", 2023)]
+    ]
+    snapshot = Snapshot(
+        generated_at=datetime(2024, 8, 1, tzinfo=UTC),
+        area_name="synthetic pilot",
+        bounds=(-66.2, -17.5, -66.1, -17.3),
+        product_version="synthetic",
+        license="test-only",
+        method="synthetic fixture",
+        limitations=["Not real environmental observations"],
+        scenes=scenes,
+    )
+    path = tmp_path / "explorer.json"
+    path.write_text(snapshot.model_dump_json(), encoding="utf-8")
+    monkeypatch.setenv("EVIDENCE_PATH", str(path))
+    get_settings.cache_clear()
+    monkeypatch.setattr("cocha_api.routes.domain._demo_geometries", lambda session: polygons)
+    app = create_app()
+    _override_empty_session(app)
+    try:
+        with TestClient(app) as client:
+            latest = client.get("/v1/indicators").json()
+            assert latest["selected_scene_id"] == "a-new"
+            assert len(latest["items"]) == 30
+            assert {item["district_number"] for item in latest["items"]} == set(range(1, 16))
+            assert {item["scene_id"] for item in latest["items"]} == {"a-new"}
+            assert all(
+                item["value"] == 24 for item in latest["items"] if item["variable"] == "lst_celsius"
+            )
+            old = client.get("/v1/indicators?scene_id=z-old&limit=100").json()
+            assert len(old["items"]) == 30
+            assert {item["scene_id"] for item in old["items"]} == {"z-old"}
+            page = client.get("/v1/indicators?scene_id=z-old&limit=7&offset=7").json()
+            assert page["items"] == old["items"][7:14]
+            assert client.get("/v1/indicators?scene_id=not-found").status_code == 404
+            assert client.get("/v1/indicators?scene_id=").status_code == 422
+    finally:
+        get_settings.cache_clear()

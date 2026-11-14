@@ -12,6 +12,7 @@ import {
 } from "../lib/filters";
 import { territoryOptions } from "../lib/territory";
 import { ComparisonPanel } from "./comparison-panel";
+import { SceneTimeline } from "./scene-timeline";
 import { MapLayers } from "./map-layers";
 import { ObservationChart } from "./observation-chart";
 import { ProvenancePanel } from "./provenance-panel";
@@ -129,7 +130,8 @@ export function Explorer({
   const [filters, setFilters] = useState(initial);
   const [copy, setCopy] = useState<CopyState>("idle");
   const [overlays, setOverlays] = useState<string[]>([]);
-  const [failedOverlays, setFailedOverlays] = useState<string[]>([]);  const update = (change: Partial<ExplorerFilters>) => {
+  const [failedOverlays, setFailedOverlays] = useState<string[]>([]);
+  const update = (change: Partial<ExplorerFilters>) => {
     const next = { ...filters, ...change };
     if (next.compareId === next.sceneId) next.compareId = null;
     setFilters(next);
@@ -181,6 +183,7 @@ export function Explorer({
           onOverlayError={overlayFailed}
         />
         <div className="hud">
+          <div className="hud-context"><span className="observatory-mark" aria-hidden="true" />Ventana piloto de Cochabamba</div>
           <p className="hud-date">
             <time dateTime={scene.acquired_at}>{date}</time>, {scene.platform}
           </p>
@@ -204,6 +207,8 @@ export function Explorer({
           </p>
         </div>
       </section>
+      <SceneTimeline scenes={evidence.scenes} selectedId={scene.id}
+        onSelect={(sceneId) => update({ sceneId })} />
       {notices.length > 0 && (
         <div className="link-notice" role="status">
           <p>Algunos filtros del enlace no se pudieron aplicar:</p>

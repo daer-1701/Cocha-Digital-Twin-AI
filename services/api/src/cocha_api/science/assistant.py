@@ -5,7 +5,11 @@ stay disabled until an explicit authorization. Tests use FakeProvider only.
 """
 
 import json
+import math
+import os
 import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -45,10 +49,14 @@ class FakeProvider:
 
 
 class BudgetLedger:
-    """Atomic reservation ledger. In memory, or a gitignored JSON file."""
+    """Atomic ledger shared by processes using the same local JSON/lock files.
+
+    A filesystem lock covers reload, read/modify/write and atomic replacement.
+    Multiple hosts must use a central transactional store before enabling paid calls.
+    """
 
     def __init__(self, *, budget_usd: float, path: Path | None = None) -> None:
-        if budget_usd <= 0:
+        if not math.isfinite(budget_usd) or budget_usd <= 0:
             raise ValueError("budget_usd must be positive")
         self.budget_usd = budget_usd
         self.path = path
@@ -56,8 +64,38 @@ class BudgetLedger:
         self._spent = 0.0
         self._reserved: dict[str, float] = {}
         self._settled: set[str] = set()
-        if path is not None and path.exists():
-            self._load(path)
+
+    @contextmanager
+    def _transaction(self) -> Iterator[None]:
+        with self._lock:
+            if self.path is None:
+                yield
+                return
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            # Lock a stable sibling: the ledger itself is replaced on every write.
+            with self.path.with_suffix(self.path.suffix + ".lock").open("a+b") as handle:
+                if os.name == "nt":
+                    import msvcrt
+
+                    if handle.seek(0, os.SEEK_END) == 0:
+                        handle.write(b"\0")
+                        handle.flush()
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+                try:
+                    if self.path.exists():
+                        self._load(self.path)
+                    yield
+                finally:
+                    if os.name == "nt":
+                        handle.seek(0)
+                        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def _load(self, path: Path) -> None:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -81,13 +119,13 @@ class BudgetLedger:
         temporary.replace(self.path)
 
     def totals(self) -> tuple[float, float]:
-        with self._lock:
+        with self._transaction():
             return self._spent, sum(self._reserved.values())
 
     def reserve(self, request_id: str, amount_usd: float) -> bool:
-        if amount_usd <= 0:
+        if not math.isfinite(amount_usd) or amount_usd <= 0:
             raise ValueError("reserve amount must be positive")
-        with self._lock:
+        with self._transaction():
             if request_id in self._settled or request_id in self._reserved:
                 return True
             reserved = sum(self._reserved.values())
@@ -100,17 +138,16 @@ class BudgetLedger:
     def reconcile(self, request_id: str, actual_usd: float | None) -> None:
         """Charge the actual cost, or the full reservation when the cost is unknown."""
 
-        with self._lock:
+        with self._transaction():
             if request_id in self._settled:
                 return
+            if actual_usd is not None and (not math.isfinite(actual_usd) or actual_usd < 0):
+                raise ValueError("cost must be finite and nonnegative")
             reserved = self._reserved.pop(request_id, None)
             if reserved is None:
                 return
             if actual_usd is None:
                 charged = reserved
-            elif actual_usd < 0:
-                self._reserved[request_id] = reserved
-                raise ValueError("cost cannot be negative")
             else:
                 charged = actual_usd
             self._spent += charged

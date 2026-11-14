@@ -6,9 +6,11 @@ Base de una plataforma de evidencia ambiental para Cochabamba: temperatura
 superficial, vegetación y tendencias territoriales reproducibles.
 
 **Estado: primer recorrido MVP con ingesta real Landsat, API y explorador.**
-Incluye LST, NDVI, QA, mapa y comparación descriptiva de fechas sobre una
-ventana urbana. No incluye aún límites distritales verificados, MÓNICA,
-tendencias inferenciales, ML ni Gemini. No es un gemelo digital validado.
+Incluye LST, NDVI, QA, explorador 2D/3D, comparación descriptiva y exportación
+de la ventana piloto. MÓNICA tiene importador y fichas, con análisis desactivado
+por metadatos pendientes. Los 15 rectángulos de desarrollo están identificados
+como sintéticos y no sustituyen límites oficiales. No incluye tendencias
+inferenciales, ML validado ni llamadas reales a Gemini. No es un gemelo digital validado.
 
 ## Ejecutar el piloto con datos reales
 
@@ -102,7 +104,7 @@ DATABASE_URL. No necesitas credenciales NASA o Gemini para esta base.
 ```text
 apps/web/                 Next.js App Router + TypeScript
 services/api/             FastAPI, configuración, rutas, modelos y migraciones
-services/workers/         Contrato del futuro procesamiento científico
+services/workers/         Ejecutor local de QA; cola distribuida pendiente
 packages/shared/          OpenAPI y tipos TypeScript generados
 data/                     Política de datos; artefactos locales ignorados por Git
 notebooks/                Exploración, sin lógica exclusiva de producción
@@ -131,10 +133,15 @@ uv run --group science pytest -q
 npm run lint
 npm run typecheck
 npm run build
+npx playwright install chromium
+npm run test:e2e -w @cocha/web
 ```
 
 Las pruebas científicas requieren `--group science`:
 `uv run --group science pytest -q`. CI instala ese grupo explícitamente.
+Playwright usa puertos exclusivos y fixtures sintéticas; no necesita Docker
+ni consume APIs de pago. La validación de correcciones está en
+[correcciones y pruebas](docs/review-fixes.md).
 
 Las pruebas de integración se omiten sin RUN_DB_TESTS. Para ejecutarlas usa una
 base exclusiva cuyo nombre termine en `_test`: las pruebas escriben fixtures.

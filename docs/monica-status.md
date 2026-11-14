@@ -25,3 +25,23 @@ Revisión de código: 14 de noviembre de 2026. No se inventan coordenadas ni hus
   redistribución.
 
 Mientras eso siga abierto, los agregados físicos permanecen apagados.
+
+## Política de importación y duplicados
+
+`scripts/import_monica.py` importa todos los archivos solicitados en una única
+transacción de datos. Si falla un archivo o una operación SQL, se revierten
+estaciones y observaciones de esa ejecución. El registro `processing_runs`
+se conserva aparte con estado `failed`, fecha final y tipo de error; no guarda
+la excepción SQL ni credenciales. Una interrupción abrupta del proceso puede
+dejar un registro `running`; su recuperación operacional sigue pendiente.
+
+La primera fila de cada estación/instante se conserva con su QA original.
+Fechas equivalentes con y sin fracciones de segundo son la misma clave.
+Las filas posteriores duplicadas se excluyen y cuentan en `skipped_duplicates`.
+Claves ya persistidas no se sobrescriben ni cambian de procedencia al reimportar;
+se cuentan en `skipped_existing`. Una corrección oficial del proveedor requiere
+un procedimiento explícito de revisión, todavía pendiente. El checksum y los
+conteos quedan registrados para ejecuciones completadas; conservar el CSV original.
+
+Estas reglas no reparan automáticamente registros de importaciones anteriores.
+Las pruebas de regresión usan CSV sintéticos y una base exclusiva `_test`.

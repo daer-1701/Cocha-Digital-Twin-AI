@@ -109,10 +109,11 @@ def parse_monica_csv(
         else:
             value, quality = classify_pm10(pm10_raw)
 
-        key = (source_id, observed_raw.strip())
+        # Equivalent timestamp spellings identify the same observation in the DB.
+        key = (source_id, observed_at.isoformat() if observed_at else observed_raw.strip())
         if key[0] and key[1] and key in seen:
             quality = "duplicate"
-            duplicate_keys.append(key)
+            duplicate_keys.append((source_id, observed_raw.strip()))
         elif key[0] and key[1]:
             seen[key] = index
 

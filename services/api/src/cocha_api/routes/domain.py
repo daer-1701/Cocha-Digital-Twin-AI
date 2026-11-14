@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -135,7 +135,10 @@ def _pilot_window() -> PilotWindowSummary | None:
         note=view.note,
         scenes=[
             PilotWindowScene(
-                scene_id=scene.scene_id, lst_mean=scene.lst_mean, ndvi_mean=scene.ndvi_mean
+                scene_id=scene.scene_id,
+                acquired_at=next(s.acquired_at for s in snapshot.scenes if s.id == scene.scene_id),
+                lst_mean=scene.lst_mean,
+                ndvi_mean=scene.ndvi_mean,
             )
             for scene in view.scenes
         ],
@@ -147,6 +150,7 @@ def list_indicators(
     session: Annotated[Session, Depends(get_session)],
     limit: LimitQuery = 50,
     offset: OffsetQuery = 0,
+    scene_id: Annotated[str | None, Query(min_length=1, max_length=200)] = None,
 ) -> IndicatorsResponse:
     geometries = _demo_geometries(session)
     if not geometries:
@@ -158,11 +162,26 @@ def list_indicators(
             offset=offset,
             pilot_window=_pilot_window(),
         )
-    means = demo_indicator_means(geometries, _snapshot_scenes())
+    scenes = _snapshot_scenes()
+    if not scenes:
+        return IndicatorsResponse(
+            status="empty",
+            reason="No pilot scenes are available for the demo rectangles.",
+            limit=limit,
+            offset=offset,
+        )
+    if scene_id is None:
+        selected = max(scenes, key=lambda scene: (scene.acquired_at, scene.id))
+    else:
+        selected = next((scene for scene in scenes if scene.id == scene_id), None)
+        if selected is None:
+            raise HTTPException(status_code=404, detail="Pilot scene not found")
+    means = demo_indicator_means(geometries, [selected])
     return IndicatorsResponse(
         status="available",
         reason=DEMO_INDICATORS_REASON,
         items=[_indicator_item(item) for item in means[offset : offset + limit]],
+        selected_scene_id=selected.id,
         limit=limit,
         offset=offset,
         pilot_window=_pilot_window(),

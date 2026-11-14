@@ -123,8 +123,14 @@ export const getReports = () =>
           isObject(b.observation_export.evidence) &&
           Array.isArray(b.observation_export.evidence.scenes))),
   );
-export const getIndicators = () =>
-  getJson<Indicators>("/v1/indicators", (b) => isEnvelope(b) && hasArray(b, "items"));
+export const getIndicators = (sceneId?: string) => {
+  // One scene has at most 15 rectangles × 2 variables, within this page size.
+  const query = new URLSearchParams({ limit: "100" });
+  if (sceneId) query.set("scene_id", sceneId);
+  return getJson<Indicators>(`/v1/indicators?${query}`, (b) =>
+    isEnvelope(b) && hasArray(b, "items"),
+  );
+};
 export const getModels = () =>
   getJson<Models>(
     "/v1/models",

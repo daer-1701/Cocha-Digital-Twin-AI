@@ -41,11 +41,15 @@ type Row = {
 export function DistrictBoard({
   indicators,
   trends,
+  sceneId,
 }: {
   indicators: Indicator[];
   trends: Trend[];
+  sceneId: string | null;
 }) {
-  const demo = indicators.filter((i) => i.nature === "demo_synthetic");
+  const demo = indicators.filter(
+    (i) => i.nature === "demo_synthetic" && i.scene_id === sceneId,
+  );
   if (demo.length === 0) return null;
   const numbers = [...new Set(demo.map((i) => i.district_number))].sort((a, b) => a - b);
   const rows: Row[] = numbers.map((number) => {

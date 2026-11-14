@@ -103,8 +103,8 @@ ingesta por lotes ya necesita orquestación. D08 puede empezar sobre fixtures.
 
 ## Lista maestra
 
-La integración de las tareas permanece **pendiente**; la adquisición MÓNICA
-ya está completada y una parte del código reutilizable puede existir. «Depende» identifica resultados previos, no instalación de Docker
+La integración con datos distritales oficiales permanece **pendiente**; existen
+el piloto Landsat, importación MÓNICA y recorridos con fixtures. «Depende» identifica resultados previos, no instalación de Docker
 para Diego. ★ indica las tareas científicas o técnicas más difíciles.
 
 ### Estado Andrés — 14/11/2026
@@ -116,13 +116,13 @@ para Diego. ★ indica las tareas científicas o técnicas más difíciles.
 | A03 | Parcial | WMS listo. Vector oficial GAMC bloqueado. Fixture demo `demo-synthetic-v1` solo para UI/dev; no es un límite municipal |
 | A04 | Completado | Migración `0002` |
 | A05 | Completado (piloto) | Landsat modular |
-| A06 | Parcial (demo) | `/v1/indicators` `available` solo con distritos demo y reason de vector oficial ausente. Sin distritos: `unavailable` |
+| A06 | Parcial (demo) | Indicadores demo de una escena, más reciente por defecto; filtro `scene_id` antes de paginar. Sin vector oficial, no hay indicadores distritales publicables |
 | A07 | Parcial | `pilot_trends` y, si hay indicadores demo, pendientes en `demo_trends`. Inferencia oficial bloqueada |
-| A08 | Parcial | `unit_declared=ug/m3` desde el informe citado; `analysis_enabled=false`. Huso, coordenadas y licencia pendientes (`docs/monica-status.md`) |
+| A08 | Parcial | Importación atómica, fallos auditados y duplicados sin sobrescritura. `analysis_enabled=false`; huso, coordenadas y licencia pendientes (`docs/monica-status.md`) |
 | A09 | Completado | Viabilidad negativa LST↔PM10 |
 | A10–A12 | Cerrado como bloqueado | Sin variable objetivo compatible. `/v1/models` y `/v1/scenarios` siguen `unavailable` (`docs/andres-blockers.md`) |
 | A13 | Parcial | Lectura de jobs, registro y `services/workers/offline_runner.py` (QA local, sin Celery/Redis) |
-| A14 | Parcial | Precios verificados el 14/11/2026; llamadas reales apagadas hasta autorización explícita |
+| A14 | Parcial | Ledger compartido entre procesos del mismo disco mediante bloqueo y recarga; pruebas sin gasto. Llamadas reales apagadas; despliegue multihost requiere almacén transaccional central |
 | A15 | Completado (piloto) | Export de observación; informe distrital formal bloqueado |
 | A16 | Parcial | `require_write_token` documentado y probado. API pública solo GET. Sin roles de usuario |
 | A17 | Parcial | Checklist actualizado con A01 en pass y bloqueos restantes. Sin validación e2e con datos oficiales |
@@ -143,16 +143,16 @@ Verificado con fixtures sintéticas de D02, no con la API real de Andrés.
 | D04 | Completado (código) | Selector consume `/v1/territories`; distritos deshabilitados con el motivo del servidor; WMS pasa a capa del mapa |
 | D05 | Parcial | Capas WMS por proxy de Next.js y comparación de dos fechas; sin probar contra el WMS municipal real; sin capas por distrito (A06) |
 | D06 | Completado (piloto) | Gráfico en escala fija con huecos; `pilot_trends` como pendiente descriptiva, no inferencial; tendencia distrital bloqueada con A07 |
-| D07 | Bloqueado | Requiere vector distrital, A06 y A07 |
+| D07 | Parcial (demo) | Tablero de 15 rectángulos sintéticos y selector de adquisición; comparación oficial bloqueada por vector, A06 y A07 |
 | D08 | Parcial | Panel de procedencia con campos del contrato; falta verificar con un snapshot real |
 | D09 | Completado (catálogo) | Ubicación descrita, unidad con fuente y metadatos pendientes traducidos; sin series PM10 en la API (A08) |
 | D10–D11 | Parcial (estado) | Muestran motivo y bloqueos del servidor; modelos y escenarios no viables con los datos actuales |
 | D12 | Parcial (estado) | Presupuesto, modelo, precios verificados con fecha y fuente; llamadas desactivadas en el servidor |
 | D13 | Completado (piloto) | `/informes` con selección, vista previa y descargas CSV/JSON de `observation_export`; falta comparar con un informe real |
 | D14 | Completado | Auditoría en `docs/ux.md`: 0 px de desbordamiento a 320/390 px, teclado, nombres e ids; corregido un id duplicado |
-| D15 | Completado | 45 pruebas Playwright sobre fixtures validadas contra OpenAPI; ejecución en el job `web` de CI |
+| D15 | Completado (fixtures) | Suite Playwright y regresión de comparación por fecha; resultados locales en `docs/review-fixes.md`. CI debe ejecutarse en GitHub |
 | D16 | Parcial | `docs/manual.md` con manual, guion y plan B; faltan capturas de un caso real y resultados A17 |
-| D17 | Completado (decisión) | 3D omitido y justificado en `docs/ux.md`: sin DEM ni alturas, celdas de unos 360 m |
+| D17 | Implementado (visualización) | MapLibre con relieve Terrain Tiles, columnas de valores y alternativa 2D; sin alturas urbanas medidas. Ver `docs/ux.md` |
 
 | ID | Responsable | Tarea | Depende |
 | --- | --- | --- | --- |

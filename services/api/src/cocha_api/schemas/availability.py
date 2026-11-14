@@ -27,6 +27,7 @@ class PaginationParams(AvailabilityModel):
 
 class PilotWindowScene(AvailabilityModel):
     scene_id: str
+    acquired_at: datetime | None = None
     lst_mean: float | None = None
     ndvi_mean: float | None = None
     scope: Literal["pilot_window"] = "pilot_window"
@@ -60,6 +61,7 @@ class DemoIndicatorItem(AvailabilityModel):
 
 class IndicatorsResponse(AvailabilityEnvelope, PaginationParams):
     items: list[DemoIndicatorItem] = Field(default_factory=list)
+    selected_scene_id: str | None = None
     pilot_window: PilotWindowSummary | None = None
 
 

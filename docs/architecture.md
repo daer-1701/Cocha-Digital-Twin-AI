@@ -31,7 +31,7 @@ Líneas continuas: base implementada. Líneas discontinuas: componentes planific
 | `services/api/src/cocha_api/db` | ORM, sesiones y conexiones |
 | `services/api/src/cocha_api/core` | Configuración y logs |
 | `services/api/migrations` | Historial del esquema administrado por Alembic |
-| `services/workers` | Diseño del pipeline futuro |
+| `services/workers` | Ejecutor local de QA; orquestación distribuida pendiente |
 | `packages/shared` | Contratos generados, sin lógica científica duplicada |
 
 El catálogo inicial es pequeño: las rutas consultan SQLAlchemy directamente.
@@ -72,7 +72,7 @@ Revisarlo al actualizar typescript-eslint; no es dependencia del runtime web.
 | GET | `/openapi.json` | Contrato generado |
 | GET | `/v1/explorer` | Snapshot Landsat validado; estado vacío si falta, 503 si es inválido |
 | GET | `/v1/territories` | Piloto disponible; capas WMS según clave; vector distrital `unavailable` |
-| GET | `/v1/indicators` | `unavailable` sin distritos. `available` solo si hay rectángulos `demo-synthetic-v1`; el `reason` dice que el vector GAMC sigue ausente. `pilot_window` sigue etiquetado como ventana piloto |
+| GET | `/v1/indicators?scene_id=...&limit=100` | `unavailable` sin distritos demo; `empty` sin escenas. Solo una adquisición (la más reciente por defecto), seleccionada antes de paginar; `selected_scene_id` identifica la elegida y una inexistente responde 404. El vector GAMC sigue ausente |
 | GET | `/v1/series` | `unavailable`: no hay series distritales oficiales |
 | GET | `/v1/trends` | `unavailable` para publicación oficial. `pilot_trends` y, si hay indicadores demo, `demo_trends` descriptivos sin inferencia |
 | GET | `/v1/models` | `unavailable` con nota de viabilidad; sin métricas; filas de `model_runs` solo como referencia no publicada |
@@ -93,6 +93,21 @@ tarifas 0.75/3.75 USD por millón de tokens (hasta 2026-12-31) se contrastaron
 el 14/11/2026; una llamada real sigue exigiendo autorización explícita.
 La ingesta multitemporal sigue fuera de HTTP. La ventana piloto y los
 rectángulos demo no sustituyen distritos municipales.
+
+## Transacciones de importación y presupuesto
+
+MÓNICA registra la ejecución en una transacción independiente e importa todos
+sus archivos en otra. Un fallo revierte los datos y actualiza la auditoría desde
+una sesión nueva. Las observaciones existentes son inmutables al reimportar;
+ver `docs/monica-status.md` para duplicados y correcciones del proveedor.
+
+El prototipo `BudgetLedger` conserva su JSON local y usa un archivo `.lock`
+estable: bloqueo del sistema operativo, recarga, operación y reemplazo atómico
+ocurren juntos. Funciona entre procesos que comparten el mismo disco en Windows
+y Linux. No borrar el lock durante la ejecución ni usar copias independientes
+del ledger. Un despliegue con varios hosts o sistemas de archivos de red exige
+un almacén transaccional central antes de habilitar gasto. Sin `path`, el ledger
+es solo memoria de una instancia. Esto no activa llamadas reales a Gemini.
 
 ## Referencias de implementación
 

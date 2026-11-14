@@ -190,13 +190,17 @@ const DEMO_REASON =
   "Fixture: demo-synthetic-v1 rectangles. Not official GAMC districts; official indicators stay blocked.";
 const PAGE = { limit: 100, offset: 0 };
 
-export function valleyDomain() {
-  const latest = valleyScenes.at(-1);
+export function valleyDomain(sceneId) {
+  const latest = sceneId
+    ? valleyScenes.find((scene) => scene.id === sceneId)
+    : valleyScenes.at(-1);
+  if (!latest) return {};
   const sceneIds = valleyScenes.map((s) => s.id);
   const indicators = {
     status: "available",
     reason: DEMO_REASON,
     ...PAGE,
+    selected_scene_id: latest.id,
     items: DISTRICTS.flatMap((d) =>
       VARIABLES.map(({ key, variable, units }) => ({
         district_number: d.number,
@@ -217,6 +221,7 @@ export function valleyDomain() {
       note: "Fixture: scene means over the whole synthetic window.",
       scenes: valleyScenes.map((s) => ({
         scene_id: s.id,
+        acquired_at: s.acquired_at,
         lst_mean: s.lst_mean,
         ndvi_mean: s.ndvi_mean,
         scope: "pilot_window",
