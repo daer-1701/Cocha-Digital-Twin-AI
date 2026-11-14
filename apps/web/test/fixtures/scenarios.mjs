@@ -89,6 +89,25 @@ export const scenarios = {
     wms: true,
     body: snapshot([scene(2022, 24, 0.32), scene(2023, 25, 0.3), scene(2024, 26, 0.28)]),
   },
+  "monica-review": {
+    description:
+      "Tres escenas, estaciones MÓNICA importadas con registros sintéticos paginados y 25 ejecuciones de procesamiento",
+    status: 200,
+    monica: "review",
+    body: snapshot([scene(2022, 24, 0.32), scene(2023, 25, 0.3), scene(2024, 26, 0.28)]),
+  },
+  "monica-locked": {
+    description: "Como monica-review, con la revisión local de registros desactivada en el servidor",
+    status: 200,
+    monica: "locked",
+    body: snapshot([scene(2022, 24, 0.32), scene(2023, 25, 0.3), scene(2024, 26, 0.28)]),
+  },
+  quota: {
+    description: "Tres escenas; el asistente informa el presupuesto de USD 4 completamente gastado",
+    status: 200,
+    quotaSpent: true,
+    body: snapshot([scene(2022, 24, 0.32), scene(2023, 25, 0.3), scene(2024, 26, 0.28)]),
+  },
   partial: {
     description: "Cobertura reducida, celdas sin datos y una escena sin píxeles válidos",
     status: 200,

@@ -1,7 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { horizontalOverflow, useScenario } from "./helpers";
 
-const ROUTES = ["/", "/comparar", "/estaciones", "/informes", "/modelos", "/escenarios", "/asistente"];
+const ROUTES = [
+  "/",
+  "/comparar",
+  "/estaciones",
+  "/informes",
+  "/modelos",
+  "/escenarios",
+  "/asistente",
+  "/procesamiento",
+];
 
 // 320 CSS px is the WCAG 1.4.10 reflow width; 390 px is a common phone.
 for (const width of [320, 390])

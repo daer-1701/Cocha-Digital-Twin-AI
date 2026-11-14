@@ -59,6 +59,36 @@ test.describe("secciones sin resultados del servidor", () => {
   });
 });
 
+test.describe("lectura guiada sin IA", () => {
+  test("responde con los campos publicados de la adquisición elegida", async ({ page }) => {
+    await useScenario("available");
+    const snapshot = await (await fetch(`${FIXTURES_URL}/v1/explorer`)).json();
+    const scene = snapshot.evidence.scenes.find((s: { id: string }) => s.id === "DEMO-SINTETICA-2022-07");
+    await page.goto("/asistente");
+    const guide = page.locator(".panel").filter({ hasText: "Lectura guiada sin IA" });
+    await expect(guide).toContainText("no usa Gemini ni consume presupuesto");
+    await expect(guide).toContainText("Esta evidencia es sintética");
+    await expect(guide.getByLabel("Adquisición que quieres consultar")).toHaveValue("DEMO-SINTETICA-2024-07");
+    await guide.getByLabel("Adquisición que quieres consultar").selectOption("DEMO-SINTETICA-2022-07");
+    const answer = guide.locator(".guide-answer");
+    await expect(answer).toContainText(`${scene.lst_mean.toFixed(1)} °C`);
+    await expect(answer).toContainText(scene.ndvi_mean.toFixed(3));
+    await expect(answer).toContainText("DEMO-SINTETICA-2022-07");
+    await guide.getByRole("button", { name: "¿Puedo hablar de cambio climático?" }).click();
+    await expect(answer).toContainText("no demuestran");
+    await expect(answer).toContainText("PM10 tampoco calibra LST");
+  });
+
+  test("una escena sin píxeles válidos responde «sin datos», no cero", async ({ page }) => {
+    await useScenario("partial");
+    await page.goto("/asistente");
+    const answer = page.locator(".guide-answer");
+    await expect(answer).toContainText("LST media de sin datos");
+    await page.getByRole("button", { name: "¿Qué limitaciones debo considerar?" }).click();
+    await expect(answer).toContainText("Hay 0 píxeles válidos");
+  });
+});
+
 test.describe("asistente", () => {
   test("sin cuota: llamadas desactivadas y precios sin verificar", async ({ page }) => {
     await useScenario("available");
@@ -68,6 +98,16 @@ test.describe("asistente", () => {
     await expect(budget).toContainText("USD 4.00");
     await expect(budget).toContainText("Sin verificar con la tarifa oficial");
     await expect(budget).toContainText("No configurada");
+  });
+
+  test("presupuesto agotado: el gasto se informa y no se habilitan consultas", async ({ page }) => {
+    await useScenario("quota");
+    await page.goto("/asistente");
+    const budget = page.locator(".facts");
+    await expect(budget).toContainText("Desactivadas");
+    await expect(budget.locator("dt", { hasText: "Gastado" }).locator("+ dd")).toHaveText("USD 4.00");
+    await expect(budget.locator("dt", { hasText: "Presupuesto declarado" }).locator("+ dd")).toHaveText("USD 4.00");
+    await expect(page.getByRole("textbox")).toHaveCount(0);
   });
 
   test("precios verificados muestran fecha y fuente externa", async ({ page }) => {

@@ -8,7 +8,9 @@ estado sustituye el traspaso antiguo que dejaba A01 y la migración 0002 pendien
 
 Consultar también `docs/release-status.md`: equipo de cinco, nuevas rutas de
 procesamiento/revisión local MÓNICA, lectura guiada sin IA y respaldo preparado.
-El usuario pidió no ejecutar pruebas; el estado actual no está validado para producción.
+Las pruebas web se retomaron el 14/11/2026 con fixtures (`docs/qa-report.md`);
+backend, ciencia y base de datos siguen sin validar para este estado. No está
+validado para producción.
 
 1. Leer `AGENTS.md`, las reglas del área, `README.md` y `docs/architecture.md`.
 2. Ejecutar `git status --short` y revisar los diffs. Conservar los cambios del

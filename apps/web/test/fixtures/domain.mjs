@@ -5,6 +5,7 @@ import { valleyDomain } from "./valley.mjs";
 const BOUNDS = [-66.18, -17.41, -66.14, -17.37];
 const PAGE = { limit: 50, offset: 0 };
 const GENERATED_AT = "2026-11-14T00:00:00Z";
+const round = (value, digits) => Number(value.toFixed(digits));
 
 // Same allowlist as services/api/src/cocha_api/science/gamc_catalog.py.
 export const WMS_LAYERS = [
@@ -26,6 +27,102 @@ const STATIONS = [
   { source_id: "kanata", name: "DEMO Kanata", described_location: "Ubicación descrita sintética A" },
   { source_id: "semapa", name: "DEMO Semapa", described_location: "Ubicación descrita sintética B" },
 ];
+
+const fixtureId = (n) => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
+// Kanata has paginated records; Semapa was imported without rows.
+export const STATION_IDS = { kanata: fixtureId(0x5a01), semapa: fixtureId(0x5a02) };
+const OBSERVATIONS_PATH = /^\/v1\/stations\/([^/]+)\/observations$/;
+const KANATA_RECORDS = 60;
+
+/** Synthetic processing runs, newest first: 25 rows so /procesamiento needs two pages. */
+function jobItems() {
+  const kinds = ["monica_pm10_import", "offline_monica_qa", "fixture_unknown_kind"];
+  const start = Date.parse("2026-11-01T12:00:00Z");
+  return Array.from({ length: 25 }, (_, i) => {
+    const started = new Date(start - i * 3_600_000).toISOString();
+    const status = i === 0 ? "running" : i === 1 ? "failed" : "completed";
+    return {
+      id: fixtureId(0x10b00 + i),
+      kind: kinds[i % kinds.length],
+      status,
+      started_at: started,
+      finished_at:
+        status === "running" ? null : new Date(Date.parse(started) + 600_000).toISOString(),
+    };
+  });
+}
+
+/** Record i of Kanata, newest first; zeros, negatives and missing values stay as imported. */
+function kanataRecord(i) {
+  const observedAt = new Date(Date.parse("2026-10-03T23:00:00Z") - i * 3_600_000)
+    .toISOString()
+    .slice(0, 19);
+  const [value, flag] =
+    i % 11 === 3
+      ? [null, "invalid_value"]
+      : i % 13 === 4
+        ? [0, "zero"]
+        : i % 17 === 5
+          ? [-2.5, "negative"]
+          : [round(30 + ((i * 7) % 23) + 0.25, 2), "valid"];
+  return {
+    id: fixtureId(0x0b5000 + i),
+    observed_at: observedAt,
+    value,
+    unit: "ug/m3",
+    quality_flag: flag,
+    processing_run_id: i < 40 ? fixtureId(0x10b02) : null,
+  };
+}
+
+/**
+ * GET /v1/stations/{id}/observations for the `monica` mode of a scenario:
+ * "review" serves records, "locked" mirrors MONICA_REVIEW_ENABLED=false.
+ * Returns null when the route does not match.
+ */
+export function stationObservations(monica, pathname, searchParams) {
+  const match = OBSERVATIONS_PATH.exec(pathname);
+  if (!match) return null;
+  const station = Object.entries(STATION_IDS).find(([, id]) => id === match[1]);
+  if (!monica || !station) return { status: 404, body: { detail: "Station not found" } };
+  const [sourceId, stationId] = station;
+  const limit = Number(searchParams.get("limit") ?? 50);
+  const offset = Number(searchParams.get("offset") ?? 0);
+  const base = {
+    station_id: stationId,
+    station_name: STATIONS.find((s) => s.source_id === sourceId).name,
+    variable: "pm10",
+    scope: "imported_records_review",
+    analysis_enabled: false,
+    timezone: null,
+    limit,
+    offset,
+  };
+  if (monica === "locked")
+    return {
+      status: 200,
+      body: {
+        ...base,
+        status: "unavailable",
+        reason: "Fixture: local record review is disabled (MONICA_REVIEW_ENABLED).",
+        items: [],
+        has_more: false,
+      },
+    };
+  const total = sourceId === "kanata" ? KANATA_RECORDS : 0;
+  const end = Math.min(total, offset + limit);
+  const items = Array.from({ length: Math.max(0, end - offset) }, (_, k) => kanataRecord(offset + k));
+  return {
+    status: 200,
+    body: {
+      ...base,
+      status: items.length ? "available" : "empty",
+      reason: "Fixture: synthetic imported records for quality review only.",
+      items,
+      has_more: end < total,
+    },
+  };
+}
 
 /** Same rule as cocha_api.science.trends.descriptive_slope: OLS on the scene index. */
 function descriptiveSlope(values, minN = 3) {
@@ -97,17 +194,21 @@ const unavailable = (reason, extra = {}) => ({
 /**
  * GET routes outside /v1/explorer. `wms` enables the synthetic GAMC layers;
  * `evidence` is the active scenario snapshot, or null when none is published;
- * `districts` adds demo-rectangle indicators, series and trends.
+ * `districts` adds demo-rectangle indicators, series and trends;
+ * `monica` ("review" | "locked") publishes imported stations and processing runs;
+ * `quotaSpent` marks the whole assistant budget as spent.
  */
-export function domainRoutes({ wms, evidence, districts = false, sceneId }) {
+export function domainRoutes({ wms, evidence, districts = false, sceneId, monica, quotaSpent }) {
   const valley = districts ? valleyDomain(sceneId) : {};
   if (valley["/v1/trends"]) valley["/v1/trends"].pilot_trends = pilotTrends(evidence);
   return {
     "/v1/territories": territories(wms),
-    "/v1/jobs": {
-      status: "empty", reason: "Fixture: no persisted processing runs.",
-      items: [], has_more: false, ...PAGE,
-    },
+    "/v1/jobs": monica
+      ? { status: "available", reason: null, items: jobItems(), has_more: false, ...PAGE }
+      : {
+          status: "empty", reason: "Fixture: no persisted processing runs.",
+          items: [], has_more: false, ...PAGE,
+        },
     "/v1/indicators": unavailable("district indicators need verified district vectors."),
     "/v1/series": unavailable("district series are not published."),
     "/v1/trends": unavailable("no official trend without comparable district series.", {
@@ -135,9 +236,12 @@ export function domainRoutes({ wms, evidence, districts = false, sceneId }) {
           observation_export: null,
         },
     "/v1/stations": {
-      status: "empty",
-      reason: "Fixture: no MONICA stations imported yet; analysis aggregates disabled.",
+      status: monica ? "available" : "empty",
+      reason: monica
+        ? "Fixture: synthetic imported stations; analysis aggregates disabled."
+        : "Fixture: no MONICA stations imported yet; analysis aggregates disabled.",
       items: STATIONS.map((station) => ({
+        ...(monica ? { id: STATION_IDS[station.source_id] } : {}),
         ...station,
         variable: "pm10",
         unit: "ug/m3",
@@ -180,7 +284,7 @@ export function domainRoutes({ wms, evidence, districts = false, sceneId }) {
           }),
       calls_enabled: false,
       key_configured: false,
-      spent_usd: 0,
+      spent_usd: quotaSpent ? 4 : 0,
       reserved_usd: 0,
     },
     ...valley,

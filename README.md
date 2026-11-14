@@ -15,8 +15,9 @@ como sintéticos y no sustituyen límites oficiales. No incluye tendencias
 inferenciales, ML validado ni llamadas reales a Gemini. No es un gemelo digital validado.
 
 Se añaden historial de procesamiento, revisión local de registros MÓNICA,
-lectura guiada de evidencia sin IA y herramientas de respaldo. Estas ampliaciones
-están pendientes de pruebas por solicitud del usuario.
+lectura guiada de evidencia sin IA y herramientas de respaldo. Su interfaz se
+probó con fixtures sintéticas ([informe de QA](docs/qa-report.md)); el backend,
+la base de datos y las herramientas de respaldo siguen pendientes de pruebas.
 
 ## Ejecutar el piloto con datos reales
 
@@ -193,6 +194,7 @@ de publicar código para reutilización. Las licencias de datos son independient
 
 - [Manual de uso y guion de demostración](docs/manual.md)
 - [Interfaz y accesibilidad](docs/ux.md)
+- [Informe de QA web](docs/qa-report.md) y [matriz de aceptación](docs/acceptance-matrix.md)
 - [Arquitectura y decisiones](docs/architecture.md)
 - [Modelo de datos](docs/data-model.md)
 - [Plan científico y procedencia](docs/science.md)

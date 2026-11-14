@@ -29,6 +29,7 @@ Definida en `apps/web/src/lib/navigation.ts`, fuente única para menú y página
 | `/estaciones` | Estaciones MÓNICA (PM10) | Disponible (catálogo, sin series) | Observación |
 | `/informes` | Informes y descargas | Disponible (ventana piloto) | Observación |
 | `/modelos` | Estimaciones | En preparación | Estimación |
+| `/procesamiento` | Procesamiento | Disponible (historial de solo lectura) | — |
 | `/escenarios` | Escenarios | En preparación | Simulación |
 | `/asistente` | Asistente | En preparación | — |
 
@@ -120,8 +121,12 @@ La falta de datos nunca se muestra como cero.
 ## Accesibilidad aplicada
 
 Enlace para saltar al contenido, foco visible en todos los controles, objetivos
-táctiles de 44 px, tablas con `scope`, alternativa tabular al mapa y respeto de
-`prefers-reduced-motion`.
+táctiles de 44 px como meta, tablas con `scope`, alternativa tabular al mapa y
+respeto de `prefers-reduced-motion`. Los botones de vista y cámara del mapa
+miden 38–40 px en móvil (incidencia QA-06 de [QA](qa-report.md)).
+
+La auditoría JF03/JF04 del 14/11/2026 (axe-core WCAG 2.2 AA, teclado, 3D y
+compatibilidad) y sus incidencias abiertas están en el [informe de QA](qa-report.md).
 
 ### Auditoría D14 (14/11/2026)
 
@@ -295,9 +300,11 @@ superficie `#223f51`, niebla `#d2e4ee`, texto `#f0f5f8` y ámbar `#edbd72` para
 selección. Las escalas científicas permanecen fijas. La vista inicial es 2D
 cuando el dispositivo indica recursos limitados o movimiento reducido.
 
-Por solicitud del usuario no se ejecutaron pruebas, lint, compilación ni
-verificación visual de estos cambios. Revisar responsive, cámara, WebGL,
-pantalla completa, teclado y reproducción antes de publicar.
+El 14/11/2026 se verificaron con fixtures en Chromium headless: modo inicial,
+movimiento reducido, giro y su detención, centrado, inspector de celda,
+teselas caídas, liberación del mapa y desbordamiento móvil (`map3d.spec.ts`).
+Quedan incidencias abiertas y comprobaciones en equipos reales; ver el
+[informe de QA](qa-report.md).
 
 - Mostrar series, tendencias e indicadores distritales cuando sus `items` tengan esquema.
 - D07: comparación oficial cuando exista el vector y A06/A07; el tablero sintético ya permite elegir adquisición.

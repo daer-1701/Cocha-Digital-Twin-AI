@@ -160,6 +160,11 @@ pruebas con Julio; no modifica a mano OpenAPI ni tipos generados.
 | JF10 | P2 | Validar despliegue desde navegador y endpoints públicos autorizados | AF10; después de despliegue autorizado | HTTPS, navegación, carga, errores y disponibilidad externa revisados; Andrés administra servidores y Eduardo ejecuta restauraciones |
 | JF11 | P2 | Coordinar aceptación final y expediente de entrega | JF02–JF10 aplicables | Matriz firmada por responsables, incidencias críticas resueltas, evidencia ligada al commit candidato, bloqueos explícitos; no sustituye checks backend de Andrés/Mateo |
 
+Avance del 14/11/2026: [matriz de aceptación](acceptance-matrix.md) e
+[informe de QA](qa-report.md). JF01–JF04, JF06 y JF08 quedan en revisión, con
+incidencias asignadas a Diego y Andrés; JF05, JF07, JF09, JF10 y JF11 están
+bloqueadas por sus dependencias.
+
 Archivos principales: `apps/web/test/`, documentación de QA y manuales. Julio
 puede revisar resultados de CI desde el navegador. No se le asignan pruebas
 locales PostGIS, migraciones, `check_containers.ps1`, backups ni administración

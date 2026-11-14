@@ -1,7 +1,13 @@
 // Local synthetic API for frontend work without Python, Docker or a database.
 import { createServer } from "node:http";
 import { responseSchema, validate } from "./contract.mjs";
-import { WMS_LAYERS, domainRoutes, hatchPng } from "./domain.mjs";
+import {
+  STATION_IDS,
+  WMS_LAYERS,
+  domainRoutes,
+  hatchPng,
+  stationObservations,
+} from "./domain.mjs";
 import { scenarios } from "./scenarios.mjs";
 
 // Read by apps/web/src/lib/api.ts to label every page as DEMO.
@@ -44,11 +50,26 @@ const scenarioDomain = (scenario, sceneId) =>
     evidence: scenario.status === 200 ? (scenario.body.evidence ?? null) : null,
     districts: Boolean(scenario.districts),
     sceneId,
+    monica: scenario.monica,
+    quotaSpent: Boolean(scenario.quotaSpent),
   });
 
-for (const [name, scenario] of Object.entries(scenarios))
+const OBSERVATIONS_TEMPLATE = "/v1/stations/{station_id}/observations";
+for (const [name, scenario] of Object.entries(scenarios)) {
   for (const [path, body] of Object.entries(scenarioDomain(scenario)))
     assertContract(`Route ${path} (scenario "${name}")`, path, 200, body);
+  if (!scenario.monica) continue;
+  for (const id of Object.values(STATION_IDS))
+    for (const offset of [0, 50]) {
+      const params = new URLSearchParams({ limit: "50", offset: String(offset) });
+      const { status, body } = stationObservations(
+        scenario.monica,
+        `/v1/stations/${id}/observations`,
+        params,
+      );
+      assertContract(`Route ${OBSERVATIONS_TEMPLATE} (scenario "${name}")`, OBSERVATIONS_TEMPLATE, status, body);
+    }
+}
 
 const fixed = {
   "/health/live": { status: 200, body: { status: "ok", service: "cocha-api" } },
@@ -110,12 +131,17 @@ const server = createServer((request, response) => {
   if (fixed[pathname]) return send(response, fixed[pathname].status, fixed[pathname].body);
   if (pathname === "/v1/gamc/wms/map" || pathname === "/v1/gamc/wms/legend")
     return sendWms(response, pathname, searchParams);
+  const records = stationObservations(scenarios[active].monica, pathname, searchParams);
+  if (records) return send(response, records.status, records.body);
   const domain = scenarioDomain(scenarios[active], searchParams.get("scene_id"))[pathname];
   if (domain) {
-    if (pathname === "/v1/indicators" && domain.status === "available") {
+    if ((pathname === "/v1/indicators" || pathname === "/v1/jobs") && domain.status === "available") {
       const limit = Number(searchParams.get("limit") ?? 50);
       const offset = Number(searchParams.get("offset") ?? 0);
-      return send(response, 200, { ...domain, limit, offset, items: domain.items.slice(offset, offset + limit) });
+      const items = domain.items.slice(offset, offset + limit);
+      const page = { ...domain, limit, offset, items };
+      if (pathname === "/v1/jobs") page.has_more = offset + limit < domain.items.length;
+      return send(response, 200, page);
     }
     return send(response, 200, domain);
   }

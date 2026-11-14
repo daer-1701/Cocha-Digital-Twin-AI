@@ -7,9 +7,13 @@ Diego y Julio no tienen Docker; Andrés, Eduardo y Mateo sí. Las asignaciones
 detalladas de ese documento prevalecen sobre el resumen C01–C24.
 
 **Estado: piloto ampliado en código, pendiente de validación. No es una entrega
-de producción ni un gemelo digital científicamente validado.** La instrucción
-vigente del usuario es no ejecutar pruebas; la regeneración de contratos no
-equivale a una prueba. No se efectuó despliegue ni se habilitó consumo Gemini.
+de producción ni un gemelo digital científicamente validado.** El 14/11/2026 se
+retomaron las pruebas web con fixtures (lint, tipos, build y Playwright: 97
+pasan, 7 incidencias abiertas como `test.fixme`); ver [informe de QA](qa-report.md)
+y [matriz de aceptación](acceptance-matrix.md). Las comprobaciones backend,
+científicas y de base de datos del estado actual siguen sin ejecutarse; la
+regeneración de contratos no equivale a una prueba. No se efectuó despliegue
+ni se habilitó consumo Gemini.
 
 ## Disponible en código
 

@@ -27,7 +27,7 @@ Resultados y alcance de las pruebas actuales: `docs/review-fixes.md`.
 
 ### Explorador (`/`)
 
-Controles nuevos, pendientes de pruebas del usuario: «Reproducir fechas» recorre
+Controles verificados con fixtures, sin datos reales (ver `docs/qa-report.md`): «Reproducir fechas» recorre
 las adquisiciones sin interpolar mediciones; la barra permite saltar a una fecha.
 «Girar el valle» activa la cámara orbital hasta interactuar o cambiar de pestaña.
 «Centrar vista» recupera la ventana de estudio. «Pantalla completa» amplía el mapa
@@ -85,11 +85,13 @@ CSV o JSON. Los archivos incluyen fuente, versión, licencia, unidades, período
 fecha del snapshot, fecha de descarga y limitaciones. Los faltantes quedan
 vacíos. Es la exportación de la ventana piloto, no un informe distrital.
 
-### Secciones en preparación
+### Procesamiento (`/procesamiento`)
 
-`/procesamiento` muestra el historial registrado, primero las ejecuciones más
-recientes, con paginación. No inicia trabajos ni permite cambiar estados.
-Un registro completado no demuestra por sí mismo validez científica.
+Muestra el historial registrado, primero las ejecuciones más recientes, con
+paginación. No inicia trabajos ni permite cambiar estados. Un registro
+completado no demuestra por sí mismo validez científica.
+
+### Secciones en preparación
 
 `/asistente` incorpora preguntas guiadas con los campos del snapshot y la fuente
 de cada escena. Está identificado como «Lectura guiada sin IA»: no usa Gemini,

@@ -1,7 +1,8 @@
 # Matriz de requisitos
 
 Revisión: **14 de noviembre de 2026** (D01). Estado contrastado con el código
-del commit `be31cec`, no solo con la documentación. Fuentes de datos y sus
+del commit `be31cec`, no solo con la documentación. R16, R17, R19 y Q05 se
+revisaron después sobre `9bbbe8f` (JF08). Fuentes de datos y sus
 metadatos: [catálogo de datos](data-catalog.md).
 
 ## Origen de los requisitos
@@ -43,10 +44,10 @@ Estados: **Implementado** (código existente y probado), **Parcial**, **Pendient
 | R13 | Resaltar hotspots de cambio | L2 | Pendiente | Depende de R04, R05 y R09 | A07, D07 |
 | R14 | Definiciones sencillas de variables para «detectives de datos» | L1, L2 | Parcial | Textos de LST ≠ temperatura del aire y advertencias en el explorador | D03, D08 |
 | R15 | Consultas guiadas por distrito o escenarios demostrativos | L1 | Pendiente | Asistente y escenarios no implementados | D11, D12 |
-| R16 | Series PM10 de estaciones MÓNICA con calidad | P | Pendiente | Archivos descargables con `scripts/download_gamc.py`; sin importar ni mostrar | A08, D09 |
-| R17 | Asistente Gemini con evidencia y presupuesto ~USD 4 | P | Pendiente | Solo existe `gemini_api_key` en configuración, sin uso | A14, D12 |
+| R16 | Series PM10 de estaciones MÓNICA con calidad | P | Parcial | Importador transaccional (`scripts/import_monica.py`), fichas y revisión local de registros apagada por defecto. Sin series ni análisis: huso, coordenadas, QA y licencia pendientes (revisado 14/11, `9bbbe8f`) | A08, D09, EF04, EF05 |
+| R17 | Asistente Gemini con evidencia y presupuesto ~USD 4 | P | Parcial | Estado, ledger de presupuesto y proveedor simulado; lectura guiada sin IA. Sin llamadas reales (revisado 14/11, `9bbbe8f`) | A14, D12, AF07, DF07 |
 | R18 | Escenarios hipotéticos rotulados | P | Pendiente | Sin modelo validado | A12, D11 |
-| R19 | Informes y descargas trazables | P | Pendiente | — | A15, D13 |
+| R19 | Informes y descargas trazables | P | Parcial | CSV/JSON de la ventana piloto con procedencia y faltantes vacíos, probado con fixtures; informes distritales bloqueados (revisado 14/11, `9bbbe8f`) | A15, D13, DF08 |
 
 ## Requisitos de calidad y evidencia
 
@@ -56,7 +57,7 @@ Estados: **Implementado** (código existente y probado), **Parcial**, **Pendient
 | Q02 | Falta de datos visible, nunca cero | P | Implementado en piloto | API devuelve `empty`; celdas sin datos se omiten; tabla muestra «Sin datos» |
 | Q03 | Separar observación, estimación y escenario | P | Parcial | Rótulo «Observación»; aún no existen estimaciones ni escenarios |
 | Q04 | No confundir LST con temperatura del aire | P | Implementado en piloto | Avisos en interfaz y limitaciones del snapshot |
-| Q05 | Accesibilidad y UX para funcionarios y ciudadanía | L2, P | Parcial | Tabla alternativa al mapa y etiquetas ARIA; falta revisión D14 |
+| Q05 | Accesibilidad y UX para funcionarios y ciudadanía | L2, P | Parcial | Auditorías D14 y JF03 (axe WCAG 2.2 AA, teclado, móvil) con incidencias abiertas en `docs/qa-report.md`; falta lector de pantalla real |
 | Q06 | Agregaciones mensuales o anuales estables | L2 | Pendiente | El piloto usa una escena de julio por año, no una media |
 | Q07 | Secretos solo en servidor | P | Implementado | Cliente API `server-only`; sin `NEXT_PUBLIC_*` para claves |
 | Q08 | Open source | L2 | Pendiente | No hay licencia de distribución elegida (`README.md`) |

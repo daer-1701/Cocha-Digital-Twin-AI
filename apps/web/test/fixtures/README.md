@@ -25,6 +25,9 @@ Para volver a la API real, restaurar `API_INTERNAL_URL=http://localhost:8000`
 | `valle` | Predeterminado. Once escenas de julio (2015-2025) en una malla de 15 × 15 celdas (unos 320 m), con nubes en 2017 y 2021. Activa indicadores, series y tendencias descriptivas sobre los 15 rectángulos `demo-synthetic-v1`. Patrón espacial inventado (núcleo cálido, piedemonte y corredor verdes); no es un mapa de Cochabamba |
 | `available` | Tres escenas completas |
 | `wms` | Como `available`, con capas GAMC habilitadas que devuelven imágenes rayadas sintéticas |
+| `monica-review` | Como `available`, con dos estaciones importadas (Kanata: 60 registros PM10 con ceros, negativos y faltantes; Semapa: sin filas) y 25 ejecuciones de procesamiento paginadas |
+| `monica-locked` | Como `monica-review`, con la revisión de registros desactivada en el servidor (`MONICA_REVIEW_ENABLED` apagado) |
+| `quota` | Como `available`, con el presupuesto de USD 4 del asistente completamente gastado |
 | `partial` | Cobertura reducida, celdas sin datos y una escena sin píxeles válidos |
 | `no-scenes` | Snapshot sin escenas |
 | `empty` | Sin snapshot publicado |
@@ -45,8 +48,10 @@ apuntando a 8100).
 Los escenarios cambian `/v1/explorer`. El resto de rutas (`domain.mjs`) reproduce
 los estados honestos por defecto de la API: territorios con vector distrital no
 disponible, dos estaciones sintéticas sin importar (unidad declarada,
-coordenadas pendientes), y series, indicadores, modelos, escenarios y asistente
-como `unavailable`. Además, derivadas del snapshot del escenario activo:
+coordenadas pendientes), historial de procesamiento vacío, y series,
+indicadores, modelos, escenarios y asistente como `unavailable`. Los
+escenarios `monica-*` y `quota` cambian estaciones, registros, ejecuciones y
+gasto del asistente. Además, derivadas del snapshot del escenario activo:
 
 - `/v1/trends` es `unavailable` por distrito, con `pilot_trends`: pendiente
   descriptiva por mínimos cuadrados sobre el índice de escena, con la misma regla
@@ -71,11 +76,14 @@ npm run test:e2e -w @cocha/web
 ```
 
 Cubren territorio, fecha, comparación y variable en la URL; estados vacío,
-error y parcial; tabla; capas WMS y validación del proxy; pendiente piloto;
-secciones sin datos; escenario rotulado; asistente sin cuota y con precios
-verificados; estaciones; descargas CSV/JSON; teclado, nombres accesibles,
-ids duplicados, falta de WebGL y desbordamiento a 320 y 390 px. CI las ejecuta
-en el job `web`. **Pasar estas pruebas valida la interfaz contra el contrato,
+error, parcial y API lenta; tabla; capas WMS y validación del proxy; pendiente
+piloto; secciones sin datos; escenario rotulado; asistente sin cuota, con
+precios verificados y con presupuesto gastado; lectura guiada; estaciones,
+revisión de registros MÓNICA e historial de procesamiento; descargas CSV/JSON
+coherentes con la pantalla y enlaces compartidos; interacción 3D; axe-core
+WCAG 2.2 AA, teclado, nombres accesibles, ids duplicados, falta de WebGL y
+desbordamiento a 320 y 390 px. Las incidencias abiertas son `test.fixme` con
+el ID de `docs/qa-report.md`. CI las ejecuta en el job `web`. **Pasar estas pruebas valida la interfaz contra el contrato,
 no los datos reales ni la integración con la API de Andrés.**
 
 ## Garantías

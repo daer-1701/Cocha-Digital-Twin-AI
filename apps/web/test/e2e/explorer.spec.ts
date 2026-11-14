@@ -16,7 +16,7 @@ test.describe("explorador con tres escenas sintéticas", () => {
     await page.goto("/");
     await page.getByLabel("Fecha de adquisición").selectOption("DEMO-SINTETICA-2022-07");
     await expect(page).toHaveURL(/escena=DEMO-SINTETICA-2022-07/);
-    await expect(page.getByRole("region", { name: /2022-07-15/ })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Indicadores del 2022-07-15" })).toBeVisible();
 
     await page.getByLabel("Comparar con").selectOption("DEMO-SINTETICA-2024-07");
     await expect(page).toHaveURL(/comparar=DEMO-SINTETICA-2024-07/);
@@ -24,7 +24,7 @@ test.describe("explorador con tres escenas sintéticas", () => {
     await expect(comparison.getByRole("heading", { name: "Comparación entre dos fechas" })).toBeVisible();
     await expect(comparison).toContainText("no indica una tendencia");
 
-    await page.getByLabel("Variable").selectOption("ndvi");
+    await page.getByLabel("Variable", { exact: true }).selectOption("ndvi");
     await expect(page).toHaveURL(/variable=ndvi/);
     await expect(page.getByText(/Pendiente descriptiva del NDVI en la ventana piloto/)).toBeVisible();
 
@@ -86,6 +86,15 @@ test.describe("estados del explorador", () => {
     await expect(
       page.getByRole("heading", { name: "No hay escenas publicadas para esta área" }),
     ).toBeVisible();
+  });
+
+  test("API lenta: al superar el tiempo de espera se informa el error", async ({ page }) => {
+    await useScenario("slow");
+    await page.goto("/");
+    await expect(page.locator("main").getByRole("alert")).toContainText(
+      "No se pudo consultar la evidencia",
+    );
+    await expect(page.locator(".metrics")).toHaveCount(0);
   });
 
   test("error de la API", async ({ page }) => {
