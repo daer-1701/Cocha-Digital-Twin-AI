@@ -9,8 +9,10 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
@@ -34,11 +36,40 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def reconciliation_differences(audit: dict[str, Any], report: dict[str, Any]) -> list[str]:
+    """Compare source evidence and check the import row balance."""
+    differences = [
+        field
+        for field in ("sha256", "rows", "quality_counts")
+        if field not in report or audit[field] != report[field]
+    ]
+    counts = [
+        report.get(field)
+        for field in ("upserted", "skipped_existing", "skipped_duplicates", "skipped_invalid_time")
+    ]
+    if any(type(count) is not int or count < 0 for count in counts) or sum(counts) != audit["rows"]:
+        differences.append("row_balance")
+    return differences
+
+
+def audit_file(path: Path) -> dict[str, Any]:
+    content = path.read_bytes()
+    summary = parse_monica_csv(content.decode("utf-8"), source_label=path.name)
+    counts_by_station: dict[str, Counter[str]] = {}
+    for row in summary.rows:
+        counts_by_station.setdefault(row.source_id, Counter())[row.quality_flag] += 1
+    return {
+        "file": path.name,
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "rows": len(summary.rows),
+        "quality_counts": summary.counts,
+        "quality_counts_by_station": counts_by_station,
+    }
+
+
 def main() -> None:
     if not MONICA_DIR.exists():
-        raise SystemExit(
-            "MÓNICA folder missing. Run: python scripts/download_gamc.py"
-        )
+        raise SystemExit("MÓNICA folder missing. Run: python scripts/download_gamc.py")
 
     catalog_rows = {}
     if CATALOG.exists():

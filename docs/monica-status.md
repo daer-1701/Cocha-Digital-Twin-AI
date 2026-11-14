@@ -45,3 +45,16 @@ Sin códigos de instrumento del proveedor. Decisión del proyecto:
 
 `scripts/import_monica.py` importa en una transacción. Duplicados no sobrescriben.
 Metadatos de estación: `scripts/sync_monica_station_metadata.py`.
+
+## Auditoría local previa a la conciliación (MF06)
+
+La [demo científica](mateo-science-review.md#demostración-sintética-mf05mf07) usa las funciones de auditoría y conciliación de `scripts/audit_monica.py`. El informe compara SHA-256, total de filas y conteos QA. Los duplicados se cuentan dentro de cada archivo. Para conciliar
+el lote, comparar cada archivo con los conteos y checksum de la ejecución
+aislada de EF05 y revisar aparte las claves repetidas entre archivos y las ya
+persistidas. Los conteos de auditoría representan filas, no cobertura temporal.
+
+Para habilitar agregaciones, confirmar huso, frecuencia esperada y política
+de ceros/negativos con el proveedor. Definir cobertura como observaciones
+válidas únicas sobre las observaciones esperadas del intervalo. Reportar
+intervalos incompletos como faltantes según el umbral acordado y documentar
+la cadencia y el período antes de comparar estaciones.

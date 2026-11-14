@@ -48,6 +48,35 @@ el área de estudio en código y reutilizar esa misma caché.
 hashes y commit base. El commit puede tener cambios locales: para reproducción
 exacta conservar también el código utilizado y `uv.lock` con esos cambios.
 
+Para repetir el lote con las mismas escenas, conservar el manifiesto, los cinco
+GeoTIFF y el `stac.json` de cada escena en sus carpetas originales. Con el
+entorno científico instalado, ejecutar desde la raíz:
+
+```powershell
+uv run --offline --group science python scripts/ingest_landsat.py --replay-manifest data/processed/landsat-manifest.json
+```
+
+El modo local verifica hashes y fechas antes de procesar, y escribe el snapshot
+y un nuevo manifiesto en `data/processed/landsat-replay/`. Al comparar resultados
+con el lote original, la fecha de generación y el commit pueden variar.
+
+### Persistencia distrital
+
+Una vez importados los 15 distritos oficiales de EF03 en una base migrada,
+indicar su versión exacta y configurar la conexión a esa base:
+
+```powershell
+uv run --offline --group science python scripts/ingest_landsat.py --replay-manifest data/processed/landsat-manifest.json --district-version VERSION_OFICIAL
+```
+
+Este modo vuelve a verificar los archivos locales y aplica la máscara del
+piloto. Proyecta los distritos al CRS métrico de cada escena y guarda las
+medias ponderadas de LST y NDVI y su cobertura por distrito y adquisición.
+Si el área válida es cero, guarda la media como ausente y la cobertura como
+cero. El lote se confirma en una transacción. Repetir los mismos insumos,
+geometrías y commit devuelve cero filas nuevas. Un lote diferente conserva
+su propio registro de procesamiento para mantener la procedencia.
+
 `data/processed/explorer.json`: contrato de evidencia completo y metadatos de
 método. Escritura final mediante reemplazo atómico; snapshot anterior permanece
 si la adquisición falla. La API devuelve `empty` al no existir y 503 si no valida.
