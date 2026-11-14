@@ -100,13 +100,17 @@ def test_indicators_and_reports_label_pilot_window(monkeypatch, tmp_path):
     assert indicator_body["pilot_window"]["scenes"][0]["lst_mean"] is None
     assert indicator_body["pilot_window"]["scenes"][0]["district_indicator"] is False
     report_body = reports.json()
-    assert report_body["status"] == "unavailable"
+    assert report_body["status"] == "available"
     export = report_body["observation_export"]
     assert export["kind"] == "observation_export"
     assert export["district_report"] is False
     assert export["evidence"]["scenes"][0]["lst_mean"] is None
-    assert trends.json()["status"] == "unavailable"
-    assert trends.json()["items"] == []
+    trend_body = trends.json()
+    assert trend_body["status"] == "unavailable"
+    assert trend_body["items"] == []
+    assert len(trend_body["pilot_trends"]) == 2
+    assert trend_body["pilot_trends"][0]["district_trend"] is False
+    assert trend_body["pilot_trends"][0]["publishes_inference"] is False
     model_body = models.json()
     assert model_body["status"] == "unavailable"
     assert model_body["items"] == []

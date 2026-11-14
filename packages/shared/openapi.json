@@ -985,9 +985,29 @@
           },
           "prices_verified": {
             "type": "boolean",
-            "const": false,
-            "title": "Prices Verified",
-            "default": false
+            "title": "Prices Verified"
+          },
+          "prices_verified_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prices Verified On"
+          },
+          "prices_source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prices Source Url"
           },
           "prices_note": {
             "type": "string",
@@ -1020,6 +1040,7 @@
           "reason",
           "model",
           "budget_usd",
+          "prices_verified",
           "prices_note",
           "key_configured",
           "spent_usd",
@@ -1498,6 +1519,83 @@
         ],
         "title": "PilotTerritory"
       },
+      "PilotTrendItem": {
+        "properties": {
+          "variable": {
+            "type": "string",
+            "enum": [
+              "lst_mean",
+              "ndvi_mean"
+            ],
+            "title": "Variable"
+          },
+          "scope": {
+            "type": "string",
+            "const": "pilot_window",
+            "title": "Scope",
+            "default": "pilot_window"
+          },
+          "district_trend": {
+            "type": "boolean",
+            "const": false,
+            "title": "District Trend",
+            "default": false
+          },
+          "n_finite": {
+            "type": "integer",
+            "title": "N Finite"
+          },
+          "min_n": {
+            "type": "integer",
+            "title": "Min N"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "descriptive",
+              "inconclusive"
+            ],
+            "title": "Status"
+          },
+          "slope_per_step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Per Step"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "publishes_inference": {
+            "type": "boolean",
+            "const": false,
+            "title": "Publishes Inference",
+            "default": false
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "variable",
+          "n_finite",
+          "min_n",
+          "status",
+          "slope_per_step",
+          "method",
+          "note"
+        ],
+        "title": "PilotTrendItem"
+      },
       "PilotWindowScene": {
         "properties": {
           "scene_id": {
@@ -1952,6 +2050,17 @@
             "type": "string",
             "title": "Name"
           },
+          "described_location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Described Location"
+          },
           "latitude": {
             "anyOf": [
               {
@@ -2000,6 +2109,17 @@
               }
             ],
             "title": "Unit"
+          },
+          "unit_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Source"
           },
           "timezone": {
             "anyOf": [
@@ -2233,6 +2353,13 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "pilot_trends": {
+            "items": {
+              "$ref": "#/components/schemas/PilotTrendItem"
+            },
+            "type": "array",
+            "title": "Pilot Trends"
           }
         },
         "additionalProperties": false,

@@ -18,6 +18,16 @@ def _key_configured() -> bool:
     return secret is not None and bool(secret.get_secret_value().strip())
 
 
+def _prices_verified(settings) -> bool:
+    return bool(
+        settings.gemini_prices_verified_on
+        and settings.gemini_prices_source_url
+        and settings.gemini_input_usd_per_million_tokens is not None
+        and settings.gemini_output_usd_per_million_tokens is not None
+        and settings.gemini_model != "unverified-placeholder"
+    )
+
+
 @router.get("/assistant", response_model=AssistantStatusResponse)
 def assistant_status() -> AssistantStatusResponse:
     settings = get_settings()
@@ -38,7 +48,9 @@ def assistant_status() -> AssistantStatusResponse:
         budget_usd=settings.gemini_budget_usd,
         input_price_usd_per_million_tokens=settings.gemini_input_usd_per_million_tokens,
         output_price_usd_per_million_tokens=settings.gemini_output_usd_per_million_tokens,
-        prices_verified=False,
+        prices_verified=_prices_verified(settings),
+        prices_verified_on=settings.gemini_prices_verified_on,
+        prices_source_url=settings.gemini_prices_source_url,
         prices_note=PRICES_NOTE,
         calls_enabled=False,
         key_configured=_key_configured(),

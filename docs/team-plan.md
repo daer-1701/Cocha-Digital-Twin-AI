@@ -111,23 +111,22 @@ para Diego. ★ indica las tareas científicas o técnicas más difíciles.
 
 | ID | Estado | Notas |
 | --- | --- | --- |
-| A01 | Pendiente (por decisión) | Validación Docker completa no ejecutada en este tramo; ver `docs/a01-validation.md` |
-| A02 | Completado (código) | Endpoints `/v1/{territories,indicators,series,trends,stations,models,scenarios,jobs,reports}` con sobre `available`/`empty`/`unavailable`; contratos regenerados |
-| A03 | Parcial | Proxy WMS backend listo; **vector distrital sigue bloqueado** (WMS/BBOX ≠ polígonos completos) |
-| A04 | Completado (código) | Migración `0002` + modelos ORM; rásteres solo URI/checksum |
-| A05 | Completado (código; piloto acotado) | Módulos reutilizables en `cocha_api/science/landsat.py`; la ventana piloto no es un distrito; las pruebas no descargan escenas |
-| A06 | Bloqueado (vector) | La agregación exige geometrías verificadas; `/v1/indicators` sigue `unavailable`; las medias de la ventana solo se etiquetan como piloto |
-| A07 | Parcial | Pendiente descriptiva en código; `/v1/trends` no publica una tendencia oficial sin series distritales |
-| A08 | Completado (código; metadatos pendientes) | QA puro + `scripts/import_monica.py`; `analysis_enabled=false`; unidad/huso/coords siguen pendientes |
-| A09 | Completado (viabilidad negativa) | `docs/ml-viability.md`; el módulo rechaza calibrar LST con PM10; sin métricas |
-| A10 | Bloqueado | No hay modelo entrenado ni métricas |
-| A11 | Bloqueado | `/v1/models` queda `unavailable` con blockers; la lectura de `model_runs` no inventa filas |
-| A12 | Bloqueado | `/v1/scenarios` queda `unavailable`; sin modelo defendible no hay escenarios evaluados |
-| A13 | Parcial | `GET /v1/jobs` lee `processing_runs` o responde `empty`; sin escritura pública ni worker |
-| A14 | Parcial (sin llamadas) | Adaptador, ledger y `GET /v1/assistant`; solo `FakeProvider` en pruebas; precios oficiales sin verificar |
-| A15 | Parcial | Informes formales `unavailable`; si hay snapshot, la exportación es la observación de la ventana, no un informe distrital |
-| A16 | Parcial | Límite de tasa en memoria para WMS y `docs/security-notes.md`; sin roles de autenticación |
-| A17–A18 | Pendiente | Validación integral y operación siguen sin hacerse |
+| A01 | Completado | `check_containers.ps1` OK (67 passed) el 14/11/2026 |
+| A02 | Completado | Contratos de disponibilidad |
+| A03 | Parcial | WMS listo; vector oficial bloqueado (candidatos de terceros no importados) |
+| A04 | Completado | Migración `0002` |
+| A05 | Completado (piloto) | Landsat modular |
+| A06 | Bloqueado | Sin vector oficial |
+| A07 | Parcial | `pilot_trends` descriptivos; tendencia distrital oficial bloqueada |
+| A08 | Parcial | Unidad µg/m³ + identidad; huso/coords/licencia pendientes |
+| A09 | Completado | Viabilidad negativa LST↔PM10 |
+| A10–A12 | Bloqueado | Sin modelo defendible / PM10 ≠ temperatura del aire |
+| A13 | Parcial | Lectura jobs + `scripts/register_processing_run.py` (sin worker) |
+| A14 | Parcial | Precios/modelo verificados; llamadas reales off |
+| A15 | Completado (piloto) | Export de observación; informe distrital formal bloqueado |
+| A16 | Parcial | Rate limit WMS + `API_WRITE_TOKEN`; sin roles de usuario |
+| A17 | Parcial | Checklist en `docs/a17-checklist.md`; falta validación end-to-end con datos oficiales |
+| A18 | Parcial | Borrador en `docs/a18-operations.md`; sin despliegue productivo |
 
 | ID | Responsable | Tarea | Depende |
 | --- | --- | --- | --- |

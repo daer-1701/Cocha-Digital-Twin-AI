@@ -22,11 +22,8 @@ try {
     Invoke-TestCompose -ComposeArguments @('up', '-d', '--no-build', '--wait', '--wait-timeout', '240')
     Invoke-TestCompose -ComposeArguments @('run', '--rm', '--no-deps', 'tests', 'python', '-m', 'alembic', 'check')
     Invoke-TestCompose -ComposeArguments @('run', '--rm', '--no-deps', 'tests')
-    # Single-quoted -c so PowerShell does not strip the Python string quotes.
-    Invoke-TestCompose -ComposeArguments @(
-        'exec', '-T', 'api', 'python', '-c',
-        'import importlib.util; assert importlib.util.find_spec("numpy") is None; assert importlib.util.find_spec("rasterio") is None; print("API runtime excludes scientific dependencies")'
-    )
+    # Avoid PowerShell/Docker quoting pitfalls by running a module entrypoint.
+    Invoke-TestCompose -ComposeArguments @('exec', '-T', 'api', 'python', '-m', 'cocha_api.runtime_guard')
     # This database exists only in the test stack's tmpfs, never in development.
     Invoke-TestCompose -ComposeArguments @('run', '--rm', '--no-deps', 'tests', 'python', '-m', 'alembic', 'downgrade', 'base')
     Invoke-TestCompose -ComposeArguments @('run', '--rm', '--no-deps', 'tests', 'python', '-m', 'alembic', 'upgrade', 'head')

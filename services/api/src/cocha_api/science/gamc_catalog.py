@@ -40,10 +40,10 @@ GAMC_WMS_DEFAULT_ENDPOINT: Final[str] = "https://serviciosgamc.cochabamba.bo/api
 GAMC_WMS_VERSION: Final[str] = "1.1.1"
 ALLOWED_CRS: Final[frozenset[str]] = frozenset({"EPSG:4326", "EPSG:3857"})
 VECTOR_DISTRICTS_BLOCKER: Final[str] = (
-    "Complete district vector geometries are not available. "
-    "WMS GetMap/GetFeatureInfo and documented BBOX extents are not a complete "
-    "vector dataset; authorized GeoJSON/GeoPackage/Shapefile or feature service "
-    "access is still required before PostGIS district import."
+    "Complete district vector geometries are not available from an authorized "
+    "GAMC source. WMS GetMap/GetFeatureInfo and documented BBOX extents are not "
+    "a complete vector dataset. Third-party GeoJSON/Shapefile candidates exist "
+    "but are not verified as the official 15 municipal districts."
 )
 
 # Pilot bounds from the Landsat MVP; not municipal district polygons.
@@ -54,15 +54,43 @@ PILOT_BOUNDS_WGS84: Final[tuple[float, float, float, float]] = (
     -17.37,
 )
 
+# Unit is absent from the CSV header. Official Red MoniCA reports use µg/m³.
+MONICA_PM10_UNIT: Final[str] = "ug/m3"
+MONICA_PM10_UNIT_SOURCE: Final[str] = (
+    "http://snia.mmaya.gob.bo/web/modulos/PNGCA/publicaciones/items/"
+    "14042022-030417-130459_209/14042022-030417-130459_209.pdf"
+)
+MONICA_PM10_UNIT_NOTE: Final[str] = (
+    "Declared from municipal/national Red MoniCA reports (ug/m3), not from the "
+    "CSV header. Keep analysis_enabled=false until timezone and coordinates are "
+    "confirmed from primary station metadata."
+)
+
 MONICA_METADATA_PENDING: Final[tuple[str, ...]] = (
-    "PM10 units",
-    "timezone",
-    "station coordinates and identity reconciliation",
+    "timezone of fecha_medicion",
+    "station coordinates (lat/lon not in CSV)",
     "measurement QA codes and zero interpretation",
     "data redistribution license",
 )
 
+# Identity from Contaminación Atmosférica Gestión 2021-CBBA. No invented lat/lon.
 STATION_CATALOG_PROFILE: Final[tuple[dict[str, str], ...]] = (
-    {"source_id": "kanata", "name": "kanata"},
-    {"source_id": "semapa", "name": "semapa"},
+    {
+        "source_id": "kanata",
+        "name": "Parque Kanata",
+        "csv_label": "kanata",
+        "described_location": "Av. 6 de Agosto y Av. del Cabildo",
+        "variable": "pm10",
+        "unit": MONICA_PM10_UNIT,
+        "unit_source": MONICA_PM10_UNIT_SOURCE,
+    },
+    {
+        "source_id": "semapa",
+        "name": "SEMAPA",
+        "csv_label": "semapa",
+        "described_location": "Av. Circunvalación y Atahuallpa",
+        "variable": "pm10",
+        "unit": MONICA_PM10_UNIT,
+        "unit_source": MONICA_PM10_UNIT_SOURCE,
+    },
 )

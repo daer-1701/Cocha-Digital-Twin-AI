@@ -111,12 +111,42 @@
       "duplicate_station_timestamp_keys": 0
     }
   ],
+  "monica_unit": {
+    "unit": "ug/m3",
+    "csv_header_declares_unit": false,
+    "source_url": "http://snia.mmaya.gob.bo/web/modulos/PNGCA/publicaciones/items/14042022-030417-130459_209/14042022-030417-130459_209.pdf",
+    "verified_on": "2026-11-14",
+    "note": "From Red MoniCA municipal/national reports; not from the CSV header"
+  },
+  "monica_station_identity": [
+    {
+      "csv_label": "kanata",
+      "official_name": "Parque Kanata",
+      "described_location": "Av. 6 de Agosto y Av. del Cabildo",
+      "coordinates": null
+    },
+    {
+      "csv_label": "semapa",
+      "official_name": "SEMAPA",
+      "described_location": "Av. Circunvalación y Atahuallpa",
+      "coordinates": null
+    }
+  ],
+  "district_vector_candidates_unverified": [
+    {
+      "url": "https://github.com/ciudatoslab/20-distritos-en-cochabamba",
+      "note": "Claims 20 districts; project needs 15 municipal districts. Not GAMC-authorized."
+    },
+    {
+      "url": "https://hogaria.com/geo/datos/distritos.geojson",
+      "note": "ODbL third-party layer; not verified as official GAMC municipal districts."
+    }
+  ],
   "metadata_pending": [
-    "PM10 units",
-    "timezone",
-    "station coordinates and identity reconciliation",
+    "timezone of fecha_medicion",
+    "station coordinates (lat/lon not in CSV)",
     "measurement QA codes and zero interpretation",
     "data redistribution license",
-    "district vector completeness and boundary vintage"
+    "authorized complete district vector for the 15 municipal districts"
   ]
 }

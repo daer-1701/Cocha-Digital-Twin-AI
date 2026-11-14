@@ -332,12 +332,12 @@ export interface components {
             input_price_usd_per_million_tokens?: number | null;
             /** Output Price Usd Per Million Tokens */
             output_price_usd_per_million_tokens?: number | null;
-            /**
-             * Prices Verified
-             * @default false
-             * @constant
-             */
-            prices_verified: false;
+            /** Prices Verified */
+            prices_verified: boolean;
+            /** Prices Verified On */
+            prices_verified_on?: string | null;
+            /** Prices Source Url */
+            prices_source_url?: string | null;
             /** Prices Note */
             prices_note: string;
             /**
@@ -537,6 +537,47 @@ export interface components {
             /** Note */
             note: string;
         };
+        /** PilotTrendItem */
+        PilotTrendItem: {
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "lst_mean" | "ndvi_mean";
+            /**
+             * Scope
+             * @default pilot_window
+             * @constant
+             */
+            scope: "pilot_window";
+            /**
+             * District Trend
+             * @default false
+             * @constant
+             */
+            district_trend: false;
+            /** N Finite */
+            n_finite: number;
+            /** Min N */
+            min_n: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "descriptive" | "inconclusive";
+            /** Slope Per Step */
+            slope_per_step: number | null;
+            /** Method */
+            method: string;
+            /**
+             * Publishes Inference
+             * @default false
+             * @constant
+             */
+            publishes_inference: false;
+            /** Note */
+            note: string;
+        };
         /** PilotWindowScene */
         PilotWindowScene: {
             /** Scene Id */
@@ -713,6 +754,8 @@ export interface components {
             source_id: string;
             /** Name */
             name: string;
+            /** Described Location */
+            described_location?: string | null;
             /** Latitude */
             latitude?: number | null;
             /** Longitude */
@@ -726,6 +769,8 @@ export interface components {
             variable: string;
             /** Unit */
             unit?: string | null;
+            /** Unit Source */
+            unit_source?: string | null;
             /** Timezone */
             timezone?: string | null;
             /**
@@ -820,6 +865,8 @@ export interface components {
             items?: {
                 [key: string]: unknown;
             }[];
+            /** Pilot Trends */
+            pilot_trends?: components["schemas"]["PilotTrendItem"][];
         };
         /** ValidationError */
         ValidationError: {
