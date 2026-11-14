@@ -7,7 +7,7 @@ missing.
 """
 
 import math
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -66,6 +66,80 @@ class ZonalMean:
     valid_fraction: float | None
     publishable_as_district: bool
     source: str
+
+
+@dataclass(frozen=True)
+class PixelIntersection:
+    area_m2: float
+    value: float | None
+
+
+@dataclass(frozen=True)
+class RasterZonalMean:
+    mean: float | None
+    district_area_m2: float
+    intersected_area_m2: float
+    valid_area_m2: float
+    valid_fraction: float
+
+
+@dataclass(frozen=True)
+class PairedPixelIntersection:
+    area_m2: float
+    lst_celsius: float | None
+    ndvi: float | None
+
+
+def summarize_paired_intersections(
+    intersections: Iterable[PairedPixelIntersection], *, district_area_m2: float
+) -> tuple[RasterZonalMean, RasterZonalMean]:
+    """Return LST and NDVI means on common valid support for one acquisition."""
+    lst_samples = []
+    ndvi_samples = []
+    for pixel in intersections:
+        lst, ndvi = pixel.lst_celsius, pixel.ndvi
+        if lst is None or ndvi is None or not math.isfinite(lst) or not math.isfinite(ndvi):
+            lst = ndvi = None
+        lst_samples.append(PixelIntersection(pixel.area_m2, lst))
+        ndvi_samples.append(PixelIntersection(pixel.area_m2, ndvi))
+    return (
+        summarize_raster_intersections(lst_samples, district_area_m2=district_area_m2),
+        summarize_raster_intersections(ndvi_samples, district_area_m2=district_area_m2),
+    )
+
+
+def summarize_raster_intersections(
+    intersections: Iterable[PixelIntersection], *, district_area_m2: float
+) -> RasterZonalMean:
+    """Reduce non-overlapping pixel intersections measured in the same projected CRS."""
+    if not math.isfinite(district_area_m2) or district_area_m2 <= 0:
+        raise ValueError("District area must be finite and positive")
+
+    intersected_areas: list[float] = []
+    valid_areas: list[float] = []
+    weighted_values: list[float] = []
+    for pixel in intersections:
+        if not math.isfinite(pixel.area_m2) or pixel.area_m2 < 0:
+            raise ValueError("Pixel intersection area must be finite and nonnegative")
+        intersected_areas.append(pixel.area_m2)
+        if pixel.area_m2 > 0 and pixel.value is not None and math.isfinite(pixel.value):
+            valid_areas.append(pixel.area_m2)
+            weighted_values.append(pixel.area_m2 * pixel.value)
+
+    intersected_area = math.fsum(intersected_areas)
+    if intersected_area > district_area_m2 and not math.isclose(
+        intersected_area, district_area_m2, rel_tol=1e-9
+    ):
+        raise ValueError("Pixel intersection areas exceed the district area")
+
+    valid_area = math.fsum(valid_areas)
+    return RasterZonalMean(
+        mean=math.fsum(weighted_values) / valid_area if valid_area else None,
+        district_area_m2=district_area_m2,
+        intersected_area_m2=min(intersected_area, district_area_m2),
+        valid_area_m2=min(valid_area, district_area_m2),
+        valid_fraction=min(valid_area / district_area_m2, 1.0),
+    )
 
 
 @dataclass(frozen=True)

@@ -4,6 +4,17 @@ Decisiones de D03 (14/11/2026). Reglas obligatorias del área en
 `apps/web/AGENTS.md`; criterios visuales de la skill `frontend-design`, siempre
 subordinados a la precisión científica.
 
+## Relieve 3D (procedencia, EF09)
+
+El mapa (`study-map.tsx`) usa **AWS Terrain Tiles** en formato Terrarium
+(`elevation-tiles-prod`) con atribución a
+[Terrain Tiles / AWS Open Data](https://registry.opendata.aws/terrain-tiles/).
+Es relieve gráfico para MapLibre (`setTerrain`); **no** es un DEM municipal
+topográficamente certificado ni equivale a la capa WMS GAMC «Cota 2750»
+(imagen de contexto). No atribuir precisión altimétrica no comprobada.
+Verificación WMS/relieve: `scripts/verify_gamc_wms.py` →
+`data/catalog/wms_verification.json`.
+
 ## Punto de partida
 
 - **Tema:** evidencia ambiental de una ciudad de valle a 2.560 m, con calor

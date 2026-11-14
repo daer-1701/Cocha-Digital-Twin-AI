@@ -1,0 +1,33 @@
+{
+  "feature_count": 15,
+  "numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "boundary_version": "gamc-official-20261114",
+  "source_url": "https://serviciosgamc.cochabamba.bo/api/gs/wms",
+  "srid": 4326,
+  "bbox_union_wgs84": [
+    -66.280703,
+    -17.53119,
+    -66.06952,
+    -17.257306
+  ],
+  "topology_note": "Structural GeoJSON checks only. Run PostGIS ST_IsValid / overlap review after import; this helper does not prove official topology.",
+  "demo_boundary_prefix_rejected": "demo-synthetic",
+  "input_path": "C:\\Users\\HP\\Downloads\\nasa\\COCHA\\Cocha-Digital-Twin-AI\\data\\raw\\gamc\\districts\\limite_distritos_gamc.geojson",
+  "status": "structurally_valid"
+}

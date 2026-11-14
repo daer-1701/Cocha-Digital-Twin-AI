@@ -7,7 +7,7 @@ FUSION_BLOCKERS = (
     "LST cannot be calibrated with PM10.",
     "Two stations are not sufficient for spatial validation across 15 districts.",
     "Verified GAMC district geometries are not available.",
-    "PM10 timezone and coordinates remain unverified, so analysis_enabled stays false.",
+    "PM10 analysis_enabled stays false until Mateo accepts series QA (MF06).",
     "No compatible target variable is available and no trained model artifact exists.",
 )
 FUSION_NOTE = "Fusion and ML are blocked. No calibration and no metrics are reported. " + " ".join(

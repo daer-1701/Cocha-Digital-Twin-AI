@@ -85,6 +85,12 @@ integrador de contratos; los demás no editan a mano los tipos generados.
 
 ## 5. Eduardo — fuentes, GIS y recuperación, con Docker
 
+Estado de avance local (14/11/2026): ver `docs/eduardo-status.md`. Los IDs
+siguen pendientes de cierre humano; no se marca terminado sin evidencia de
+aceptación. Artefactos ya producidos: inventario, auditoría MÓNICA, borrador
+EF02, validadores/import oficial, plan satelital, referencia terrestre,
+verificación WMS/relieve documentada, procedimiento de backup y paquete de datos.
+
 | ID | Prioridad | Tarea | Dependencias | Criterio de cierre |
 | --- | --- | --- | --- | --- |
 | EF01 | P0 | Auditar inventario real de archivos, fuentes y permisos | Ninguna | Catálogo con disponibilidad, checksum, fecha, versión, cobertura, unidades, licencia y bloqueos; no repetir descargas ya disponibles |
@@ -105,6 +111,27 @@ modelos y migraciones con Andrés. Las solicitudes externas al GAMC se gestionan
 por el equipo; este plan no autoriza al agente a enviar mensajes por su cuenta.
 
 ## 6. Mateo — procesamiento y ciencia, con Docker
+
+**Estado de la entrega de Mateo.** La demostración sintética está disponible
+para MF05–MF07. El procesamiento y la persistencia distrital de MF03–MF04
+tienen pruebas locales. La validación con datos reales y el informe científico
+final siguen pendientes. Consultar la [revisión científica y el comando de la demo](mateo-science-review.md).
+
+**Traspaso para trabajar con datos reales**
+
+- **Eduardo** prepara los recortes Landsat y su manifiesto (EF07), importa la
+  versión oficial de los 15 distritos (EF03) y entrega los CSV de MÓNICA con
+  metadatos y el reporte de importación aislada (EF04–EF05).
+- **Andrés** acuerda el alcance con el equipo (AF01), ejecuta el lote distrital
+  con esos insumos y conecta las series validadas con la API (AF04).
+- **Diego** integra las series aprobadas con sus unidades, cobertura y
+  datos faltantes (DF04).
+- **Julio** verifica que cifras, fechas y unidades coincidan entre API y
+  frontend en el recorrido de aceptación.
+
+La revisión científica de los resultados reales queda por asignar o retomar
+con Mateo. ML, escenarios e índice dependen del alcance y de la evidencia
+disponible.
 
 | ID | Prioridad | Tarea | Dependencias | Criterio de cierre |
 | --- | --- | --- | --- | --- |

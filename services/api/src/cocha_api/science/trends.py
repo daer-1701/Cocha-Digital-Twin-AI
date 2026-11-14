@@ -8,6 +8,7 @@ dropped and are not treated as zero.
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import date
 from typing import Literal
 
 from cocha_api.science.indicators import DemoCellMean
@@ -30,6 +31,99 @@ class DescriptiveSlope:
     note: str
 
 
+def _ols_slope(points: Sequence[tuple[float, float]]) -> float | None:
+    if len(points) < 2:
+        return None
+    xs, ys = zip(*points, strict=True)
+    x_mean = math.fsum(xs) / len(points)
+    y_mean = math.fsum(ys) / len(points)
+    var_x = math.fsum((x - x_mean) ** 2 for x in xs)
+    if var_x == 0:
+        return None
+    return math.fsum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys, strict=True)) / var_x
+
+
+@dataclass(frozen=True)
+class SeasonalObservation:
+    acquired_on: date
+    value: float | None
+    valid_fraction: float
+
+
+@dataclass(frozen=True)
+class SeasonalSlope:
+    n_eligible: int
+    min_n: int
+    slope_per_year: float | None
+
+
+def seasonal_anomalies(
+    observations: Sequence[SeasonalObservation],
+    *,
+    month: int,
+    reference_years: set[int],
+    min_valid_fraction: float,
+    min_n: int,
+) -> tuple[float | None, ...]:
+    """Subtract the eligible reference mean, preserving missing observations."""
+    eligible = _eligible_seasonal_values(observations, month, min_valid_fraction, min_n)
+    reference = [
+        value
+        for observation, value in zip(observations, eligible, strict=True)
+        if value is not None and observation.acquired_on.year in reference_years
+    ]
+    if len(reference) < min_n:
+        return (None,) * len(observations)
+    mean = math.fsum(reference) / len(reference)
+    return tuple(value - mean if value is not None else None for value in eligible)
+
+
+def seasonal_descriptive_slope(
+    observations: Sequence[SeasonalObservation],
+    *,
+    month: int,
+    min_valid_fraction: float,
+    min_n: int,
+) -> SeasonalSlope:
+    """Summarize one comparable district, boundary version and variable.
+
+    The caller supplies at most one observation per year for the selected month.
+    The result describes change over elapsed time without statistical inference.
+    """
+    eligible = _eligible_seasonal_values(observations, month, min_valid_fraction, min_n)
+    points = [
+        ((observation.acquired_on - date(2000, 1, 1)).days / 365.2425, value)
+        for observation, value in zip(observations, eligible, strict=True)
+        if value is not None
+    ]
+    return SeasonalSlope(
+        n_eligible=len(points),
+        min_n=min_n,
+        slope_per_year=_ols_slope(points) if len(points) >= min_n else None,
+    )
+
+
+def _eligible_seasonal_values(
+    observations: Sequence[SeasonalObservation], month: int, min_valid_fraction: float, min_n: int
+) -> list[float | None]:
+    if not 1 <= month <= 12 or not 0 < min_valid_fraction <= 1 or min_n < 2:
+        raise ValueError("Require a valid month, positive coverage threshold and min_n >= 2")
+
+    years: set[int] = set()
+    values: list[float | None] = []
+    for observation in observations:
+        acquired = observation.acquired_on
+        if acquired.month != month or acquired.year in years:
+            raise ValueError("Require one observation per year in the selected month")
+        years.add(acquired.year)
+        if not 0 <= observation.valid_fraction <= 1:
+            raise ValueError("Observation coverage must be between zero and one")
+        value = observation.value
+        valid = observation.valid_fraction >= min_valid_fraction
+        values.append(value if valid and value is not None and math.isfinite(value) else None)
+    return values
+
+
 def descriptive_slope(
     values: Sequence[float | None],
     *,
@@ -38,21 +132,11 @@ def descriptive_slope(
     if min_n < 2:
         raise ValueError("min_n must be at least 2")
     points = [
-        (index, float(value))
+        (float(index), float(value))
         for index, value in enumerate(values)
         if value is not None and math.isfinite(value)
     ]
     n_finite = len(points)
-    slope: float | None = None
-    if n_finite >= 2:
-        xs = [point[0] for point in points]
-        ys = [point[1] for point in points]
-        x_mean = sum(xs) / n_finite
-        y_mean = sum(ys) / n_finite
-        var_x = sum((x - x_mean) ** 2 for x in xs)
-        if var_x > 0:
-            covariance = sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys, strict=True))
-            slope = covariance / var_x
     status: Literal["descriptive", "inconclusive"] = (
         "descriptive" if n_finite >= min_n else "inconclusive"
     )
@@ -64,7 +148,7 @@ def descriptive_slope(
         n_finite=n_finite,
         min_n=min_n,
         status=status,
-        slope_per_step=slope,
+        slope_per_step=_ols_slope(points),
         method="descriptive_ols_on_index",
         publishes_inference=False,
         note=note,

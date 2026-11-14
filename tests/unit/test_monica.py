@@ -39,22 +39,24 @@ def test_negative_and_zero_values_are_preserved_not_truncated():
     assert analysis_eligible("zero") is False
 
 
-def test_import_profile_declares_unit_without_inventing_place_or_timezone():
+def test_import_profile_declares_unit_timezone_and_catalog_coordinates():
     profile = station_import_profile("kanata")
     assert profile.unit_declared == "ug/m3"
     assert profile.name == "Parque Kanata"
     assert profile.analysis_enabled is False
-    assert profile.timezone_declared is None
-    assert profile.latitude is None
-    assert profile.longitude is None
+    assert profile.timezone_declared == "America/La_Paz"
+    assert profile.latitude == -17.41252
+    assert profile.longitude == -66.15897
+    assert profile.elevation_m == 2564.0
     pending = " ".join(profile.metadata_pending).lower()
-    assert "timezone" in pending
-    assert "coordinates" in pending
+    assert "timezone" not in pending
+    assert "coordinates" not in pending
     unknown = station_import_profile("not-a-station")
     assert unknown.name == "not-a-station"
     assert unknown.unit_declared == "ug/m3"
     assert unknown.latitude is None
     assert unknown.longitude is None
+    assert unknown.timezone_declared is None
 
 
 def test_missing_columns_raise():

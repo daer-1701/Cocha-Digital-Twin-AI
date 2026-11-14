@@ -1,47 +1,60 @@
 # MÓNICA — confirmado y pendiente
 
-Revisión de código: 14 de noviembre de 2026. No se inventan coordenadas ni huso.
+Actualizado: **14 de noviembre de 2026**. PM10 nunca se presenta como temperatura.
 
 ## Confirmado
 
 - Archivos: `red_monica.kanata (1).csv` y `red_monica.semapa (1).csv`, columnas
   `estacion`, `pm10`, `fecha_medicion`.
 - Variable: PM10. No es temperatura del aire y no calibra LST.
-- Identidad, desde el informe de Contaminación Atmosférica Gestión 2021:
-  `kanata` es Parque Kanata (Av. 6 de Agosto y Av. del Cabildo) y `semapa` es
-  SEMAPA (Av. Circunvalación y Atahuallpa).
-- Unidad declarada en la importación: `ug/m3`, tomada de ese informe
-  ([PDF](http://snia.mmaya.gob.bo/web/modulos/PNGCA/publicaciones/items/14042022-030417-130459_209/14042022-030417-130459_209.pdf)),
-  no del encabezado del CSV.
-- El importador guarda `unit_declared`, deja `analysis_enabled=false` y copia
-  `metadata_pending`. No escribe latitud, longitud ni zona horaria.
+- Unidad: `ug/m3` desde el informe 2021 (no del CSV).
+- **Huso:** `America/La_Paz`. Los timestamps del CSV siguen sin offset; se
+  guardan naive y se declara el huso en la estación.
+- **Coordenadas (2026-11-14):**
+
+| Estación | Lat | Lon | Elevación |
+| --- | --- | --- | --- |
+| Parque Kanata | -17.41252 | -66.15897 | ~2564 m (rango 2554–2574) |
+| SEMAPA | -17.36470 | -66.16245 | ~2600 m |
+
+- Import PostGIS: kanata 54 711 + semapa 71 154 (`monica_import_audit.json`).
+- `analysis_enabled=false` hasta que Mateo acepte series (MF06).
+
+## Política de ceros y negativos
+
+Sin códigos de instrumento del proveedor. Decisión del proyecto:
+
+- Conservar el valor crudo.
+- Marcar `zero` / `negative`.
+- Excluirlos de agregados físicos (`analysis_eligible` solo `valid`).
+- No truncar negativos a cero ni convertir ceros en faltantes.
+
+## Licencia / uso
+
+- Se puede mostrar en la app del proyecto (`MONICA_REVIEW_ENABLED=true` local).
+- CSV/ZIP crudos fuera de Git.
+- No republicar el archivo fuente en público sin permiso escrito adicional.
 
 ## Pendiente
 
-- Zona horaria de `fecha_medicion`. Los timestamps no traen offset; no se
-  etiquetan como UTC ni como America/La_Paz.
-- Coordenadas y elevación. El texto de avenidas no se convierte a lat/lon.
-- Tratamiento de ceros y negativos, códigos de instrumento y licencia de
-  redistribución.
+- Códigos QA del fabricante / procedimiento oficial de corrección.
+- Permiso escrito de redistribución más allá de la app.
+- Vector oficial de 15 distritos (aparte de MÓNICA).
 
-Mientras eso siga abierto, los agregados físicos permanecen apagados.
+## Importación y duplicados
 
-## Política de importación y duplicados
+`scripts/import_monica.py` importa en una transacción. Duplicados no sobrescriben.
+Metadatos de estación: `scripts/sync_monica_station_metadata.py`.
 
-`scripts/import_monica.py` importa todos los archivos solicitados en una única
-transacción de datos. Si falla un archivo o una operación SQL, se revierten
-estaciones y observaciones de esa ejecución. El registro `processing_runs`
-se conserva aparte con estado `failed`, fecha final y tipo de error; no guarda
-la excepción SQL ni credenciales. Una interrupción abrupta del proceso puede
-dejar un registro `running`; su recuperación operacional sigue pendiente.
+## Auditoría local previa a la conciliación (MF06)
 
-La primera fila de cada estación/instante se conserva con su QA original.
-Fechas equivalentes con y sin fracciones de segundo son la misma clave.
-Las filas posteriores duplicadas se excluyen y cuentan en `skipped_duplicates`.
-Claves ya persistidas no se sobrescriben ni cambian de procedencia al reimportar;
-se cuentan en `skipped_existing`. Una corrección oficial del proveedor requiere
-un procedimiento explícito de revisión, todavía pendiente. El checksum y los
-conteos quedan registrados para ejecuciones completadas; conservar el CSV original.
+La [demo científica](mateo-science-review.md#demostración-sintética-mf05mf07) usa las funciones de auditoría y conciliación de `scripts/audit_monica.py`. El informe compara SHA-256, total de filas y conteos QA. Los duplicados se cuentan dentro de cada archivo. Para conciliar
+el lote, comparar cada archivo con los conteos y checksum de la ejecución
+aislada de EF05 y revisar aparte las claves repetidas entre archivos y las ya
+persistidas. Los conteos de auditoría representan filas, no cobertura temporal.
 
-Estas reglas no reparan automáticamente registros de importaciones anteriores.
-Las pruebas de regresión usan CSV sintéticos y una base exclusiva `_test`.
+Para habilitar agregaciones, confirmar huso, frecuencia esperada y política
+de ceros/negativos con el proveedor. Definir cobertura como observaciones
+válidas únicas sobre las observaciones esperadas del intervalo. Reportar
+intervalos incompletos como faltantes según el umbral acordado y documentar
+la cadencia y el período antes de comparar estaciones.

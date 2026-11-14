@@ -200,11 +200,10 @@ def get_json(client: Any, url: str, params: dict[str, str] | None = None) -> dic
     return payload
 
 
-def read_scene(client: Any, item: Mapping[str, Any], folder: Path) -> Any:
+def read_scene_grids(
+    client: Any, item: Mapping[str, Any], folder: Path
+) -> tuple[NDArray, NDArray, Any, Any]:
     import rasterio
-    from rasterio.windows import Window
-
-    from cocha_api.schemas.explorer import Cell, Scene
 
     arrays: dict[str, Any] = {}
     reference = None
@@ -214,11 +213,15 @@ def read_scene(client: Any, item: Mapping[str, Any], folder: Path) -> Any:
         cached = folder / f"{band}.tif"
         if cached.exists():
             with rasterio.open(cached) as source:
+                if source.crs is None:
+                    raise ValueError("Cached raster CRS is missing")
                 if reference is not None and (source.transform != reference or source.crs != crs):
                     raise ValueError("Cached bands have different grids")
                 reference, crs = source.transform, source.crs
                 arrays[band] = source.read(1)
             continue
+        if client is None:
+            raise ValueError(f"Missing cached band {band} for offline replay")
         asset = item["assets"][band]["href"]
         container = "/".join(asset.split("/")[:4])
         if container not in token_cache:
@@ -246,6 +249,16 @@ def read_scene(client: Any, item: Mapping[str, Any], folder: Path) -> Any:
                 with rasterio.open(folder / f"{band}.tif", "w", **profile) as target:
                     target.write(arrays[band], 1)
     lst, ndvi = indicators(*(arrays[key] for key in BANDS))
+    return lst, ndvi, reference, crs
+
+
+def read_scene(client: Any, item: Mapping[str, Any], folder: Path) -> Any:
+    import rasterio
+    from rasterio.windows import Window
+
+    from cocha_api.schemas.explorer import Cell, Scene
+
+    lst, ndvi, reference, crs = read_scene_grids(client, item, folder)
     height, width = lst.shape
     cells = []
     # Native 30 m grid aggregated in 12x12-pixel blocks (~360 m); no invented detail.

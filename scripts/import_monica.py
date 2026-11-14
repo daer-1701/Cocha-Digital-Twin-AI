@@ -1,7 +1,7 @@
 """Idempotent MONICA PM10 import into stations/observations.
 
-Sets unit_declared from the catalog source (ug/m3). Does not invent timezone
-or coordinates. Keeps analysis_enabled=false while metadata remains pending.
+Sets unit_declared, America/La_Paz timezone and catalog coordinates.
+Keeps analysis_enabled=false until Mateo accepts series QA (MF06).
 PM10 is not air temperature and must not calibrate LST.
 """
 
@@ -43,7 +43,10 @@ def ensure_station(session: Session, source_id: str) -> Station:
         existing.name = profile.name
         existing.analysis_enabled = False
         existing.unit_declared = profile.unit_declared
-        existing.timezone_declared = None
+        existing.timezone_declared = profile.timezone_declared
+        existing.latitude = profile.latitude
+        existing.longitude = profile.longitude
+        existing.elevation_m = profile.elevation_m
         existing.metadata_pending = list(profile.metadata_pending)
         return existing
     station = Station(
@@ -51,11 +54,11 @@ def ensure_station(session: Session, source_id: str) -> Station:
         source_id=source_id,
         name=profile.name,
         network="monica",
-        latitude=None,
-        longitude=None,
-        elevation_m=None,
+        latitude=profile.latitude,
+        longitude=profile.longitude,
+        elevation_m=profile.elevation_m,
         unit_declared=profile.unit_declared,
-        timezone_declared=None,
+        timezone_declared=profile.timezone_declared,
         analysis_enabled=False,
         metadata_pending=list(profile.metadata_pending),
     )
@@ -157,14 +160,14 @@ def import_files(engine: Engine, folder: Path, files: list[str]) -> list[dict[st
                 "analysis_enabled": False,
                 "unit_declared": MONICA_PM10_UNIT,
                 "unit_source": MONICA_PM10_UNIT_SOURCE,
-                "timezone_declared": None,
+                "timezone_declared": "America/La_Paz",
                 "notes": (
-                    "PM10 import only; unit declared from the catalog report; "
-                    "timezone and coordinates still pending; not for LST calibration"
+                    "PM10 import only; unit/timezone/coordinates from catalog; "
+                    "analysis_enabled false until MF06; not for LST calibration"
                 ),
             },
             started_at=started,
-            notes="analysis_enabled remains false while MONICA metadata is pending",
+            notes="analysis_enabled remains false until Mateo accepts MONICA series QA",
         )
         session.add(run)
     results: list[dict[str, object]] = []

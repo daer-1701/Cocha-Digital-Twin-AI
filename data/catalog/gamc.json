@@ -66,7 +66,7 @@
       ]
     }
   ],
-  "district_vector_download_status": "No complete vector download identified in project-1 documented resource links; WMS is not a complete polygon dataset",
+  "district_vector_download_status": "Retrieved 2026-11-14 via authorized WMS GetMap KMZ (limite_distritos, kmscore=100); imported PostGIS boundary_version=gamc-official-20261114; 15 valid polygons D1-D15",
   "documented_downloads": [
     "https://recursosgamc.cochabamba.bo/assets/geo/lineas_de_transporte.rar",
     "https://recursosgamc.cochabamba.bo/assets/geo/red_monica.zip"
@@ -118,18 +118,43 @@
     "verified_on": "2026-11-14",
     "note": "From Red MoniCA municipal/national reports; not from the CSV header"
   },
+  "monica_timezone": {
+    "timezone": "America/La_Paz",
+    "verified_on": "2026-11-14",
+    "note": "fecha_medicion is local wall time without offset; store naive and declare America/La_Paz"
+  },
+  "monica_qa_policy": {
+    "zeros": "preserve and flag as zero; exclude from physical aggregates",
+    "negatives": "preserve and flag as negative; never clamp to zero; exclude from aggregates",
+    "verified_on": "2026-11-14",
+    "note": "No instrument QA codes from provider; project policy until written codes arrive"
+  },
+  "monica_license_policy": {
+    "app_display": "allowed for the project",
+    "raw_csv_in_git": false,
+    "public_redistribution_of_source_archive": "not granted; keep outside public repos",
+    "verified_on": "2026-11-14"
+  },
   "monica_station_identity": [
     {
       "csv_label": "kanata",
       "official_name": "Parque Kanata",
-      "described_location": "Av. 6 de Agosto y Av. del Cabildo",
-      "coordinates": null
+      "described_location": "Av. 6 de Agosto / Av. del Cabildo",
+      "latitude": -17.41252,
+      "longitude": -66.15897,
+      "elevation_m": 2564,
+      "elevation_note": "approx 2554-2574 m asl",
+      "coordinates_verified_on": "2026-11-14"
     },
     {
       "csv_label": "semapa",
       "official_name": "SEMAPA",
-      "described_location": "Av. Circunvalación y Atahuallpa",
-      "coordinates": null
+      "described_location": "Predios SEMAPA / Planta Cala Cala",
+      "latitude": -17.3647,
+      "longitude": -66.16245,
+      "elevation_m": 2600,
+      "elevation_note": "approx 2600 m asl",
+      "coordinates_verified_on": "2026-11-14"
     }
   ],
   "district_vector_candidates_unverified": [
@@ -142,11 +167,18 @@
       "note": "ODbL third-party layer; not verified as official GAMC municipal districts."
     }
   ],
+  "wms_live_verified_on": "2026-11-14",
+  "wms_live_note": "GetMap probes for all five allowlisted layers succeeded with server-side key; key is not stored in this catalog",
   "metadata_pending": [
-    "timezone of fecha_medicion",
-    "station coordinates (lat/lon not in CSV)",
-    "measurement QA codes and zero interpretation",
-    "data redistribution license",
-    "authorized complete district vector for the 15 municipal districts"
-  ]
+    "instrument manufacturer QA codes (zeros/negatives handled by project policy)",
+    "written redistribution grant beyond project app display"
+  ],
+  "eduardo_followups": {
+    "vector_request_draft": "docs/gamc-vector-request.md",
+    "inventory": "data/catalog/inventory.json",
+    "monica_audit": "data/catalog/monica_audit.json",
+    "wms_verification": "data/catalog/wms_verification.json",
+    "status": "docs/eduardo-status.md",
+    "note": "Follow-up paths only; no secrets and no invented official geometries"
+  }
 }
