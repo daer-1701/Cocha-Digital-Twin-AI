@@ -5,6 +5,8 @@ export type Variable = "lst" | "ndvi";
 export type ExplorerFilters = {
   territory: TerritoryId;
   sceneId: string;
+  /** Second acquisition for the descriptive comparison, if any. */
+  compareId: string | null;
   variable: Variable;
 };
 
@@ -49,6 +51,17 @@ export function parseFilters(
       );
   }
 
+  let compareId: string | null = null;
+  const requestedCompare = first(params.comparar);
+  if (requestedCompare !== undefined && requestedCompare !== "") {
+    if (sceneIds.includes(requestedCompare) && requestedCompare !== sceneId)
+      compareId = requestedCompare;
+    else
+      notices.push(
+        "La fecha de comparación del enlace no es válida. Se muestra sin comparación.",
+      );
+  }
+
   let variable: Variable = "lst";
   const requestedVariable = first(params.variable);
   if (requestedVariable !== undefined) {
@@ -60,13 +73,15 @@ export function parseFilters(
       );
   }
 
-  return { filters: { territory, sceneId, variable }, notices };
+  return { filters: { territory, sceneId, compareId, variable }, notices };
 }
 
 export function filtersToQuery(filters: ExplorerFilters): string {
-  return new URLSearchParams({
+  const query = new URLSearchParams({
     territorio: filters.territory,
     escena: filters.sceneId,
     variable: filters.variable,
-  }).toString();
+  });
+  if (filters.compareId) query.set("comparar", filters.compareId);
+  return query.toString();
 }

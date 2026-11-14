@@ -26,6 +26,7 @@ Definida en `apps/web/src/lib/navigation.ts`, fuente única para menú y página
 | --- | --- | --- | --- |
 | `/` | Explorador | Disponible (piloto Landsat) | Observación |
 | `/comparar` | Comparar distritos | En preparación | Observación |
+| `/estaciones` | Estaciones MÓNICA (PM10) | Disponible (catálogo, sin series) | Observación |
 | `/modelos` | Estimaciones | En preparación | Estimación |
 | `/escenarios` | Escenarios | En preparación | Simulación |
 | `/asistente` | Asistente | En preparación | — |
@@ -34,6 +35,13 @@ Las secciones pendientes muestran qué datos o validaciones faltan, con
 `PendingSection`. **No muestran gráficos, mapas ni cifras de ejemplo.** El menú
 las anuncia como «en preparación» a lectores de pantalla. Al implementar una
 sección, cambiar `available` y reemplazar su página.
+
+Cada sección consulta su recurso de la API (`/v1/indicators` y `/v1/trends`,
+`/v1/models`, `/v1/scenarios`, `/v1/assistant`) y muestra en español si el
+servidor confirma que no hay resultados, si está vacío o si no respondió. El
+motivo original del servidor, en inglés, queda en un desplegable
+(`ServerDetail`) con `lang="en"`. El asistente muestra además el estado del
+presupuesto que informa el servidor; no envía consultas.
 
 ## Tokens
 
@@ -76,10 +84,13 @@ En `apps/web/src/components/ui/`:
 | `NatureBadge` | Rótulo y descripción del tipo de evidencia |
 | `StatusPanel` | Estados `loading`, `empty`, `error` y `pending` |
 | `DemoBanner` | Franja permanente con datos sintéticos o bloqueados |
+| `ServerDetail` | Motivo literal del servidor, plegado y marcado en inglés |
 
 `PendingSection` compone estos elementos para secciones sin resultados.
 `TerritorySelector` y `TerritoryCard` (en `components/`) se describen en
-«Selección territorial y filtros».
+«Selección territorial y filtros». En `components/` también están
+`MapLayers` (capas municipales), `ComparisonPanel` (dos fechas),
+`ObservationChart` (puntos por fecha) y `ProvenancePanel` (procedencia).
 
 ## Estados
 
@@ -111,13 +122,18 @@ Auditoría completa pendiente en D14.
 
 ## Selección territorial y filtros (D04)
 
-El explorador distingue tres niveles territoriales en `lib/territory.ts`:
+El explorador consulta `/v1/territories` (A02/A03) y ofrece dos niveles en
+`lib/territory.ts`:
 
 | Opción | Estado | Qué permite |
 | --- | --- | --- |
 | Ventana piloto (`piloto`) | Disponible; nombre y límites vienen del snapshot | Indicadores de todo el rectángulo |
-| Límites distritales GAMC, capa WMS (`distritos-wms`) | Deshabilitada | Orientación visual; nunca indicadores por distrito |
-| Distritos con análisis (`distritos-vector`) | Deshabilitada | Indicadores por distrito con polígonos completos |
+| Distritos con análisis (`distritos`) | Deshabilitada mientras `vector_districts` no esté disponible | Indicadores por distrito con polígonos completos |
+
+Los límites distritales WMS ya no son una opción territorial: son una imagen
+de orientación y se muestran como capa del mapa (ver «Capas municipales»).
+Si la API no responde, la opción de distritos indica que no se pudo consultar
+el catálogo y el piloto sigue funcionando.
 
 `TerritorySelector` es un grupo de radios con descripción y motivo pendiente
 asociados mediante `aria-describedby`. `TerritoryCard` muestra nombre, tipo,
@@ -125,25 +141,57 @@ límites WGS84, extensión aproximada, escenas y producto, siempre con el aviso
 de que la ventana no es un límite administrativo. La extensión en km es un
 cálculo geométrico aproximado de la caja, no un área oficial.
 
-**Filtros compartibles:** `?territorio=piloto&escena=<id>&variable=lst|ndvi`.
+**Filtros compartibles:**
+`?territorio=piloto&escena=<id>&comparar=<id>&variable=lst|ndvi`.
 El servidor los lee en `lib/filters.ts`; los valores inválidos o no
 disponibles vuelven al valor por defecto y la página lo avisa
 (`role="status"`), en vez de fallar o cambiar la vista en silencio. Cada cambio
 actualiza la URL con `history.replaceState`, sin nueva consulta a la API.
 «Copiar enlace a esta vista» informa si el portapapeles no está disponible.
 
-**Integración pendiente (A02/A03):** la API no expone todavía un catálogo
-territorial, por lo que la disponibilidad de las opciones GAMC está fijada en el
-frontend. Para habilitarlas, la pantalla necesita del backend, por territorio:
-identificador estable, nombre, tipo (ventana, capa WMS o vector), estado de
-disponibilidad con motivo, fuente, versión y fecha del límite, licencia, y si
-admite indicadores. Para la capa WMS, además, una ruta del proxy del servidor
-con imagen y leyenda, sin clave ni URL municipal en el navegador. Andrés define
-el contrato; al publicarse se reemplaza la lista fija por la respuesta de la API.
+## Capas municipales y comparación temporal (D05)
+
+`MapLayers` lista las capas WMS del catálogo con su estado. Las no disponibles
+quedan deshabilitadas con el motivo del servidor. Al activar una capa, el mapa
+pide una sola imagen del área visible a `/api/gamc/wms/map`, una ruta de Next.js
+que valida `service_id`, `bbox` y tamaño y reenvía a la API desde el servidor:
+el navegador nunca ve la URL de la API ni la clave municipal. Se vuelve a pedir
+400 ms después de mover el mapa, para respetar el límite de solicitudes del
+proxy. Las capas se rotulan como referencia municipal, nunca como resultados
+Landsat; «Cota 2750» se aclara como contexto, no como modelo de elevación. Si
+una imagen falla, se avisa en la capa y el mapa Landsat sigue visible. Si el
+navegador no tiene WebGL, se muestra un aviso y la tabla.
+
+«Comparar con» añade `ComparisonPanel`: medias de ambas fechas y su diferencia
+(la más reciente menos la anterior), con aviso de cobertura reducida y la
+aclaración de que no es una tendencia. El mapa mantiene la escala fija para
+alternar fechas.
+
+## Series, tendencias y procedencia (D06, D08)
+
+`ObservationChart` usa la misma escala fija que la leyenda del mapa, muestra
+cada fecha como punto independiente y marca las fechas sin datos con un
+círculo punteado y el texto «Sin datos». El estado de `/v1/series` y
+`/v1/trends` se explica en español; hoy ambos son `unavailable`, así que no se
+dibuja ninguna tendencia. Los `items` de esos contratos aún no tienen esquema:
+cuando Andrés lo defina, se mostrarán pendiente, intervalo, n y método.
+
+`ProvenancePanel` lista solo campos del contrato: colección, producto, licencia,
+plataforma, escena, hora de adquisición, unidades, tamaño de celda calculado de
+sus límites, cobertura válida y fecha del snapshot. La resolución nativa no
+está en el snapshot y se indica así, sin suponerla.
+
+## Estaciones (D09)
+
+`/estaciones` consume `/v1/stations`: ficha por estación con unidad, zona
+horaria, ubicación y elevación como «Pendiente» cuando faltan, análisis
+desactivado y lista de metadatos pendientes traducida. No hay marcadores en el
+mapa sin coordenadas oficiales ni series hasta que la API las publique. Se
+aclara que PM10 no es temperatura ni valida LST.
 
 ## Pendiente
 
-- D04: conectar el catálogo territorial de A02/A03 cuando exista.
-- D05–D07: capas, series y comparación sobre estos componentes.
-- Revisar la dirección visual completa cuando existan las secciones reales;
-  esta etapa extrajo tokens sin rediseñar el explorador.
+- Mostrar series, tendencias e indicadores cuando sus `items` tengan esquema.
+- D07: comparación de distritos cuando exista el vector y A06/A07.
+- Series PM10 por estación cuando la API las publique (A08).
+- Revisar la dirección visual completa cuando existan las secciones reales.

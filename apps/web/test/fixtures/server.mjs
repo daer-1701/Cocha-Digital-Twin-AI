@@ -1,6 +1,7 @@
 // Local synthetic API for frontend work without Python, Docker or a database.
 import { createServer } from "node:http";
 import { responseSchema, validate } from "./contract.mjs";
+import { WMS_LAYERS, domainRoutes, hatchPng } from "./domain.mjs";
 import { scenarios } from "./scenarios.mjs";
 
 // Read by apps/web/src/lib/api.ts to label every page as DEMO.
@@ -20,24 +21,60 @@ if (!scenarios[active]) {
   process.exit(1);
 }
 
-for (const [name, scenario] of Object.entries(scenarios)) {
-  const schema = responseSchema("/v1/explorer", scenario.status);
-  if (!schema) continue;
-  const errors = validate(schema, scenario.body);
+function assertContract(label, path, status, body) {
+  const schema = responseSchema(path, status);
+  if (!schema) {
+    console.error(`${label}: OpenAPI documents no ${status} response for ${path}.`);
+    process.exit(1);
+  }
+  const errors = validate(schema, body);
   if (errors.length) {
-    console.error(`Scenario "${name}" does not match OpenAPI:\n  ${errors.join("\n  ")}`);
+    console.error(`${label} does not match OpenAPI:\n  ${errors.join("\n  ")}`);
     process.exit(1);
   }
 }
+
+for (const [name, scenario] of Object.entries(scenarios)) {
+  if (responseSchema("/v1/explorer", scenario.status))
+    assertContract(`Scenario "${name}"`, "/v1/explorer", scenario.status, scenario.body);
+}
+for (const wms of [false, true])
+  for (const [path, body] of Object.entries(domainRoutes({ wms })))
+    assertContract(`Route ${path} (wms=${wms})`, path, 200, body);
 
 const fixed = {
   "/health/live": { status: 200, body: { status: "ok", service: "cocha-api" } },
   "/v1/datasets": { status: 200, body: [] },
 };
+const ALLOWED_SERVICES = new Set(WMS_LAYERS.map((layer) => layer.service_id));
+const LAYER_COLORS = [
+  [255, 200, 87],
+  [212, 168, 255],
+  [114, 223, 184],
+  [143, 188, 255],
+  [255, 154, 139],
+];
 
 function send(response, status, body) {
   response.writeHead(status, { "content-type": "application/json", ...SOURCE_HEADER });
   response.end(JSON.stringify(body));
+}
+
+function sendWms(response, pathname, params) {
+  if (!scenarios[active].wms)
+    return send(response, 503, {
+      detail: { status: "unavailable", reason: "GAMC_WMS_API_KEY is not configured" },
+    });
+  const serviceId = params.get("service_id") ?? "";
+  if (!ALLOWED_SERVICES.has(serviceId))
+    return send(response, 400, {
+      status: "unavailable",
+      reason: "service_id is not in the verified GAMC allowlist",
+    });
+  const color = LAYER_COLORS[[...ALLOWED_SERVICES].indexOf(serviceId) % LAYER_COLORS.length];
+  const size = pathname.endsWith("/legend") ? 24 : 256;
+  response.writeHead(200, { "content-type": "image/png", ...SOURCE_HEADER });
+  response.end(hatchPng(size, color));
 }
 
 function info() {
@@ -52,7 +89,7 @@ function info() {
 }
 
 const server = createServer((request, response) => {
-  const { pathname } = new URL(request.url ?? "/", `http://${HOST}`);
+  const { pathname, searchParams } = new URL(request.url ?? "/", `http://${HOST}`);
   if (request.method === "POST" && pathname.startsWith("/__fixtures/scenario/")) {
     const name = decodeURIComponent(pathname.split("/").pop() ?? "");
     if (!scenarios[name]) return send(response, 404, { detail: "Unknown scenario" });
@@ -63,6 +100,10 @@ const server = createServer((request, response) => {
   if (request.method !== "GET") return send(response, 405, { detail: "Method Not Allowed" });
   if (pathname === "/__fixtures") return send(response, 200, info());
   if (fixed[pathname]) return send(response, fixed[pathname].status, fixed[pathname].body);
+  if (pathname === "/v1/gamc/wms/map" || pathname === "/v1/gamc/wms/legend")
+    return sendWms(response, pathname, searchParams);
+  const domain = domainRoutes({ wms: Boolean(scenarios[active].wms) })[pathname];
+  if (domain) return send(response, 200, domain);
   if (pathname !== "/v1/explorer") return send(response, 404, { detail: "Not Found" });
 
   const scenario = scenarios[active];

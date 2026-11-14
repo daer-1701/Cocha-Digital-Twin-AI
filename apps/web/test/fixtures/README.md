@@ -23,6 +23,7 @@ Para volver a la API real, restaurar `API_INTERNAL_URL=http://localhost:8000`
 | Nombre | Comportamiento |
 | --- | --- |
 | `available` | Tres escenas completas (predeterminado) |
+| `wms` | Como `available`, con capas GAMC habilitadas que devuelven imágenes rayadas sintéticas |
 | `partial` | Cobertura reducida, celdas sin datos y una escena sin píxeles válidos |
 | `no-scenes` | Snapshot sin escenas |
 | `empty` | Sin snapshot publicado |
@@ -40,6 +41,13 @@ Invoke-RestMethod -Method Post http://127.0.0.1:8100/__fixtures/scenario/empty
 Puerto alternativo: variable `FIXTURES_PORT` (el enlace de escena seguirá
 apuntando a 8100).
 
+Los escenarios cambian `/v1/explorer`. El resto de rutas (`domain.mjs`) reproduce
+los estados honestos por defecto de la API: territorios con vector distrital no
+disponible, estaciones Kanata/Semapa sin importar, y series, tendencias,
+indicadores, modelos, escenarios y asistente como `unavailable`. Las capas WMS
+solo están disponibles en el escenario `wms`; en los demás responden 503, como
+la API sin `GAMC_WMS_API_KEY`.
+
 ## Garantías
 
 - Cada respuesta lleva `x-cocha-data-source: synthetic-fixture`. La web muestra
@@ -49,7 +57,7 @@ apuntando a 8100).
   `ALLOW_SYNTHETIC_FIXTURES=1`, y el servidor no arranca con `NODE_ENV=production`.
   La web nunca usa fixtures como respaldo si falla la API real.
 - Escucha solo en `127.0.0.1`.
-- Al arrancar valida los escenarios contra `packages/shared/openapi.json`. Si
+- Al arrancar valida los escenarios y todas las rutas de `domain.mjs` contra `packages/shared/openapi.json`. Si
   el contrato cambia, falla con la ruta del campo incompatible: actualizar
   `scenarios.mjs`, no copiar tipos a mano.
 - La respuesta 503 reproduce la API (`tests/unit/test_explorer.py`); OpenAPI

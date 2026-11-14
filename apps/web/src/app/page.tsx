@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { getEvidence } from "../lib/api";
+import {
+  getEvidence,
+  getSeries,
+  getTerritories,
+  getTrends,
+  mergeDemo,
+} from "../lib/api";
 import {
   filtersToQuery,
   parseFilters,
@@ -19,23 +25,28 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const [{ data, error, demo }, params] = await Promise.all([
-    getEvidence(),
-    searchParams,
-  ]);
+  const [{ data, error, demo }, territories, trends, series, params] =
+    await Promise.all([
+      getEvidence(),
+      getTerritories(),
+      getTrends(),
+      getSeries(),
+      searchParams,
+    ]);
   const current = section("/");
+  const pageDemo = mergeDemo(demo, territories.demo, trends.demo, series.demo);
   const parsed =
     data &&
     parseFilters(
       params,
       data.scenes.map((scene) => scene.id),
-      territoryOptions(data)
+      territoryOptions(data, territories.data)
         .filter((option) => option.available)
         .map((option) => option.id),
     );
   return (
     <>
-      <DemoBanner state={demo} />
+      <DemoBanner state={pageDemo} />
       <PageHeader title={current.title}>
         <p>{current.summary}</p>
       </PageHeader>
@@ -46,6 +57,9 @@ export default async function Home({
           synthetic={demo === "active"}
           initial={parsed.filters}
           notices={parsed.notices}
+          catalog={territories.data}
+          trends={trends.data}
+          series={series.data}
         />
       ) : error ? (
         <StatusPanel

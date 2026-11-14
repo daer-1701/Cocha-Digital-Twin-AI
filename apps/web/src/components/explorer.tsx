@@ -3,18 +3,23 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import type { Evidence } from "../lib/api";
+import type { Evidence, Series, Territories, Trends } from "../lib/api";
 import {
   filtersToQuery,
   type ExplorerFilters,
   type Variable,
 } from "../lib/filters";
 import { territoryOptions } from "../lib/territory";
+import { ComparisonPanel } from "./comparison-panel";
+import { MapLayers } from "./map-layers";
+import { ObservationChart } from "./observation-chart";
+import { ProvenancePanel } from "./provenance-panel";
 import { TerritoryCard } from "./territory-card";
 import { TerritorySelector } from "./territory-selector";
 import { Metric } from "./ui/metric";
 import { NatureBadge } from "./ui/nature-badge";
 import { Panel } from "./ui/panel";
+import { ServerDetail } from "./ui/server-detail";
 import { StatusPanel } from "./ui/status-panel";
 
 const StudyMap = dynamic(() => import("./study-map"), {
@@ -30,22 +35,65 @@ const format = (value: number | null | undefined, digits = 2) =>
 
 type CopyState = "idle" | "copied" | "failed";
 
+function TrendStatus({ trends }: { trends: Trends | null }) {
+  if (!trends)
+    return <p>No se pudo consultar en el servidor si hay tendencias publicadas.</p>;
+  const text = {
+    unavailable:
+      "Todavía no. El servidor no publica tendencias: hace falta una serie más larga y comparable por distrito, tratando la estacionalidad y la autocorrelación.",
+    empty: "El servidor no tiene tendencias calculadas para esta área.",
+    available:
+      "El servidor publicó resultados de tendencia, pero esta vista todavía no los muestra.",
+  }[trends.status];
+  return (
+    <>
+      <p>{text}</p>
+      <ServerDetail reason={trends.reason} />
+    </>
+  );
+}
+
+function SeriesStatus({ series }: { series: Series | null }) {
+  const text = !series
+    ? "No se pudo consultar el estado de las series por distrito."
+    : {
+        unavailable: "Series por distrito: todavía no disponibles en el servidor.",
+        empty: "Series por distrito: el servidor no tiene registros.",
+        available: "Series por distrito: publicadas, pendientes de integrar en esta vista.",
+      }[series.status];
+  return (
+    <div className="series-status">
+      <p className="caption">{text}</p>
+      <ServerDetail reason={series?.reason} />
+    </div>
+  );
+}
+
 export function Explorer({
   evidence,
   synthetic,
   initial,
   notices,
+  catalog,
+  trends,
+  series,
 }: {
   evidence: Evidence;
   synthetic: boolean;
   initial: ExplorerFilters;
   notices: string[];
+  catalog: Territories | null;
+  trends: Trends | null;
+  series: Series | null;
 }) {
   const pathname = usePathname();
   const [filters, setFilters] = useState(initial);
   const [copy, setCopy] = useState<CopyState>("idle");
+  const [overlays, setOverlays] = useState<string[]>([]);
+  const [failedOverlays, setFailedOverlays] = useState<string[]>([]);
   const update = (change: Partial<ExplorerFilters>) => {
     const next = { ...filters, ...change };
+    if (next.compareId === next.sceneId) next.compareId = null;
     setFilters(next);
     setCopy("idle");
     window.history.replaceState(null, "", `${pathname}?${filtersToQuery(next)}`);
@@ -59,6 +107,15 @@ export function Explorer({
       setCopy("failed");
     }
   };
+  const toggleOverlay = (id: string, on: boolean) => {
+    setFailedOverlays((current) => current.filter((x) => x !== id));
+    setOverlays((current) =>
+      on ? [...current.filter((x) => x !== id), id] : current.filter((x) => x !== id),
+    );
+  };
+  const overlayFailed = (id: string) =>
+    setFailedOverlays((current) => (current.includes(id) ? current : [...current, id]));
+
   const { variable } = filters;
   const selected = Math.max(
     0,
@@ -71,14 +128,8 @@ export function Explorer({
         <p>El snapshot existe, pero no contiene adquisiciones válidas.</p>
       </StatusPanel>
     );
+  const compared = evidence.scenes.find((s) => s.id === filters.compareId) ?? null;
   const lst = variable === "lst";
-  const points = evidence.scenes.map((s) => (lst ? s.lst_mean : s.ndvi_mean));
-  const values = points.filter((n): n is number => n !== null);
-  const low = Math.min(...values),
-    high = Math.max(...values);
-  const x = (index: number) =>
-    40 + (index * 520) / Math.max(1, points.length - 1);
-  const y = (value: number) => 140 - ((value - low) / (high - low || 1)) * 100;
   const date = scene.acquired_at.slice(0, 10);
   return (
     <>
@@ -94,7 +145,7 @@ export function Explorer({
       )}
       <div className="territory">
         <TerritorySelector
-          options={territoryOptions(evidence)}
+          options={territoryOptions(evidence, catalog)}
           value={filters.territory}
           onChange={(territory) => update({ territory })}
         />
@@ -116,6 +167,24 @@ export function Explorer({
           </select>
         </div>
         <div className="field">
+          <label htmlFor="compare">Comparar con</label>
+          <select
+            id="compare"
+            value={filters.compareId ?? ""}
+            disabled={evidence.scenes.length < 2}
+            onChange={(e) => update({ compareId: e.target.value || null })}
+          >
+            <option value="">Sin comparación</option>
+            {evidence.scenes
+              .filter((s) => s.id !== scene.id)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.acquired_at.slice(0, 10)}, {s.platform}
+                </option>
+              ))}
+          </select>
+        </div>
+        <div className="field">
           <label htmlFor="variable">Variable</label>
           <select
             id="variable"
@@ -133,10 +202,10 @@ export function Explorer({
           </button>
           <small aria-live="polite">
             {copy === "copied"
-              ? "Enlace copiado. Incluye territorio, fecha y variable."
+              ? "Enlace copiado. Incluye territorio, fechas y variable."
               : copy === "failed"
                 ? "No se pudo copiar. Copia la dirección del navegador; ya incluye los filtros."
-                : "El enlace conserva territorio, fecha y variable."}
+                : "El enlace conserva territorio, fechas y variable."}
           </small>
         </div>
       </section>
@@ -167,6 +236,8 @@ export function Explorer({
             scene={scene}
             variable={variable}
             bounds={evidence.bounds}
+            overlays={overlays}
+            onOverlayError={overlayFailed}
           />
           <div className="legend">
             <span>{lst ? "0 °C" : "−1"}</span>
@@ -178,6 +249,13 @@ export function Explorer({
             El rectángulo es una ventana de estudio, no un límite municipal ni
             distrital.
           </p>
+          <MapLayers
+            layers={catalog?.wms_layers ?? []}
+            catalogError={!catalog}
+            active={overlays}
+            failed={failedOverlays}
+            onToggle={toggleOverlay}
+          />
         </Panel>
         <aside className="panel">
           <h2>Cómo leer estas cifras</h2>
@@ -190,55 +268,24 @@ export function Explorer({
             La temperatura superficial no equivale a la temperatura del aire.
           </div>
           <h3>¿Hay una tendencia?</h3>
-          <p>
-            Aún no se puede evaluar. Hace falta una serie más larga, cobertura
-            comparable y tratar la estacionalidad y la autocorrelación.
-          </p>
+          <TrendStatus trends={trends} />
           <h3>Calidad de esta escena</h3>
-          <p>
-            {scene.valid_fraction < 0.7
-              ? "Cobertura reducida: interpreta estos valores con especial cautela."
-              : "Revisa siempre la cobertura válida y las limitaciones del producto."}
+          <p className={scene.valid_fraction < 0.7 ? "warning" : undefined}>
+            {scene.valid_fraction === 0
+              ? "Esta escena no tiene píxeles válidos: no hay valores que interpretar."
+              : scene.valid_fraction < 0.7
+                ? "Cobertura reducida: interpreta estos valores con especial cautela."
+                : "Revisa siempre la cobertura válida y las limitaciones del producto."}
           </p>
-          <a href={scene.source_url} target="_blank" rel="noreferrer">
-            Ver el registro STAC de la escena
-            <span className="sr-only"> (se abre en una pestaña nueva)</span> ↗
-          </a>
         </aside>
       </div>
+      {compared && <ComparisonPanel first={scene} second={compared} />}
       <Panel
         title="Observaciones en el tiempo"
         meta={`${lst ? "LST en °C" : "NDVI sin unidad"}, media de píxeles válidos`}
         className="history"
       >
-        {values.length > 0 && (
-          <svg
-            viewBox="0 0 600 190"
-            role="img"
-            aria-label="Valores por fecha; puntos independientes, sin línea de tendencia"
-          >
-            <line x1="35" x2="570" y1="155" y2="155" className="axis" />
-            {points.map(
-              (v, i) =>
-                v !== null && (
-                  <g key={evidence.scenes[i].id}>
-                    <circle
-                      cx={x(i)}
-                      cy={y(v)}
-                      r="6"
-                      className={i === selected ? "point point-selected" : "point"}
-                    />
-                    <text x={x(i)} y={y(v) - 14} textAnchor="middle">
-                      {format(v)}
-                    </text>
-                    <text x={x(i)} y="180" textAnchor="middle">
-                      {evidence.scenes[i].acquired_at.slice(0, 10)}
-                    </text>
-                  </g>
-                ),
-            )}
-          </svg>
-        )}
+        <ObservationChart scenes={evidence.scenes} variable={variable} selectedId={scene.id} />
         <div className="table-wrap">
           <table>
             <caption>
@@ -255,7 +302,7 @@ export function Explorer({
             </thead>
             <tbody>
               {evidence.scenes.map((s) => (
-                <tr key={s.id}>
+                <tr key={s.id} aria-current={s.id === scene.id ? "true" : undefined}>
                   <td>{s.acquired_at.slice(0, 10)}</td>
                   <td>{format(s.lst_mean)}</td>
                   <td>{format(s.ndvi_mean, 3)}</td>
@@ -265,29 +312,9 @@ export function Explorer({
             </tbody>
           </table>
         </div>
+        <SeriesStatus series={series} />
       </Panel>
-      <section className="panel provenance">
-        <div>
-          <h2>De dónde salen estos datos</h2>
-          <p>
-            {evidence.product_version}. {evidence.license}.
-          </p>
-          <p className="code">{scene.id}</p>
-          <p>
-            Snapshot generado el {evidence.generated_at.slice(0, 10)}. La ingesta
-            conserva un manifiesto con sumas de verificación.
-          </p>
-        </div>
-        <details>
-          <summary>Método y limitaciones</summary>
-          <p>{evidence.method}</p>
-          <ul>
-            {evidence.limitations.map((l) => (
-              <li key={l}>{l}</li>
-            ))}
-          </ul>
-        </details>
-      </section>
+      <ProvenancePanel evidence={evidence} scene={scene} synthetic={synthetic} />
     </>
   );
 }
