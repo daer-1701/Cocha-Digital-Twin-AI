@@ -15,12 +15,49 @@ export const WMS_LAYERS = [
 ];
 
 const METADATA_PENDING = [
-  "PM10 units",
-  "timezone",
-  "station coordinates and identity reconciliation",
+  "timezone of fecha_medicion",
+  "station coordinates (lat/lon not in CSV)",
   "measurement QA codes and zero interpretation",
   "data redistribution license",
 ];
+
+const STATIONS = [
+  { source_id: "kanata", name: "DEMO Kanata", described_location: "Ubicación descrita sintética A" },
+  { source_id: "semapa", name: "DEMO Semapa", described_location: "Ubicación descrita sintética B" },
+];
+
+/** Same rule as cocha_api.science.trends.descriptive_slope: OLS on the scene index. */
+function descriptiveSlope(values, minN = 3) {
+  const points = values
+    .map((value, index) => [index, value])
+    .filter(([, value]) => typeof value === "number");
+  const n = points.length;
+  if (n < minN) return { n, status: "inconclusive", slope: null };
+  const meanX = points.reduce((s, [x]) => s + x, 0) / n;
+  const meanY = points.reduce((s, [, y]) => s + y, 0) / n;
+  const num = points.reduce((s, [x, y]) => s + (x - meanX) * (y - meanY), 0);
+  const den = points.reduce((s, [x]) => s + (x - meanX) ** 2, 0);
+  return { n, status: "descriptive", slope: den ? Number((num / den).toFixed(6)) : 0 };
+}
+
+function pilotTrends(evidence) {
+  if (!evidence) return [];
+  return ["lst_mean", "ndvi_mean"].map((variable) => {
+    const { n, status, slope } = descriptiveSlope(evidence.scenes.map((s) => s[variable]));
+    return {
+      variable,
+      scope: "pilot_window",
+      district_trend: false,
+      n_finite: n,
+      min_n: 3,
+      status,
+      slope_per_step: slope,
+      method: "descriptive_ols_on_index",
+      publishes_inference: false,
+      note: "Fixture: descriptive slope on synthetic values; not a district trend or climate inference.",
+    };
+  });
+}
 
 function territories(wms) {
   return {
@@ -56,21 +93,47 @@ const unavailable = (reason, extra = {}) => ({
   ...extra,
 });
 
-/** GET routes outside /v1/explorer. `wms` enables the synthetic GAMC layers. */
-export function domainRoutes({ wms }) {
+/**
+ * GET routes outside /v1/explorer. `wms` enables the synthetic GAMC layers;
+ * `evidence` is the active scenario snapshot, or null when none is published.
+ */
+export function domainRoutes({ wms, evidence }) {
   return {
     "/v1/territories": territories(wms),
     "/v1/indicators": unavailable("district indicators need verified district vectors."),
     "/v1/series": unavailable("district series are not published."),
-    "/v1/trends": unavailable("no official trend without comparable district series."),
+    "/v1/trends": unavailable("no official trend without comparable district series.", {
+      pilot_trends: pilotTrends(evidence),
+    }),
+    "/v1/reports": evidence
+      ? {
+          status: "available",
+          reason: "Fixture: formal district reports are unavailable; observation_export is the pilot window.",
+          items: [],
+          ...PAGE,
+          observation_export: {
+            kind: "observation_export",
+            scope: "pilot_window",
+            district_report: false,
+            note: "Fixture: observation export of the synthetic pilot window. Not a district report.",
+            evidence,
+          },
+        }
+      : {
+          status: "empty",
+          reason: "Fixture: no observation snapshot is published for export.",
+          items: [],
+          ...PAGE,
+          observation_export: null,
+        },
     "/v1/stations": {
       status: "empty",
       reason: "Fixture: no MONICA stations imported yet; analysis aggregates disabled.",
-      items: ["kanata", "semapa"].map((id) => ({
-        source_id: id,
-        name: id,
+      items: STATIONS.map((station) => ({
+        ...station,
         variable: "pm10",
-        unit: null,
+        unit: "ug/m3",
+        unit_source: "https://example.org/fixture-unit-source.pdf",
         timezone: null,
         analysis_enabled: false,
         metadata_pending: METADATA_PENDING,
@@ -89,10 +152,24 @@ export function domainRoutes({ wms }) {
       reason: "Fixture: Gemini calls are disabled.",
       model: "demo-model",
       budget_usd: 4,
-      input_price_usd_per_million_tokens: null,
-      output_price_usd_per_million_tokens: null,
-      prices_verified: false,
-      prices_note: "Fixture: prices are placeholders, not verified official prices.",
+      // The "wms" scenario also exercises the verified-prices view, with placeholder numbers.
+      ...(wms
+        ? {
+            input_price_usd_per_million_tokens: 1,
+            output_price_usd_per_million_tokens: 2,
+            prices_verified: true,
+            prices_verified_on: "2026-01-01",
+            prices_source_url: "https://example.org/fixture-pricing",
+            prices_note: "Fixture: placeholder prices marked as verified for UI tests only.",
+          }
+        : {
+            input_price_usd_per_million_tokens: null,
+            output_price_usd_per_million_tokens: null,
+            prices_verified: false,
+            prices_verified_on: null,
+            prices_source_url: null,
+            prices_note: "Fixture: prices are placeholders, not verified official prices.",
+          }),
       calls_enabled: false,
       key_configured: false,
       spent_usd: 0,

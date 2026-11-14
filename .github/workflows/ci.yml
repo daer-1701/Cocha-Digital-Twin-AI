@@ -57,6 +57,16 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
+      # Browser tests against the Node synthetic fixtures; no Docker, database or paid APIs.
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: npm run test:e2e -w @cocha/web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
 
   containers:
     runs-on: ubuntu-latest

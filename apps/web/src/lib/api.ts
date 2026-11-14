@@ -12,6 +12,9 @@ export type Indicators = Schemas["IndicatorsResponse"];
 export type Models = Schemas["ModelsResponse"];
 export type Scenarios = Schemas["ScenariosResponse"];
 export type AssistantStatus = Schemas["AssistantStatusResponse"];
+export type Reports = Schemas["ReportsResponse"];
+export type ObservationExport = Schemas["ObservationExport"];
+export type PilotTrend = Schemas["PilotTrendItem"];
 /** "blocked": synthetic fixtures reached a production build and were rejected. */
 export type DemoState = "off" | "active" | "blocked";
 export type ApiResult<T> = { data: T | null; error: boolean; demo: DemoState };
@@ -104,7 +107,22 @@ export const getStations = () =>
 export const getSeries = () =>
   getJson<Series>("/v1/series", (b) => isEnvelope(b) && hasArray(b, "items"));
 export const getTrends = () =>
-  getJson<Trends>("/v1/trends", (b) => isEnvelope(b) && hasArray(b, "items"));
+  getJson<Trends>(
+    "/v1/trends",
+    (b) => isEnvelope(b) && hasArray(b, "items") && hasArray(b, "pilot_trends"),
+  );
+export const getReports = () =>
+  getJson<Reports>(
+    "/v1/reports",
+    (b) =>
+      isEnvelope(b) &&
+      isObject(b) &&
+      (b.observation_export == null ||
+        (isObject(b.observation_export) &&
+          b.observation_export.district_report === false &&
+          isObject(b.observation_export.evidence) &&
+          Array.isArray(b.observation_export.evidence.scenes))),
+  );
 export const getIndicators = () =>
   getJson<Indicators>("/v1/indicators", (b) => isEnvelope(b) && hasArray(b, "items"));
 export const getModels = () =>
