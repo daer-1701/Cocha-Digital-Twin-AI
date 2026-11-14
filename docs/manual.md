@@ -27,6 +27,13 @@ Resultados y alcance de las pruebas actuales: `docs/review-fixes.md`.
 
 ### Explorador (`/`)
 
+Controles nuevos, pendientes de pruebas del usuario: «Reproducir fechas» recorre
+las adquisiciones sin interpolar mediciones; la barra permite saltar a una fecha.
+«Girar el valle» activa la cámara orbital hasta interactuar o cambiar de pestaña.
+«Centrar vista» recupera la ventana de estudio. «Pantalla completa» amplía el mapa
+con fecha y naturaleza del dato visibles. Pulsar una celda abre sus valores
+LST/NDVI; las pastillas Temperatura/Vegetación cambian la variable representada.
+
 1. **Territorio.** Hoy solo está disponible la ventana piloto. «Distritos con
    análisis» aparece deshabilitado con el motivo del servidor.
 2. **Fecha de adquisición.** Cada fecha es una escena Landsat de julio. Los
@@ -60,6 +67,11 @@ Sin el fixture importado, la comparación permanece bloqueada.
 
 ### Estaciones (`/estaciones`)
 
+Las estaciones importadas tienen un enlace a «Revisar registros importados y
+calidad». La tabla muestra filas de PM10, fecha sin conversión de huso, QA y
+referencia de importación; conserva ceros, negativos y faltantes. Es una revisión
+local, no un agregado físico validado. El operador debe habilitarla explícitamente.
+
 Fichas de las estaciones MÓNICA de PM10 con la dirección descrita, la unidad
 (µg/m³, declarada a partir de informes de la Red MoniCA) y los metadatos que
 faltan: zona horaria, coordenadas, códigos de calidad y licencia. No hay series
@@ -74,6 +86,15 @@ fecha del snapshot, fecha de descarga y limitaciones. Los faltantes quedan
 vacíos. Es la exportación de la ventana piloto, no un informe distrital.
 
 ### Secciones en preparación
+
+`/procesamiento` muestra el historial registrado, primero las ejecuciones más
+recientes, con paginación. No inicia trabajos ni permite cambiar estados.
+Un registro completado no demuestra por sí mismo validez científica.
+
+`/asistente` incorpora preguntas guiadas con los campos del snapshot y la fuente
+de cada escena. Está identificado como «Lectura guiada sin IA»: no usa Gemini,
+no acepta consultas libres y no consume presupuesto. La integración Gemini real
+sigue pendiente.
 
 `/modelos`, `/escenarios` y `/asistente` explican qué falta para
 mostrar resultados. No muestran valores de ejemplo. El asistente informa el

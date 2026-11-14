@@ -181,9 +181,14 @@ export function Explorer({
           bounds={evidence.bounds}
           overlays={overlays}
           onOverlayError={overlayFailed}
+          synthetic={synthetic}
         />
         <div className="hud">
           <div className="hud-context"><span className="observatory-mark" aria-hidden="true" />Ventana piloto de Cochabamba</div>
+          <div className="variable-pills" role="group" aria-label="Variable del mapa">
+            <button type="button" aria-pressed={lst} onClick={() => update({ variable: "lst" })}>Temperatura</button>
+            <button type="button" aria-pressed={!lst} onClick={() => update({ variable: "ndvi" })}>Vegetación</button>
+          </div>
           <p className="hud-date">
             <time dateTime={scene.acquired_at}>{date}</time>, {scene.platform}
           </p>

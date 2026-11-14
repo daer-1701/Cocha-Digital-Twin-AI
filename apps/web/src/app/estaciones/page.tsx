@@ -89,6 +89,7 @@ function StationCard({ station }: { station: Station }) {
             : "Desactivado hasta confirmar los metadatos"}
         </dd>
       </dl>
+      {station.id && <Link href={`/estaciones/${station.id}`}>Revisar registros importados y calidad</Link>}
       {pending.length > 0 && (
         <>
           <h3>Metadatos pendientes</h3>
@@ -149,11 +150,12 @@ export default async function Page() {
           ) : (
             <StatusPanel status="empty" title="El servidor no lista estaciones" />
           )}
-          <Panel title="Series de PM10" meta="Pendiente">
+          <Panel title="Registros y análisis de PM10" meta="Revisión local">
             <p>
-              El servidor todavía no publica series por estación. Cuando lo haga, se
-              mostrarán con su cobertura y con los valores negativos y ceros marcados
-              para revisión, sin convertir faltantes en cero.
+              Las estaciones importadas permiten revisar sus registros paginados,
+              marcas de calidad y ejecución de origen. Los agregados físicos y
+              las series validadas permanecen pendientes de metadatos y control
+              instrumental. Los valores negativos, ceros y faltantes se conservan.
             </p>
           </Panel>
         </>

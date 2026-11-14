@@ -104,6 +104,10 @@ export function domainRoutes({ wms, evidence, districts = false, sceneId }) {
   if (valley["/v1/trends"]) valley["/v1/trends"].pilot_trends = pilotTrends(evidence);
   return {
     "/v1/territories": territories(wms),
+    "/v1/jobs": {
+      status: "empty", reason: "Fixture: no persisted processing runs.",
+      items: [], has_more: false, ...PAGE,
+    },
     "/v1/indicators": unavailable("district indicators need verified district vectors."),
     "/v1/series": unavailable("district series are not published."),
     "/v1/trends": unavailable("no official trend without comparable district series.", {

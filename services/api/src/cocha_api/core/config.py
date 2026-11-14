@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
     log_level: str = "INFO"
     evidence_path: Path = Path("data/processed/explorer.json")
+    monica_review_enabled: bool = False
     gemini_api_key: SecretStr | None = None
     # Verified 2026-11-14 against https://ai.google.dev/gemini-api/docs/pricing
     # Paid tier for gemini-3.6-flash through 2026-12-31; rates rise on 2027-01-01.

@@ -13,6 +13,8 @@ x-api: &api
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     CORS_ORIGINS: '["http://localhost:3000"]'
     LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    GAMC_WMS_API_KEY: ${GAMC_WMS_API_KEY:-}
+    MONICA_REVIEW_ENABLED: ${MONICA_REVIEW_ENABLED:-false}
 
 services:
   db:

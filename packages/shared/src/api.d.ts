@@ -225,6 +225,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stations/{station_id}/observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Station Observations
+         * @description Review imported records without publishing physical aggregates or calibration.
+         */
+        get: operations["station_observations_v1_stations__station_id__observations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/reports": {
         parameters: {
             query?: never;
@@ -574,6 +594,11 @@ export interface components {
             reason?: string | null;
             /** Items */
             items?: components["schemas"]["JobItem"][];
+            /**
+             * Has More
+             * @default false
+             */
+            has_more: boolean;
         };
         /** ModelsResponse */
         ModelsResponse: {
@@ -886,6 +911,75 @@ export interface components {
             analysis_enabled: boolean;
             /** Metadata Pending */
             metadata_pending?: string[];
+        };
+        /** StationObservationItem */
+        StationObservationItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Value */
+            value?: number | null;
+            /** Unit */
+            unit?: string | null;
+            /** Quality Flag */
+            quality_flag: string;
+            /** Processing Run Id */
+            processing_run_id?: string | null;
+        };
+        /** StationObservationsResponse */
+        StationObservationsResponse: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "empty" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Station Id
+             * Format: uuid
+             */
+            station_id: string;
+            /** Station Name */
+            station_name: string;
+            /**
+             * Variable
+             * @default pm10
+             * @constant
+             */
+            variable: "pm10";
+            /**
+             * Scope
+             * @default imported_records_review
+             * @constant
+             */
+            scope: "imported_records_review";
+            /**
+             * Analysis Enabled
+             * @default false
+             * @constant
+             */
+            analysis_enabled: false;
+            /** Timezone */
+            timezone?: string | null;
+            /**
+             * Has More
+             * @default false
+             */
+            has_more: boolean;
+            /** Items */
+            items?: components["schemas"]["StationObservationItem"][];
         };
         /** StationsResponse */
         StationsResponse: {
@@ -1387,6 +1481,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    station_observations_v1_stations__station_id__observations_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                station_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationObservationsResponse"];
                 };
             };
             /** @description Validation Error */

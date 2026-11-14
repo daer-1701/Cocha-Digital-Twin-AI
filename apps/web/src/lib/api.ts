@@ -15,6 +15,8 @@ export type AssistantStatus = Schemas["AssistantStatusResponse"];
 export type Reports = Schemas["ReportsResponse"];
 export type ObservationExport = Schemas["ObservationExport"];
 export type PilotTrend = Schemas["PilotTrendItem"];
+export type Jobs = Schemas["JobsResponse"];
+export type StationObservations = Schemas["StationObservationsResponse"];
 /** "blocked": synthetic fixtures reached a production build and were rejected. */
 export type DemoState = "off" | "active" | "blocked";
 export type ApiResult<T> = { data: T | null; error: boolean; demo: DemoState };
@@ -104,6 +106,13 @@ export const getTerritories = () =>
 
 export const getStations = () =>
   getJson<Stations>("/v1/stations", (b) => isEnvelope(b) && hasArray(b, "items"));
+export const getJobs = (offset = 0) =>
+  getJson<Jobs>(`/v1/jobs?limit=20&offset=${offset}`,
+    (b) => isEnvelope(b) && isObject(b) && Array.isArray(b.items));
+export const getStationObservations = (id: string, offset = 0) =>
+  getJson<StationObservations>(`/v1/stations/${encodeURIComponent(id)}/observations?limit=50&offset=${offset}`,
+    (b) => isEnvelope(b) && isObject(b) && Array.isArray(b.items) &&
+      b.scope === "imported_records_review" && b.analysis_enabled === false);
 export const getSeries = () =>
   getJson<Series>("/v1/series", (b) => isEnvelope(b) && hasArray(b, "items"));
 export const getTrends = () =>

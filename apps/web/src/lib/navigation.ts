@@ -69,6 +69,13 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
+    href: "/procesamiento",
+    label: "Procesamiento",
+    title: "Procesamiento y trazabilidad",
+    summary: "Historial de importaciones y ejecuciones registradas.",
+    available: true,
+  },
+  {
     href: "/escenarios",
     label: "Escenarios",
     title: "Escenarios hipotéticos",

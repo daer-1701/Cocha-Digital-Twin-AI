@@ -12,11 +12,15 @@ Alcance local actual. No hay entorno de producción configurado en este repo.
 - Distritos demo, solo desarrollo: `scripts/import_demo_districts.py --i-understand-demo-only`.
   No cargarlos como límites oficiales.
 - Escrituras: `API_WRITE_TOKEN` existe, pero la API pública sigue en GET.
+- Historial de ejecuciones en `/procesamiento`, con estado y referencias.
+- `scripts/database_archive.py`: creación de dump y manifiesto SHA-256,
+  restauración únicamente hacia una base nueva `_restore_test`. Código preparado,
+  aún no ejecutado ni validado.
 
 ## Sin hacer
 
-- Backups: el volumen `postgres_data` es de desarrollo. No hay job de backup
-  ni una restauración probada en otra base.
+- Backups: falta ejecutar y comprobar el script, programar copias y ensayar
+  recuperación. El volumen `postgres_data` sigue siendo de desarrollo.
 - No hay HTTPS, monitoreo de costos ni despliegue fuera de la máquina local.
 
 ## Antes de producción

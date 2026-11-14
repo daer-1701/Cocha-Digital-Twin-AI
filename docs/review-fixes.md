@@ -24,7 +24,17 @@ runtime de producción. No cambió el esquema de la base de datos.
 
 ## Validación
 
-En ejecución; los resultados se registran al terminar. Comandos reproducibles:
+La ejecución de validación quedó interrumpida. Posteriormente el usuario pidió
+mejorar frontend/backend **sin ejecutar pruebas**; las nuevas interacciones 3D,
+línea temporal y caché de snapshots quedan pendientes de validación. No tomar
+resultados parciales anteriores como aprobación del estado actual.
+
+Comandos para ejecutar cuando el usuario retome la validación:
+
+Ampliación posterior: rutas de revisión de registros MÓNICA (desactivadas por
+defecto), historial de procesamiento con paginación, lectura guiada sin IA y
+respaldo/restauración local. Contratos regenerados; no se ejecutaron pruebas ni
+operaciones de respaldo/restauración. Estado de cierre en `release-status.md`.
 
 ```powershell
 uv run --group science pytest -q

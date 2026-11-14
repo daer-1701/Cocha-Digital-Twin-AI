@@ -282,6 +282,23 @@ WMS externo no quedan certificadas por ellas. Ver `review-fixes.md`.
 
 ## Pendiente
 
+### Explorador interactivo — cambios pendientes de pruebas
+
+La revisión visual añade una línea temporal con reproducción bajo demanda,
+fechas seleccionables y cobertura por adquisición. El recorrido se detiene al
+salir de la pestaña; no interpola observaciones entre fechas. El mapa permite
+giro bajo demanda, centrado y pantalla completa. Un panel de inspección muestra
+LST y NDVI de la celda pulsada y desaparece al cambiar de adquisición.
+
+La composición conserva las fuentes existentes, con azul cordillera `#122939`,
+superficie `#223f51`, niebla `#d2e4ee`, texto `#f0f5f8` y ámbar `#edbd72` para
+selección. Las escalas científicas permanecen fijas. La vista inicial es 2D
+cuando el dispositivo indica recursos limitados o movimiento reducido.
+
+Por solicitud del usuario no se ejecutaron pruebas, lint, compilación ni
+verificación visual de estos cambios. Revisar responsive, cámara, WebGL,
+pantalla completa, teclado y reproducción antes de publicar.
+
 - Mostrar series, tendencias e indicadores distritales cuando sus `items` tengan esquema.
 - D07: comparación oficial cuando exista el vector y A06/A07; el tablero sintético ya permite elegir adquisición.
 - Series PM10 por estación cuando la API las publique (A08).

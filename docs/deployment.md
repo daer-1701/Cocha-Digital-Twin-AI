@@ -35,6 +35,28 @@ No ejecutar migraciones en cada worker ni usar `create_all`. El servicio
 
 ## Backup local
 
+Herramienta preparada, todavía pendiente de pruebas:
+
+```powershell
+uv run python scripts/database_archive.py backup data/local/backups/cocha-20261114.dump
+uv run python scripts/database_archive.py restore data/local/backups/cocha-20261114.dump --database cocha_20261114_restore_test
+```
+
+No se ejecutó durante esta entrega. El respaldo incluye un manifiesto SHA-256 y
+se rechaza sobrescribir archivos. Requiere un sistema de archivos con enlaces
+duros (NTFS/ext4) para publicar el archivo completo sin reemplazar otro.
+La restauración crea una base nueva: nunca reutiliza ni limpia una existente.
+Verificar PostGIS, revisión Alembic y conteos antes de aceptar una restauración.
+La base de ensayo se conserva para inspección. El dump no incluye snapshots,
+CSV originales ni roles globales: respaldarlos por separado según permisos.
+Guardar copias cifradas fuera del equipo y configurar retención antes de producción.
+En Windows, proteger la carpeta con permisos del usuario; `chmod` no sustituye ACL.
+
+La revisión de filas MÓNICA requiere `MONICA_REVIEW_ENABLED=true` en configuración
+local del servidor y reiniciar la API. Se mantiene apagada por defecto; no activar
+en un servicio público antes de confirmar licencia y controles de acceso.
+Compose pasa la clave WMS desde `GAMC_WMS_API_KEY` exclusivamente a la API.
+
 Ejemplo con herramienta nativa de PostgreSQL; evitar redirigir un dump binario
 con PowerShell antiguo:
 

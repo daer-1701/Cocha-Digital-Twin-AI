@@ -1,6 +1,8 @@
 # Cocha Digital Twin AI
 
 Para continuar el desarrollo desde Cursor: [traspaso completo](CONTINUAR_EN_CURSOR.md).
+Estado vigente y pendientes del equipo de cinco: [entrega del proyecto](docs/release-status.md).
+Reparto completo según herramientas de cada integrante: [tareas pendientes finales](docs/tareas_pendientes_finales.md).
 
 Base de una plataforma de evidencia ambiental para Cochabamba: temperatura
 superficial, vegetación y tendencias territoriales reproducibles.
@@ -11,6 +13,10 @@ de la ventana piloto. MÓNICA tiene importador y fichas, con análisis desactiva
 por metadatos pendientes. Los 15 rectángulos de desarrollo están identificados
 como sintéticos y no sustituyen límites oficiales. No incluye tendencias
 inferenciales, ML validado ni llamadas reales a Gemini. No es un gemelo digital validado.
+
+Se añaden historial de procesamiento, revisión local de registros MÓNICA,
+lectura guiada de evidencia sin IA y herramientas de respaldo. Estas ampliaciones
+están pendientes de pruebas por solicitud del usuario.
 
 ## Ejecutar el piloto con datos reales
 

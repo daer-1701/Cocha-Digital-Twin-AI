@@ -163,6 +163,27 @@ class JobItem(AvailabilityModel):
 
 class JobsResponse(AvailabilityEnvelope, PaginationParams):
     items: list[JobItem] = Field(default_factory=list)
+    has_more: bool = False
+
+
+class StationObservationItem(AvailabilityModel):
+    id: UUID
+    observed_at: datetime
+    value: float | None = None
+    unit: str | None = None
+    quality_flag: str
+    processing_run_id: UUID | None = None
+
+
+class StationObservationsResponse(AvailabilityEnvelope, PaginationParams):
+    station_id: UUID
+    station_name: str
+    variable: Literal["pm10"] = "pm10"
+    scope: Literal["imported_records_review"] = "imported_records_review"
+    analysis_enabled: Literal[False] = False
+    timezone: str | None = None
+    has_more: bool = False
+    items: list[StationObservationItem] = Field(default_factory=list)
 
 
 class ObservationExport(AvailabilityModel):

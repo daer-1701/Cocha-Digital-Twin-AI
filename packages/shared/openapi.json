@@ -613,6 +613,73 @@
         }
       }
     },
+    "/v1/stations/{station_id}/observations": {
+      "get": {
+        "tags": [
+          "domain"
+        ],
+        "summary": "Station Observations",
+        "description": "Review imported records without publishing physical aggregates or calibration.",
+        "operationId": "station_observations_v1_stations__station_id__observations_get",
+        "parameters": [
+          {
+            "name": "station_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Station Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StationObservationsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/reports": {
       "get": {
         "tags": [
@@ -1603,6 +1670,11 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -2414,6 +2486,161 @@
           "name"
         ],
         "title": "StationItem"
+      },
+      "StationObservationItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "quality_flag": {
+            "type": "string",
+            "title": "Quality Flag"
+          },
+          "processing_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processing Run Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "observed_at",
+          "quality_flag"
+        ],
+        "title": "StationObservationItem"
+      },
+      "StationObservationsResponse": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "empty",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "station_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Station Id"
+          },
+          "station_name": {
+            "type": "string",
+            "title": "Station Name"
+          },
+          "variable": {
+            "type": "string",
+            "const": "pm10",
+            "title": "Variable",
+            "default": "pm10"
+          },
+          "scope": {
+            "type": "string",
+            "const": "imported_records_review",
+            "title": "Scope",
+            "default": "imported_records_review"
+          },
+          "analysis_enabled": {
+            "type": "boolean",
+            "const": false,
+            "title": "Analysis Enabled",
+            "default": false
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StationObservationItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "limit",
+          "offset",
+          "status",
+          "station_id",
+          "station_name"
+        ],
+        "title": "StationObservationsResponse"
       },
       "StationsResponse": {
         "properties": {

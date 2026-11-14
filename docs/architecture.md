@@ -64,6 +64,13 @@ Revisarlo al actualizar typescript-eslint; no es dependencia del runtime web.
 
 ## Contratos actuales
 
+Ampliaciones pendientes de pruebas: `/v1/stations/{station_id}/observations`
+expone registros PM10 solo si `MONICA_REVIEW_ENABLED` está habilitado; responde
+con `scope=imported_records_review`, análisis desactivado y paginación `has_more`.
+`/v1/jobs` ordena del más reciente al más antiguo y también informa `has_more`.
+La web añade `/procesamiento` y `/estaciones/[id]`. La lectura guiada de
+`/asistente` usa campos ya publicados y texto fijo, sin proveedor de IA.
+
 | Método | Ruta | Comportamiento |
 | --- | --- | --- |
 | GET | `/health/live` | Proceso HTTP disponible; no consulta DB |
@@ -95,6 +102,13 @@ La ingesta multitemporal sigue fuera de HTTP. La ventana piloto y los
 rectángulos demo no sustituyen distritos municipales.
 
 ## Transacciones de importación y presupuesto
+
+La lectura del snapshot del explorador se comparte con las rutas de dominio.
+Una caché local acotada a cuatro revisiones evita releer y validar JSON sin
+cambios; se invalida por modificación, tamaño e identidad del archivo. Cada
+consumidor recibe una copia independiente. Archivos ausentes o inválidos no
+recuperan silenciosamente evidencia antigua. La publicación debe reemplazar
+el snapshot atómicamente. Esta optimización está pendiente de pruebas.
 
 MÓNICA registra la ejecución en una transacción independiente e importa todos
 sus archivos en otra. Un fallo revierte los datos y actualiza la auditoría desde

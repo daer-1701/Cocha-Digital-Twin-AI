@@ -1,9 +1,22 @@
-# Plan de trabajo — Andrés y Diego
+# Plan de trabajo — Andrés, Eduardo, Mateo, Julio y Diego
+
+El equipo ahora tiene cinco personas. El reparto vigente según disponibilidad
+de Docker está en [tareas pendientes finales](tareas_pendientes_finales.md).
+El [estado de entrega](release-status.md) conserva el contexto técnico. Los identificadores
+A01–A18 y D01–D17 de este documento se conservan para no romper las referencias
+y los prompts históricos. No implican que Andrés siga haciendo todas las áreas.
 
 ## Reparto y punto de partida
 
-**Andrés:** arquitectura, GIS, procesamiento, estadística, modelos, backend,
-seguridad e infraestructura. Aquí quedan las tareas de mayor complejidad técnica.
+**Andrés:** arquitectura, backend, integraciones y revisión técnica.
+
+**Eduardo:** fuentes oficiales, geometrías, metadatos y permisos de los datos.
+
+**Mateo:** procesamiento científico, estadística, incertidumbre y viabilidad ML.
+
+**Julio (sin Docker):** pruebas web, accesibilidad, revisión desde navegador,
+documentación y aceptación sobre fixtures/API compartida. Andrés ejecuta
+infraestructura y Eduardo se encarga de respaldos/restauración.
 
 **Diego:** experiencia de usuario, frontend, visualización, investigación de
 fuentes, pruebas de navegador y presentación. **Ninguna tarea de Diego exige

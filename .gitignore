@@ -41,6 +41,7 @@ data/models/*
 *.log
 *.dump
 *.backup
+*.partial
 .playwright-cli/
 output/playwright/
 apps/web/test-results/

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { PendingSection } from "../../components/pending-section";
 import { ExternalLink, safeExternalUrl } from "../../components/ui/external-link";
 import { Panel } from "../../components/ui/panel";
-import { getAssistantStatus } from "../../lib/api";
+import { getAssistantStatus, getEvidence, mergeDemo } from "../../lib/api";
+import { EvidenceGuide } from "../../components/evidence-guide";
 import { section } from "../../lib/navigation";
 
 const current = section("/asistente");
@@ -12,18 +13,19 @@ export const dynamic = "force-dynamic";
 const usd = (value: number) => `USD ${value.toFixed(2)}`;
 
 export default async function Page() {
-  const { data, demo } = await getAssistantStatus();
+  const [{ data, demo }, evidence] = await Promise.all([getAssistantStatus(), getEvidence()]);
   const source = safeExternalUrl(data?.prices_source_url);
   return (
     <PendingSection
       section={current}
-      demo={demo}
+      demo={mergeDemo(demo, evidence.demo)}
       server={{
         status: data?.status ?? null,
         reason: data?.reason ?? null,
         items: data ? [data.prices_note] : [],
       }}
     >
+      {evidence.data && <EvidenceGuide evidence={evidence.data} synthetic={evidence.demo === "active"} />}
       {data && (
         <Panel title="Estado del presupuesto" meta="Informado por el servidor">
           <dl className="facts">

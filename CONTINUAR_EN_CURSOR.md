@@ -6,6 +6,10 @@ estado sustituye el traspaso antiguo que dejaba A01 y la migración 0002 pendien
 
 ## Primero
 
+Consultar también `docs/release-status.md`: equipo de cinco, nuevas rutas de
+procesamiento/revisión local MÓNICA, lectura guiada sin IA y respaldo preparado.
+El usuario pidió no ejecutar pruebas; el estado actual no está validado para producción.
+
 1. Leer `AGENTS.md`, las reglas del área, `README.md` y `docs/architecture.md`.
 2. Ejecutar `git status --short` y revisar los diffs. Conservar los cambios del
    otro editor: dos ramas dentro de la misma carpeta no aíslan archivos.

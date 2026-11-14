@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from cocha_api.core.config import get_settings
 from cocha_api.core.pagination import LimitQuery, OffsetQuery
-from cocha_api.db.models import District, ModelRun, ProcessingRun, ScenarioRun, Station
+from cocha_api.db.models import District, ModelRun, Observation, ProcessingRun, ScenarioRun, Station
 from cocha_api.db.session import get_session
 from cocha_api.schemas.availability import (
     DemoIndicatorItem,
@@ -26,6 +26,8 @@ from cocha_api.schemas.availability import (
     ScenariosResponse,
     SeriesResponse,
     StationItem,
+    StationObservationItem,
+    StationObservationsResponse,
     StationsResponse,
     StoredModelRef,
     StoredScenarioRef,
@@ -292,6 +294,22 @@ def list_stations(
             id=row.id,
             source_id=row.source_id,
             name=row.name,
+            described_location=next(
+                (
+                    p.get("described_location")
+                    for p in STATION_CATALOG_PROFILE
+                    if p["source_id"] == row.source_id
+                ),
+                None,
+            ),
+            unit_source=next(
+                (
+                    p.get("unit_source")
+                    for p in STATION_CATALOG_PROFILE
+                    if p["source_id"] == row.source_id
+                ),
+                None,
+            ),
             latitude=row.latitude,
             longitude=row.longitude,
             elevation_m=row.elevation_m,
@@ -397,14 +415,15 @@ def list_jobs(
         )
     rows = session.scalars(
         select(ProcessingRun)
-        .order_by(ProcessingRun.created_at, ProcessingRun.id)
-        .limit(limit)
+        .order_by(ProcessingRun.created_at.desc(), ProcessingRun.id.desc())
+        .limit(limit + 1)
         .offset(offset)
     ).all()
     return JobsResponse(
         status="available",
         reason=None,
-        items=[_job_item(row) for row in rows],
+        items=[_job_item(row) for row in rows[:limit]],
+        has_more=len(rows) > limit,
         limit=limit,
         offset=offset,
     )
@@ -422,6 +441,61 @@ def get_job(
             detail={"status": "empty", "reason": "Processing run not found"},
         )
     return _job_item(row)
+
+
+@router.get("/stations/{station_id}/observations", response_model=StationObservationsResponse)
+def station_observations(
+    station_id: UUID,
+    session: Annotated[Session, Depends(get_session)],
+    limit: LimitQuery = 50,
+    offset: OffsetQuery = 0,
+) -> StationObservationsResponse:
+    """Review imported records without publishing physical aggregates or calibration."""
+    station = session.get(Station, station_id)
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station not found")
+    if not get_settings().monica_review_enabled:
+        return StationObservationsResponse(
+            status="unavailable",
+            reason=(
+                "Local record review is disabled. Confirm permission before exposing imported data."
+            ),
+            station_id=station.id,
+            station_name=station.name,
+            limit=limit,
+            offset=offset,
+        )
+    rows = session.scalars(
+        select(Observation)
+        .where(Observation.station_id == station_id, Observation.variable == "pm10")
+        .order_by(Observation.observed_at.desc(), Observation.id.desc())
+        .offset(offset)
+        .limit(limit + 1)
+    ).all()
+    return StationObservationsResponse(
+        status="available" if rows else "empty",
+        reason=(
+            "Imported records for quality review only. Timezone, instrument QA and "
+            "redistribution permission require verification. Not an LST calibration."
+        ),
+        station_id=station.id,
+        station_name=station.name,
+        timezone=station.timezone_declared,
+        limit=limit,
+        offset=offset,
+        has_more=len(rows) > limit,
+        items=[
+            StationObservationItem(
+                id=row.id,
+                observed_at=row.observed_at,
+                value=float(row.value) if row.value is not None else None,
+                unit=row.unit,
+                quality_flag=row.quality_flag,
+                processing_run_id=row.processing_run_id,
+            )
+            for row in rows[:limit]
+        ],
+    )
 
 
 @router.get("/reports", response_model=ReportsResponse)

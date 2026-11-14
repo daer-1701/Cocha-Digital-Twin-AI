@@ -4,7 +4,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import ValidationError
 
 from cocha_api.core.config import get_settings
-from cocha_api.schemas.explorer import ExplorerResponse, Snapshot
+from cocha_api.schemas.explorer import ExplorerResponse
+from cocha_api.science.evidence import read_snapshot
 
 router = APIRouter(prefix="/v1/explorer", tags=["evidence"])
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/v1/explorer", tags=["evidence"])
 def explorer() -> ExplorerResponse:
     path = get_settings().evidence_path
     try:
-        snapshot = Snapshot.model_validate_json(path.read_bytes())
+        snapshot = read_snapshot(path)
     except FileNotFoundError:
         return ExplorerResponse(status="empty")
     except (OSError, ValidationError):

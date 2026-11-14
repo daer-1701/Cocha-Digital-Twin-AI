@@ -12,6 +12,11 @@
 data/raw
 data/processed
 data/models
+data/local
+**/*.dump
+**/*.backup
+**/*.partial
+**/*.log
 notebooks
 .agents
 .cursor

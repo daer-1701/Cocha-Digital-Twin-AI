@@ -13,7 +13,7 @@ export function NavLinks() {
           <li key={s.href}>
             <Link
               href={s.href}
-              aria-current={pathname === s.href ? "page" : undefined}
+              aria-current={pathname === s.href || (s.href !== "/" && pathname.startsWith(`${s.href}/`)) ? "page" : undefined}
               className={s.available ? undefined : "nav-pending"}
             >
               {s.label}
