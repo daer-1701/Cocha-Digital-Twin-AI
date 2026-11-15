@@ -7,6 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { components } from "@cocha/shared";
 import { MapClimate } from "./map-climate";
 import { DistrictClimateFx } from "./district-climate-fx";
+import { DistrictMunicipalBrief } from "./municipal-briefing";
 import { CellCombobox } from "./cell-combobox";
 import { ThemeToggle, useTheme } from "./ui/theme-provider";
 import { cellKey } from "../lib/cell-identity";
@@ -1953,52 +1954,21 @@ export default function StudyMap({
       {selectedDistrict && <motion.aside key="district-info" className="district-selection-info" aria-live="polite"
         initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: reduceMotion ? 0 : 8 }} transition={{ duration: reduceMotion ? 0 : .3 }}>
-        <div className="selection-heading">
-          <span className="selection-kind">Distrito municipal {selectedDistrict.number}</span>
-          <strong>{selectedDistrict.name}</strong>
-        </div>
+        <DistrictMunicipalBrief
+          districtName={selectedDistrict.name}
+          districtNumber={selectedDistrict.number}
+          series={districtSeries}
+          weather={districtWeather}
+        />
         <InfoFields items={[
           ["Número", selectedDistrict.number],
           ["Fuente del límite", selectedDistrict.source_url],
           ["Versión territorial", selectedDistrict.boundary_version],
           ["Comuna (WMS)", place?.status === "ready" ? place.district?.Comuna : null],
         ]} />
-        <div className="district-indicators">
-          <strong>Indicadores oficiales aceptados</strong>
-          {!districtSeries || districtSeries.status === "loading" ? (
-            <p role="status">Consultando /v1/series…</p>
-          ) : districtSeries.status === "error" ? (
-            <p role="status">{districtSeries.reason}</p>
-          ) : districtSeries.status === "unavailable" || districtSeries.items.length === 0 ? (
-            <p role="status">
-              {districtSeries.reason || "Todavía no hay estadísticas zonales aceptadas para este polígono."}
-              {" "}La media Landsat de la ventana piloto no se muestra aquí como medición distrital.
-            </p>
-          ) : (
-            <ul>
-              {districtSeries.items.map((row) => (
-                <li key={`${row.variable}-${row.statistic}-${row.period_start}-${row.period_end}`}>
-                  <strong>{row.variable}</strong> · {row.statistic}
-                  <span>
-                    {row.value == null ? "sin dato" : `${row.value} ${row.units ?? ""}`.trim()}
-                  </span>
-                  <small>
-                    {row.period_start}–{row.period_end}
-                    {row.valid_fraction != null
-                      ? ` · cobertura válida ${(row.valid_fraction * 100).toFixed(0)}%`
-                      : ""}
-                    {row.n != null ? ` · n=${row.n}` : ""}
-                    {row.provenance && typeof row.provenance.product === "string"
-                      ? ` · ${row.provenance.product}`
-                      : ""}
-                  </small>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
         <small className="cell-inspector-note">
-          La selección funciona en 2D y 3D. El resalte marca el polígono; los valores solo aparecen si hay filas aceptadas en la API.
+          Esta ficha está pensada para gestión municipal: priorizar, comparar y documentar.
+          No convierte correlación en causalidad.
         </small>
         <button type="button" onClick={closeDistrict}>Cerrar selección</button>
       </motion.aside>}

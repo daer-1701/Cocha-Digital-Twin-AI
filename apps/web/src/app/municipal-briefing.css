@@ -1,0 +1,214 @@
+.municipal-purpose {
+  margin: 0 0 20px;
+  padding: 18px 20px;
+  border: 1px solid #5f7d8d;
+  border-radius: 12px;
+  background: #132839;
+  color: #edf6fc;
+}
+
+.municipal-purpose > strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.municipal-purpose > p {
+  margin: 0;
+  max-width: 78ch;
+  line-height: 1.5;
+  color: #d5e6ef;
+}
+
+.municipal-purpose-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.municipal-purpose-cols span {
+  display: block;
+  font-size: 12px;
+  color: #9fb6c4;
+  margin-bottom: 6px;
+}
+
+.municipal-purpose-cols ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e7f3f9;
+}
+
+.municipal-purpose-demo {
+  margin: 14px 0 0 !important;
+  padding-top: 12px;
+  border-top: 1px solid #365064;
+  font-size: 13px;
+  color: #b4e2ff !important;
+}
+
+.municipal-brief {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.municipal-brief header {
+  display: grid;
+  gap: 6px;
+}
+
+.municipal-kicker {
+  font-size: 12px;
+  color: #9fb6c4;
+}
+
+.municipal-brief header strong {
+  font-size: 20px;
+}
+
+.municipal-brief header p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #b5cbd8;
+  max-width: 68ch;
+}
+
+.municipal-card-row {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px 4px;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.municipal-card-row > li {
+  flex: 0 0 min(320px, 85vw);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #6d8a9a;
+  border-radius: 12px;
+  background: #0f2432;
+}
+
+.municipal-card-value {
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #c9e4ed;
+  line-height: 1.1;
+  min-width: 4.8ch;
+}
+
+.municipal-card-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.municipal-card-copy strong {
+  font-size: 14px;
+  color: #edf6fc;
+}
+
+.municipal-card-copy p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c1d4df;
+}
+
+.municipal-use span {
+  color: #9bd6ff;
+  font-weight: 700;
+}
+
+.municipal-caution {
+  color: #edbd72 !important;
+}
+
+.municipal-card-copy dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 0;
+}
+
+.municipal-card-copy dt {
+  font-size: 11px;
+  color: #9fb6c4;
+}
+
+.municipal-card-copy dd {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.municipal-card-copy .district-coverage-bar {
+  display: block;
+  margin-top: 4px;
+  height: 6px;
+  border-radius: 999px;
+  background: #243847;
+  overflow: hidden;
+}
+
+.municipal-card-copy .district-coverage-bar i {
+  display: block;
+  width: var(--coverage, 0%);
+  height: 100%;
+  background: linear-gradient(90deg, #5fa8c4, #9bd6ff);
+}
+
+.municipal-actions {
+  padding: 14px;
+  border: 1px solid #5f7d8d;
+  border-radius: 10px;
+  background: #122636;
+}
+
+.municipal-actions strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.municipal-actions ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #d5e6ef;
+}
+
+.municipal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.municipal-links a {
+  color: #b4e2ff;
+  font-size: 13px;
+}
+
+@media (max-width: 800px) {
+  .municipal-purpose-cols {
+    grid-template-columns: 1fr;
+  }
+  .municipal-card-row > li {
+    grid-template-columns: 1fr;
+  }
+}

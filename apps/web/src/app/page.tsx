@@ -50,8 +50,12 @@ export default async function Home({
   return (
     <div className="observatory">
       <DemoBanner state={pageDemo} />
-      <PageHeader title="Temperatura superficial y vegetación">
-        <p>Explora una fecha, selecciona una zona y consulta qué sabemos de su superficie.</p>
+      <PageHeader title="Evidencia ambiental por distrito para la Alcaldía">
+        <p>
+          Prioriza dónde mirar con Landsat y límites GAMC: calor de superficie y verdor
+          relativo, con fuente y cobertura. No sustituye temperatura del aire ni decide por
+          sí solo una obra.
+        </p>
       </PageHeader>
       {demo === "off" && data?.scenes.length === 12 && data.scenes[0]?.acquired_at.startsWith("2014") && (
         <p className="note">12 adquisiciones de julio entre 2014 y 2025.

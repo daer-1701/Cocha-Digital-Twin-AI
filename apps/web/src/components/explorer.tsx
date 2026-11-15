@@ -28,6 +28,7 @@ import { StudyMapClient as StudyMap } from "./study-map-client";
 import { TerritoryCard } from "./territory-card";
 import { TerritorySelector } from "./territory-selector";
 import { VariableSwitch } from "./variable-switch";
+import { MunicipalPurposeBanner } from "./municipal-briefing";
 import { NatureBadge } from "./ui/nature-badge";
 import { Panel } from "./ui/panel";
 import { SignalGauge } from "./ui/signal-gauge";
@@ -196,6 +197,7 @@ export function Explorer({
   return (
     <div className="evidence-workbench">
       <nav className="explorer-index" aria-label="En esta página"><a href="#mapa">Explorar el mapa</a><a href="#historial">Comparar fechas</a><a href="#fuentes">Fuentes y límites</a></nav>
+      {showDistrictOutlines && <MunicipalPurposeBanner />}
       <div className="explorer-toolbar">
         <TerritorySelector
           options={territoryOptions(evidence, catalog)}
@@ -347,7 +349,7 @@ export function Explorer({
                 <summary>Cómo leer el mapa</summary>
                 <p className="hud-note">
                   {showDistrictOutlines
-                    ? "Se dibujan los 15 polígonos oficiales del GAMC. La cuadrícula Landsat queda oculta. Pulsa un distrito para ver su ficha y las series zonales aceptadas; la cobertura puede ser baja si el ráster solo cubre la ventana piloto."
+                    ? "Los 15 distritos oficiales GAMC. Pulsa uno: la ficha dice qué significa para gestión (priorizar visitas, comparar, documentar) y qué no se puede afirmar. Cobertura baja = evidencia incompleta, no un ranking inventado."
                     : "El color representa la variable seleccionada en celdas de unos 360 m. Las celdas sin valor quedan transparentes. Selecciona una para ver LST, NDVI y cobertura."}
                 </p>
               </details>
