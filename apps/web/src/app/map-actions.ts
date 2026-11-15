@@ -198,12 +198,14 @@ export async function loadDistrictIndicators(input: {
 }
 
 /**
- * Gemini explanation grounded in server-fetched district metadata and series.
- * The browser only sends identity fields; numbers come from the API.
+ * Gemini advice for the municipality on one district.
+ * Browser sends identity (+ optional labeled weather context); numbers come from the API.
  */
 export async function explainDistrictEvidence(input: {
   districtNumber: number;
   boundaryVersion: string;
+  weatherNote?: string | null;
+  focus?: "acciones" | "visita" | "datos";
 }): Promise<ExplainResult> {
   const headers = assistantHeaders();
   if (!headers) {
@@ -238,14 +240,33 @@ export async function explainDistrictEvidence(input: {
     if (match?.source_url) sourceUrl = String(match.source_url);
   }
 
+  const weatherNote = String(input.weatherNote ?? "")
+    .trim()
+    .slice(0, 280);
+  const focus = input.focus ?? "acciones";
+  const focusLine =
+    focus === "visita"
+      ? "Énfasis: prioriza si conviene una visita de campo ahora y qué observar en terreno (sombra, materiales, vegetación), sin inventar hallazgos."
+      : focus === "datos"
+        ? "Énfasis: lista qué datos faltan para decidir con más seguridad y cómo documentarlos en un expediente municipal."
+        : "Énfasis: 3 a 5 acciones concretas que la Alcaldía puede hacer en este distrito a partir de la evidencia.";
+
   const question = [
-    `Explica en español el contexto de microclima urbano del distrito municipal «${name}» (número ${number}).`,
-    `Versión territorial: ${version}. Fuente del límite consultada en servidor: ${sourceUrl}.`,
+    `Eres apoyo técnico para la Alcaldía de Cochabamba sobre microclimas urbanos del distrito municipal «${name}» (número ${number}).`,
+    `Versión territorial: ${version}. Fuente del límite en servidor: ${sourceUrl}.`,
     "El servidor adjuntará la serie oficial aceptada de este distrito y la evidencia piloto publicada.",
-    "Cita identificadores [En]. Distingue LST (superficie) de temperatura del aire.",
-    "No inventes valores. Si la cobertura distrital es baja o nula, dilo con claridad.",
+    focusLine,
+    "Responde en español con esta estructura exacta:",
+    "1) Qué dice la evidencia de microclima aquí (distingue LST/superficie de aire).",
+    "2) Qué puede hacer la Alcaldía en este distrito: sugerencias concretas y priorizadas (visitas, inventario de sombra/arbolado, comparación con otro distrito, expediente con cobertura, agenda según clima modelado de hoy si aplica).",
+    "3) Qué no se puede afirmar todavía.",
+    "4) Qué dato faltaría para decidir con más seguridad.",
+    "Reglas: cita identificadores [En]; no inventes cifras ni límites oficiales; no prometas °C de enfriamiento ni causalidad; si la cobertura es baja o no hay serie distrital, dilo y sugiere solo pasos de verificación.",
     "No trates la media de la ventana piloto como medición del polígono completo.",
-    `Estado previo de /v1/series visto por el cliente: ${series.status}.`,
+    weatherNote
+      ? `Contexto operativo modelado (Open‑Meteo, no es Landsat ni sensor distrital): ${weatherNote}`
+      : "Sin contexto meteorológico modelado adjunto en esta consulta.",
+    `Estado de /v1/series visto por el cliente: ${series.status}.`,
   ].join("\n");
 
   const requestId = `dist-${number}-${Date.now().toString(36)}`;
@@ -313,7 +334,7 @@ export async function explainDistrictEvidence(input: {
     return {
       answer: result.answer.slice(0, 12000),
       message:
-        "Interpretación IA basada en evidencia obtenida en el servidor para este distrito. No sustituye indicadores aceptados ausentes.",
+        "Sugerencias IA para la Alcaldía con evidencia del servidor de este distrito. Son orientación técnica, no una decisión automática.",
       status: "answered",
       spent_usd: spent,
       model: typeof result.model === "string" ? result.model : null,

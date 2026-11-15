@@ -1957,6 +1957,7 @@ export default function StudyMap({
         <DistrictMunicipalBrief
           districtName={selectedDistrict.name}
           districtNumber={selectedDistrict.number}
+          boundaryVersion={selectedDistrict.boundary_version}
           series={districtSeries}
           weather={districtWeather}
         />

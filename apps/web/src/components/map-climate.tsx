@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  explainDistrictEvidence,
   explainMapEvidence,
   loadMapWeather,
   type ExplainResult,
@@ -149,69 +148,72 @@ export function MapClimate({
           .
         </small>
         <hr />
-        <strong>Inteligencia artificial sobre el microclima</strong>
-        <p>
-          {district
-            ? "La IA explica la evidencia oficial de este distrito (superficie + contexto). No inventa series ni confunde aire con LST."
-            : "La IA explica la evidencia publicada de superficie y vegetación del piloto para estudiar microclimas urbanos."}
-        </p>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            const key = districtKey;
-            try {
-              const result = district
-                ? await explainDistrictEvidence({
-                    districtNumber: district.number,
-                    boundaryVersion: district.boundaryVersion,
-                  })
-                : await explainMapEvidence();
-              setExplanationKey(key);
-              setExplanation(result);
-            } catch {
-              setExplanationKey(key);
-              setExplanation({
-                answer: null,
-                message: "No se pudo consultar el asistente.",
-              });
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          {busy
-            ? "Interpretando microclima…"
-            : district
-              ? "Interpretar microclima del distrito con IA"
-              : "Interpretar microclima del piloto con IA"}
-        </button>
-        {visibleExplanation && (
-          <div role="status">
-            <p>{visibleExplanation.message}</p>
-            {visibleExplanation.answer && (
-              <p style={{ whiteSpace: "pre-wrap" }}>{visibleExplanation.answer}</p>
+        {district ? (
+          <>
+            <strong>IA para la Alcaldía</strong>
+            <p>
+              Las sugerencias de acción por distrito viven en la ficha inferior: qué puede
+              hacer aquí el equipo municipal, priorizar visita o qué datos faltan. Este panel
+              aporta el aire modelado como contexto operativo de hoy.
+            </p>
+          </>
+        ) : (
+          <>
+            <strong>Inteligencia artificial sobre el microclima</strong>
+            <p>
+              La IA explica la evidencia publicada de superficie y vegetación del piloto para
+              estudiar microclimas urbanos.
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                const key = districtKey;
+                try {
+                  const result = await explainMapEvidence();
+                  setExplanationKey(key);
+                  setExplanation(result);
+                } catch {
+                  setExplanationKey(key);
+                  setExplanation({
+                    answer: null,
+                    message: "No se pudo consultar el asistente.",
+                  });
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {busy ? "Interpretando microclima…" : "Interpretar microclima del piloto con IA"}
+            </button>
+            {visibleExplanation && (
+              <div role="status">
+                <p>{visibleExplanation.message}</p>
+                {visibleExplanation.answer && (
+                  <p style={{ whiteSpace: "pre-wrap" }}>{visibleExplanation.answer}</p>
+                )}
+                {visibleExplanation.citations && visibleExplanation.citations.length > 0 && (
+                  <ul>
+                    {visibleExplanation.citations.map((citation) => (
+                      <li key={citation.id}>
+                        {citation.title}
+                        {citation.source ? ` · ${citation.source}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {(visibleExplanation.spent_usd != null || visibleExplanation.model) && (
+                  <small>
+                    {visibleExplanation.model ? `Modelo ${visibleExplanation.model}. ` : ""}
+                    {visibleExplanation.spent_usd != null
+                      ? `Gasto acumulado registrado en el ledger: USD ${visibleExplanation.spent_usd.toFixed(4)}.`
+                      : ""}
+                  </small>
+                )}
+              </div>
             )}
-            {visibleExplanation.citations && visibleExplanation.citations.length > 0 && (
-              <ul>
-                {visibleExplanation.citations.map((citation) => (
-                  <li key={citation.id}>
-                    {citation.title}
-                    {citation.source ? ` · ${citation.source}` : ""}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {(visibleExplanation.spent_usd != null || visibleExplanation.model) && (
-              <small>
-                {visibleExplanation.model ? `Modelo ${visibleExplanation.model}. ` : ""}
-                {visibleExplanation.spent_usd != null
-                  ? `Gasto acumulado registrado en el ledger: USD ${visibleExplanation.spent_usd.toFixed(4)}.`
-                  : ""}
-              </small>
-            )}
-          </div>
+          </>
         )}
         <small>
           LST describe la superficie; el aire requiere sensores o modelos atmosféricos. La

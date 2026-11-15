@@ -135,9 +135,9 @@ export const MUNICIPAL_PURPOSE = {
   summary:
     "El tema del prototipo es entender microclimas de Cochabamba por distrito oficial: evidencia de superficie (LST/NDVI), clima modelado de aire cerca del centroide, e IA que explica esa evidencia sin inventar cifras. Para la Alcaldía: priorizar dónde mirar, comparar con el mismo método y documentar límites.",
   helps: [
-    "Ver microclima de un distrito: superficie satelital + aire modelado + lectura con IA",
-    "Priorizar visitas donde la superficie se ve más caliente o el verdor relativo es bajo",
-    "Pedir a la IA una explicación citada de la evidencia publicada (presupuesto limitado)",
+    "La IA sugiere qué puede hacer la Alcaldía en cada distrito (visitas, inventario, expediente)",
+    "Cruzar superficie Landsat + aire modelado + evidencia citada por el asistente",
+    "Separar lo afirmable de lo que aún falta medir",
   ],
   doesNot: [
     "La IA no inventa mediciones ni convierte LST en temperatura del aire",
