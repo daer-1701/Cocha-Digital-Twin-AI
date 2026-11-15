@@ -1,6 +1,7 @@
 "use server";
 
 import { apiBaseUrl } from "../lib/api";
+import { buildDistrictFallbackAdvice } from "../lib/municipal-briefing";
 
 export type DistrictIndicatorRow = {
   variable: string;
@@ -246,27 +247,39 @@ export async function explainDistrictEvidence(input: {
   const focus = input.focus ?? "acciones";
   const focusLine =
     focus === "visita"
-      ? "Énfasis: prioriza si conviene una visita de campo ahora y qué observar en terreno (sombra, materiales, vegetación), sin inventar hallazgos."
+      ? "Énfasis: prioriza una visita de campo y qué observar en terreno (sombra, materiales, vegetación), sin inventar hallazgos."
       : focus === "datos"
-        ? "Énfasis: lista qué datos faltan para decidir con más seguridad y cómo documentarlos en un expediente municipal."
-        : "Énfasis: 3 a 5 acciones concretas que la Alcaldía puede hacer en este distrito a partir de la evidencia.";
+        ? "Énfasis: qué datos conviene sumar al expediente y cómo documentar la evidencia ya publicada."
+        : "Énfasis: 3 a 5 acciones concretas para la Alcaldía en este distrito.";
+
+  const seriesHint =
+    series.status === "available" && series.items.length > 0
+      ? `El cliente ve ${series.items.length} indicador(es) aceptado(s) para este distrito; úsalos y cítalos.`
+      : "El cliente no ve serie zonal aceptada para este polígono; cita esa limitación y usa la evidencia piloto solo como contexto de ciudad, no como media del distrito.";
+
+  const fallbackAdvice = buildDistrictFallbackAdvice({
+    districtName: name,
+    districtNumber: number,
+    series,
+    weather: parseWeatherNote(weatherNote),
+    focus,
+  });
 
   const question = [
-    `Eres apoyo técnico para la Alcaldía de Cochabamba sobre microclimas urbanos del distrito municipal «${name}» (número ${number}).`,
+    `Apoyo técnico para la Alcaldía de Cochabamba · microclima del distrito «${name}» (n.º ${number}).`,
     `Versión territorial: ${version}. Fuente del límite en servidor: ${sourceUrl}.`,
-    "El servidor adjuntará la serie oficial aceptada de este distrito y la evidencia piloto publicada.",
+    "Obligatorio: entrega siempre una respuesta útil con la estructura pedida. Prohibido responder solo «no hay datos suficientes».",
     focusLine,
-    "Responde en español con esta estructura exacta:",
-    "1) Qué dice la evidencia de microclima aquí (distingue LST/superficie de aire).",
-    "2) Qué puede hacer la Alcaldía en este distrito: sugerencias concretas y priorizadas (visitas, inventario de sombra/arbolado, comparación con otro distrito, expediente con cobertura, agenda según clima modelado de hoy si aplica).",
-    "3) Qué no se puede afirmar todavía.",
-    "4) Qué dato faltaría para decidir con más seguridad.",
-    "Reglas: cita identificadores [En]; no inventes cifras ni límites oficiales; no prometas °C de enfriamiento ni causalidad; si la cobertura es baja o no hay serie distrital, dilo y sugiere solo pasos de verificación.",
-    "No trates la media de la ventana piloto como medición del polígono completo.",
+    seriesHint,
+    "Estructura exacta:",
+    "1) Lectura de lo disponible (LST/superficie vs aire; si no hay serie distrital, dilo en una frase y pasa al contexto piloto de ciudad).",
+    "2) Qué puede hacer la Alcaldía AHORA en este distrito: 3 a 5 bullets accionables (visita, inventario sombra/arbolado, comparar con otro distrito, expediente con cobertura, agenda según clima modelado de hoy si aplica).",
+    "3) Límites: qué no se puede afirmar todavía.",
+    "4) Próximo dato útil (uno o dos), sin bloquear las acciones del punto 2.",
+    "Cita al menos un [En]. No inventes cifras ni °C de enfriamiento. No trates la media piloto como media del polígono.",
     weatherNote
-      ? `Contexto operativo modelado (Open‑Meteo, no es Landsat ni sensor distrital): ${weatherNote}`
-      : "Sin contexto meteorológico modelado adjunto en esta consulta.",
-    `Estado de /v1/series visto por el cliente: ${series.status}.`,
+      ? `Contexto operativo modelado Open‑Meteo (no es Landsat ni sensor distrital); puedes usarlo solo para agenda de campo: ${weatherNote}`
+      : "Sin contexto meteorológico modelado en esta consulta.",
   ].join("\n");
 
   const requestId = `dist-${number}-${Date.now().toString(36)}`;
@@ -288,23 +301,27 @@ export async function explainDistrictEvidence(input: {
       const detail =
         typeof result?.detail === "string"
           ? result.detail
-          : "El asistente no pudo responder. Revisa disponibilidad, autorización y cuota.";
-      return { answer: null, message: detail, status: "http_error" };
+          : "El asistente no pudo responder. Se muestra orientación local con los datos disponibles.";
+      return {
+        answer: fallbackAdvice,
+        message: detail,
+        status: "http_error",
+      };
     }
     if (!result || typeof result.status !== "string") {
       return {
-        answer: null,
-        message: "Respuesta del asistente no válida.",
+        answer: fallbackAdvice,
+        message: "Respuesta del asistente no válida. Orientación local con datos disponibles.",
         status: "invalid",
       };
     }
     if (result.status !== "answered" || typeof result.answer !== "string") {
       return {
-        answer: null,
+        answer: fallbackAdvice,
         message:
           typeof result.reason === "string"
-            ? result.reason
-            : "Sin interpretación IA: el servidor mantuvo sus controles de evidencia, autorización o presupuesto.",
+            ? `${result.reason} Se muestra orientación local con la evidencia ya cargada.`
+            : "Sin texto IA verificable. Orientación local con la evidencia ya cargada.",
         status: result.status,
         model: typeof result.model === "string" ? result.model : null,
       };
@@ -331,10 +348,16 @@ export async function explainDistrictEvidence(input: {
             source: typeof c.source === "string" ? c.source : "",
           }))
       : [];
+    let answer = result.answer.slice(0, 12000);
+    // If the model only refuses for lack of data, replace with actionable local advice.
+    if (/no hay datos suficientes|evidencia no basta|sin datos suficientes|datos insuficientes/i.test(answer)
+      && answer.length < 900) {
+      answer = fallbackAdvice;
+    }
     return {
-      answer: result.answer.slice(0, 12000),
+      answer,
       message:
-        "Sugerencias IA para la Alcaldía con evidencia del servidor de este distrito. Son orientación técnica, no una decisión automática.",
+        "Sugerencias para la Alcaldía con la evidencia disponible de este distrito. Orientación técnica, no decisión automática.",
       status: "answered",
       spent_usd: spent,
       model: typeof result.model === "string" ? result.model : null,
@@ -342,11 +365,24 @@ export async function explainDistrictEvidence(input: {
     };
   } catch {
     return {
-      answer: null,
-      message: "El asistente no respondió a tiempo. Puedes reintentar.",
+      answer: fallbackAdvice,
+      message: "El asistente no respondió a tiempo. Orientación local con los datos disponibles.",
       status: "timeout",
     };
   }
+}
+
+function parseWeatherNote(note: string) {
+  if (!note.trim()) return null;
+  const temperature = Number(/aire\s+(-?\d+(?:\.\d+)?)/i.exec(note)?.[1]);
+  const apparent = Number(/sensaci[oó]n\s+(-?\d+(?:\.\d+)?)/i.exec(note)?.[1]);
+  const humidity = Number(/humedad\s+(\d+(?:\.\d+)?)/i.exec(note)?.[1]);
+  const wind = Number(/viento\s+(\d+(?:\.\d+)?)/i.exec(note)?.[1]);
+  const rain = Number(/lluvia\s+(\d+(?:\.\d+)?)/i.exec(note)?.[1]);
+  if (![temperature, apparent, humidity, wind, rain].every((value) => Number.isFinite(value))) {
+    return null;
+  }
+  return { temperature, apparent, humidity, wind, rain };
 }
 
 /** City-wide fallback used when no district is selected. */

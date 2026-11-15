@@ -1,4 +1,21 @@
-import type { DistrictIndicatorRow, WeatherReading } from "../app/map-actions";
+export type BriefIndicator = {
+  variable: string;
+  statistic: string;
+  value: number | null;
+  units: string | null;
+  period_start: string;
+  period_end: string;
+  valid_fraction: number | null;
+  n: number | null;
+};
+
+export type BriefWeather = {
+  temperature: number;
+  humidity: number;
+  apparent: number;
+  rain: number;
+  wind: number;
+};
 
 export type BriefCard = {
   id: string;
@@ -19,12 +36,12 @@ function formatPeriod(start: string, end: string): string {
   return `${a} → ${b}`;
 }
 
-function coveragePct(row: DistrictIndicatorRow): number | null {
+function coveragePct(row: BriefIndicator): number | null {
   if (row.valid_fraction == null || !Number.isFinite(row.valid_fraction)) return null;
   return Math.round(row.valid_fraction * 100);
 }
 
-function lstCard(row: DistrictIndicatorRow): BriefCard {
+function lstCard(row: BriefIndicator): BriefCard {
   const coverage = coveragePct(row);
   const value =
     row.value == null || !Number.isFinite(row.value)
@@ -47,7 +64,7 @@ function lstCard(row: DistrictIndicatorRow): BriefCard {
   };
 }
 
-function ndviCard(row: DistrictIndicatorRow): BriefCard {
+function ndviCard(row: BriefIndicator): BriefCard {
   const coverage = coveragePct(row);
   const value =
     row.value == null || !Number.isFinite(row.value) ? "Sin dato" : row.value.toFixed(3);
@@ -68,7 +85,7 @@ function ndviCard(row: DistrictIndicatorRow): BriefCard {
   };
 }
 
-export function briefCardsFromSeries(items: DistrictIndicatorRow[]): BriefCard[] {
+export function briefCardsFromSeries(items: BriefIndicator[]): BriefCard[] {
   const cards: BriefCard[] = [];
   for (const row of items) {
     const key = row.variable.toLowerCase();
@@ -96,20 +113,29 @@ export function briefCardsFromSeries(items: DistrictIndicatorRow[]): BriefCard[]
 export function municipalNextSteps(input: {
   hasIndicators: boolean;
   weakCoverage: boolean;
-  weather: WeatherReading | null;
+  weather: BriefWeather | null;
 }): string[] {
   const steps: string[] = [];
   if (!input.hasIndicators) {
     steps.push(
-      "Este distrito aún no tiene medias zonales aceptadas: no inventes un ranking. Usa el mapa para ubicar el polígono y pide la serie oficial.",
+      "Agenda una visita corta al polígono: anotar sombra en veredas, tipo de cubierta y arbolado visible.",
     );
-    steps.push("Compara con otro distrito que sí tenga indicadores, o revisa el análisis 2014–2025 del piloto.");
+    steps.push(
+      "Compara visualmente este distrito con otro en el mapa y abre Comparar distritos cuando haya serie aceptada.",
+    );
+    steps.push(
+      "Usa el análisis 2014–2025 del piloto como contexto de ciudad (no como media de este polígono).",
+    );
   } else if (input.weakCoverage) {
-    steps.push("Marca este distrito como «evidencia incompleta» hasta mejorar cobertura o sumar visitas de campo.");
-    steps.push("Descarga la ficha para el expediente y documenta el % de cobertura válida.");
+    steps.push(
+      "Haz visita de campo priorizando zonas pavimentadas/poco sombra y documenta cobertura válida en el expediente.",
+    );
+    steps.push("Compara este distrito con otro de la misma versión territorial antes de priorizar obra.");
   } else {
-    steps.push("Usa LST y NDVI juntos: superficie caliente + poco verdor relativo = candidato a visita técnica, no a conclusión automática.");
-    steps.push("Compara este distrito con otro bajo la misma versión territorial antes de priorizar intervención.");
+    steps.push(
+      "Cruza LST y NDVI: superficie caliente + verdor relativo bajo → candidato a visita técnica e inventario de sombra.",
+    );
+    steps.push("Compara con otro distrito bajo la misma versión territorial y deja constancia en Informes.");
   }
   if (input.weather) {
     if (input.weather.rain > 0.2) {
@@ -128,6 +154,71 @@ export function municipalNextSteps(input: {
   }
   steps.push("Para un informe municipal: exporta en Informes con fuente, período y limitaciones visibles.");
   return steps.slice(0, 4);
+}
+
+/** Local advice when Gemini is unavailable or refuses; always returns actionable text. */
+export function buildDistrictFallbackAdvice(input: {
+  districtName: string;
+  districtNumber: number;
+  series: {
+    status: string;
+    items: BriefIndicator[];
+    reason?: string;
+  };
+  weather: BriefWeather | null;
+  focus?: "acciones" | "visita" | "datos";
+}): string {
+  const cards = briefCardsFromSeries(input.series.items ?? []);
+  const weakCoverage = cards.some(
+    (card) => card.coveragePct != null && card.coveragePct < 50,
+  );
+  const steps = municipalNextSteps({
+    hasIndicators: cards.length > 0,
+    weakCoverage,
+    weather: input.weather,
+  });
+  const focus = input.focus ?? "acciones";
+  const lines: string[] = [
+    `1) Lectura disponible · ${input.districtName} (distrito ${input.districtNumber})`,
+  ];
+  if (cards.length === 0) {
+    lines.push(
+      `Aún no hay serie zonal aceptada para este polígono${
+        input.series.reason ? ` (${input.series.reason})` : ""
+      }. Se puede trabajar con el mapa oficial, el clima modelado de hoy y la evidencia piloto solo como contexto de ciudad.`,
+    );
+  } else {
+    for (const card of cards.slice(0, 4)) {
+      lines.push(
+        `• ${card.title}: ${card.value} (${card.period}` +
+          `${card.coveragePct != null ? `, cobertura ${card.coveragePct}%` : ""}). ${card.useFor}`,
+      );
+    }
+  }
+  lines.push("");
+  lines.push(
+    focus === "visita"
+      ? "2) Prioridad de visita de campo"
+      : focus === "datos"
+        ? "2) Datos y expediente"
+        : "2) Qué puede hacer la Alcaldía ahora",
+  );
+  for (const step of steps) {
+    lines.push(`• ${step}`);
+  }
+  lines.push("");
+  lines.push("3) Límites");
+  lines.push(
+    "• No se afirma temperatura del aire ni efecto garantizado de arbolado a partir de LST/NDVI solos.",
+  );
+  lines.push("");
+  lines.push("4) Próximo dato útil");
+  lines.push(
+    cards.length === 0
+      ? "• Publicar o aceptar la serie zonal oficial de este distrito con cobertura documentada."
+      : "• Una visita georreferenciada (sombra/cubiertas) y, si aplica, comparar con otro distrito en la misma versión territorial.",
+  );
+  return lines.join("\n");
 }
 
 export const MUNICIPAL_PURPOSE = {

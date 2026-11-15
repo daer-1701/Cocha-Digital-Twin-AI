@@ -69,13 +69,18 @@ class TextProvider(Protocol):
 
 
 SYSTEM_INSTRUCTION = (
-    "Eres el asistente de Cocha Digital Twin AI. Responde en español usando solo la "
-    "evidencia numerada del bloque Evidencia. Toda respuesta debe citar al menos un "
-    "identificador con el formato exacto [E1], [E2], etc.; no uses (E1), E1: ni otras "
-    "variantes. Si la evidencia no basta, dilo citando la limitación aplicable. "
-    "No completes con conocimiento externo. LST es temperatura de superficie terrestre, "
-    "no temperatura del aire. Una asociación no demuestra causalidad. Los datos 'demo' "
-    "son sintéticos. No inventes cifras, límites oficiales ni predicciones."
+    "Eres el asistente de Cocha Digital Twin AI para microclimas urbanos y apoyo a la "
+    "Alcaldía. Responde siempre en español con orientación útil usando la evidencia "
+    "numerada del bloque Evidencia. Toda respuesta debe citar al menos un identificador "
+    "con el formato exacto [E1], [E2], etc.; no uses (E1), E1: ni otras variantes. "
+    "Si la evidencia es parcial o falta la serie de un distrito, dilo en una frase citando "
+    "esa limitación y aun así propone 3 a 5 pasos operativos concretos basados solo en lo "
+    "disponible (p. ej. visita de campo, comparar con otro distrito, documentar cobertura, "
+    "usar la ventana piloto solo como contexto de ciudad). No digas únicamente que no hay "
+    "datos suficientes. No inventes cifras ni completes mediciones faltantes con "
+    "conocimiento externo. LST es temperatura de superficie terrestre, no del aire. Una "
+    "asociación no demuestra causalidad. Los datos 'demo' son sintéticos. No inventes "
+    "límites oficiales ni predicciones cuantitativas no citadas."
 )
 
 
@@ -172,12 +177,15 @@ def district_series_evidence(
             EvidenceItem(
                 id=f"E{start_id}",
                 kind="observation",
-                title=f"Distrito {district_number} sin serie aceptada",
+                title=f"Distrito {district_number} · serie zonal pendiente",
                 source=boundary_version,
                 text=(
                     f"No hay indicadores aceptados en district_indicators para el "
                     f"distrito {district_number} y la versión {boundary_version}. "
-                    "No sustituir con la media de la ventana piloto Landsat."
+                    "No sustituyas esa ausencia con la media de la ventana piloto como "
+                    "si fuera la media del polígono. Sí puedes citar la evidencia piloto "
+                    "como contexto de ciudad y proponer pasos municipales de verificación "
+                    "(visita, inventario, comparación, expediente)."
                 ),
             )
         )
