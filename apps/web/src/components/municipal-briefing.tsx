@@ -33,8 +33,9 @@ export function MunicipalPurposeBanner() {
         </div>
       </div>
       <p className="municipal-purpose-demo">
-        Demo sugerida: elige un distrito → lee la ficha en lenguaje municipal → mira el
-        microclima solo como contexto de hoy → compara o descarga para el expediente.
+        Demo: elige un distrito → mira microclima (aire modelado) → lee LST/NDVI → pulsa
+        «Interpretar con IA» en el panel de microclimas → explica qué se puede y qué no se
+        puede afirmar.
       </p>
     </aside>
   );
@@ -87,7 +88,7 @@ export function DistrictMunicipalBrief({
     <div className="municipal-brief">
       <header>
         <span className="municipal-kicker">
-          Lectura para gestión · Distrito {districtNumber}
+          Microclima · lectura para gestión · Distrito {districtNumber}
         </span>
         <strong>{districtName}</strong>
         <p>

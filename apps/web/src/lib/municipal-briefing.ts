@@ -131,17 +131,17 @@ export function municipalNextSteps(input: {
 }
 
 export const MUNICIPAL_PURPOSE = {
-  title: "Qué hace este sistema para la Alcaldía",
+  title: "Microclimas urbanos con inteligencia artificial",
   summary:
-    "Convierte imágenes Landsat y límites oficiales GAMC en evidencia por distrito: dónde la superficie se ve más caliente y dónde hay más o menos verdor relativo, con fuente, período y cobertura. Sirve para priorizar visitas, comparar distritos con el mismo método y armar informes reproducibles.",
+    "El tema del prototipo es entender microclimas de Cochabamba por distrito oficial: evidencia de superficie (LST/NDVI), clima modelado de aire cerca del centroide, e IA que explica esa evidencia sin inventar cifras. Para la Alcaldía: priorizar dónde mirar, comparar con el mismo método y documentar límites.",
   helps: [
-    "Priorizar distritos a inspeccionar por calor de superficie o bajo verdor relativo",
-    "Comparar polígonos oficiales con la misma metodología y versión territorial",
-    "Documentar qué se sabe, qué falta y qué no se puede afirmar todavía",
+    "Ver microclima de un distrito: superficie satelital + aire modelado + lectura con IA",
+    "Priorizar visitas donde la superficie se ve más caliente o el verdor relativo es bajo",
+    "Pedir a la IA una explicación citada de la evidencia publicada (presupuesto limitado)",
   ],
   doesNot: [
-    "No mide temperatura del aire ni confort térmico de la población",
-    "No calcula automáticamente cuántos árboles hay que plantar ni el °C que bajarían",
-    "No sustituye catastro, sensores MÓNICA ni decisión política",
+    "La IA no inventa mediciones ni convierte LST en temperatura del aire",
+    "El clima de hoy (Open‑Meteo) no es la fecha histórica Landsat",
+    "No decide sola una obra ni calcula cuántos árboles «enfrían» X grados",
   ],
 };

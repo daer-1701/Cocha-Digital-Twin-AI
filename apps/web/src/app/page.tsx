@@ -50,11 +50,11 @@ export default async function Home({
   return (
     <div className="observatory">
       <DemoBanner state={pageDemo} />
-      <PageHeader title="Evidencia ambiental por distrito para la Alcaldía">
+      <PageHeader title="Microclimas urbanos con inteligencia artificial">
         <p>
-          Prioriza dónde mirar con Landsat y límites GAMC: calor de superficie y verdor
-          relativo, con fuente y cobertura. No sustituye temperatura del aire ni decide por
-          sí solo una obra.
+          Combina calor de superficie y verdor (Landsat), clima modelado por distrito y una
+          IA que interpreta la evidencia publicada para la Alcaldía. Distingue superficie de
+          aire; no inventa mediciones.
         </p>
       </PageHeader>
       {demo === "off" && data?.scenes.length === 12 && data.scenes[0]?.acquired_at.startsWith("2014") && (

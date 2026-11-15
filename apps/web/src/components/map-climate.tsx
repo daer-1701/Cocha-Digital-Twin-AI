@@ -81,14 +81,18 @@ export function MapClimate({
     <details className="map-climate" open>
       <summary>
         {district
-          ? `Microclimas · ${district.name}`
-          : "Microclimas urbanos · clima e interpretación"}
+          ? `Microclima + IA · ${district.name}`
+          : "Microclimas urbanos + IA"}
       </summary>
       <div className="map-climate-body">
+        <p className="climate-theme-lead">
+          Núcleo del prototipo: microclima por distrito (aire modelado) e interpretación con
+          inteligencia artificial sobre evidencia publicada.
+        </p>
         <strong>
           {district
-            ? `Tiempo modelado cerca del centroide · distrito ${district.number}`
-            : "Tiempo actual · punto urbano de Cochabamba"}
+            ? `Aire modelado · centroide del distrito ${district.number}`
+            : "Aire modelado · punto urbano de Cochabamba"}
         </strong>
         {loading ? (
           <p role="status">Consultando meteorología…</p>
@@ -145,11 +149,11 @@ export function MapClimate({
           .
         </small>
         <hr />
-        <strong>Interpretación con IA</strong>
+        <strong>Inteligencia artificial sobre el microclima</strong>
         <p>
           {district
-            ? "Consulta el asistente con la identidad territorial y los indicadores oficiales que el servidor confirme para este distrito."
-            : "Consulta el asistente sobre la evidencia publicada de temperatura superficial y vegetación del piloto."}
+            ? "La IA explica la evidencia oficial de este distrito (superficie + contexto). No inventa series ni confunde aire con LST."
+            : "La IA explica la evidencia publicada de superficie y vegetación del piloto para estudiar microclimas urbanos."}
         </p>
         <button
           type="button"
@@ -178,10 +182,10 @@ export function MapClimate({
           }}
         >
           {busy
-            ? "Interpretando…"
+            ? "Interpretando microclima…"
             : district
-              ? "Interpretar este distrito con IA"
-              : "Interpretar evidencia con IA"}
+              ? "Interpretar microclima del distrito con IA"
+              : "Interpretar microclima del piloto con IA"}
         </button>
         {visibleExplanation && (
           <div role="status">

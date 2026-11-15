@@ -1795,7 +1795,7 @@ export default function StudyMap({
           <div className="fs-cinema" aria-hidden={!fsActive}>
             <div className="fs-cinema-copy">
               <p className="fs-cinema-title">Cochabamba</p>
-              <p>Temperatura superficial y vegetación</p>
+              <p>Microclimas urbanos con inteligencia artificial</p>
             </div>
             {fsActive && (
               <button

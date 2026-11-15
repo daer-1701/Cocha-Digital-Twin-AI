@@ -16,9 +16,9 @@ export const SECTIONS: Section[] = [
   {
     href: "/?territorio=distritos",
     label: "Explorador",
-    title: "Temperatura superficial y vegetación",
+    title: "Microclimas urbanos con IA",
     summary:
-      "Observaciones Landsat sobre una ventana urbana de estudio, con su cobertura y procedencia.",
+      "Mapa de distritos con evidencia de superficie, clima modelado e interpretación por inteligencia artificial.",
     available: true,
     nature: "observed",
   },
@@ -98,9 +98,9 @@ export const SECTIONS: Section[] = [
   {
     href: "/asistente",
     label: "Asistente",
-    title: "Asistente científico",
+    title: "IA de microclimas",
     summary:
-      "Consultar el estado del presupuesto Gemini y la evidencia que puede citar. La interpretación por distrito vive en el mapa.",
+      "Presupuesto Gemini y evidencia que puede citar. En el mapa, la IA interpreta el microclima del distrito seleccionado.",
     available: true,
     requires: [
       "Clave Gemini y GEMINI_CALLS_ENABLED en el servidor API.",

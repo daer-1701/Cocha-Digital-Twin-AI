@@ -31,7 +31,8 @@ const display = Archivo({
 
 export const metadata: Metadata = {
   title: { default: "Cocha Digital Twin AI", template: "%s | Cocha Digital Twin AI" },
-  description: "Evidencia ambiental reproducible para Cochabamba.",
+  description:
+    "Microclimas urbanos de Cochabamba con evidencia satelital e interpretación por inteligencia artificial.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -51,7 +52,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <span className="brand-name">Cocha</span>
                   <span className="brand-system">Digital Twin AI</span>
                 </Link>
-                <p className="brand-purpose">Evidencia ambiental de Cochabamba</p>
+                <p className="brand-purpose">Microclimas urbanos con IA</p>
               </div>
               <svg className="orbital-signature" viewBox="0 0 360 150" fill="none" aria-hidden="true">
                 <ellipse cx="230" cy="75" rx="118" ry="43" transform="rotate(-22 230 75)" />
@@ -66,11 +67,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </header>
           <main id="contenido">{children}</main>
           <footer>
-            <span>Cocha Digital Twin AI, prototipo de evidencia ambiental.</span>
+            <span>Cocha Digital Twin AI · microclimas urbanos con inteligencia artificial.</span>
             <span>
-              Observaciones Landsat de USGS y NASA. Cada cifra indica su fuente y sus
-              límites. Día / Noche solo ilumina el mapa 3D; no cambia la página ni es
-              una adquisición nocturna.
+              Evidencia Landsat (superficie) + clima modelado (aire) + IA que explica sin
+              inventar cifras. Día / Noche solo ilumina el mapa 3D; no es adquisición nocturna.
             </span>
           </footer>
         </ThemeProvider>
