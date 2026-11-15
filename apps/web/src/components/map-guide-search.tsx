@@ -28,8 +28,7 @@ export function MapGuideSearch({
 }: Props) {
   const formId = useId();
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<GuideHit[]>([]);
-  const [open, setOpen] = useState(false);
+  const [hits, setHits] = useState<GuideHit[]>(() => matchProjectGuide(""));
   const [ai, setAi] = useState<ExplainResult | null>(null);
   const [pending, startTransition] = useTransition();
   const chips = useMemo(() => defaultGuideSuggestions(), []);
@@ -37,7 +36,6 @@ export function MapGuideSearch({
   function runLocal(nextQuery: string) {
     setAi(null);
     setHits(matchProjectGuide(nextQuery));
-    setOpen(true);
   }
 
   function handleAction(action: GuideAction) {
@@ -47,13 +45,11 @@ export function MapGuideSearch({
       runLocal("distritos");
     } else if (action.intent === "climate") {
       runLocal("microclima");
-    } else {
-      runLocal(action.label);
     }
   }
 
   return (
-    <div className={`map-guide-search${open ? " is-open" : ""}`}>
+    <div className="map-guide-search">
       <div className="map-guide-row">
         <CellCombobox
           value={selectedIndex}
@@ -80,11 +76,8 @@ export function MapGuideSearch({
             type="search"
             value={query}
             disabled={disabled}
-            placeholder="¿Qué puedo hacer aquí?"
+            placeholder="¿Qué puedo hacer aquí? LST, NDVI, microclima…"
             onChange={(event) => setQuery(event.target.value)}
-            onFocus={() => {
-              if (hits.length || ai) setOpen(true);
-            }}
             autoComplete="off"
           />
           <button type="submit" disabled={disabled || !query.trim()}>
@@ -97,11 +90,10 @@ export function MapGuideSearch({
               startTransition(async () => {
                 const result = await askProjectQuestion(query.trim());
                 setAi(result);
-                setOpen(true);
               });
             }}
           >
-            {pending ? "IA…" : "IA"}
+            {pending ? "IA…" : "Preguntar a la IA"}
           </button>
         </form>
       </div>
@@ -127,57 +119,49 @@ export function MapGuideSearch({
         )}
       </div>
 
-      {open && (hits.length > 0 || ai) && (
-        <div className="map-guide-results" aria-live="polite">
-          <div className="map-guide-results-head">
-            <strong>Guía</strong>
-            <button type="button" onClick={() => setOpen(false)}>
-              Cerrar
-            </button>
-          </div>
-          {hits.map((hit) => (
-            <article key={hit.id} className="map-guide-hit">
-              <strong>{hit.title}</strong>
-              <p>{hit.answer}</p>
-              {hit.suggestions.length > 0 && (
-                <div className="map-guide-hit-actions">
-                  {hit.suggestions.map((action) =>
-                    action.href ? (
-                      <Link key={action.id} href={action.href}>
-                        {action.label}
-                      </Link>
-                    ) : (
-                      <button
-                        key={action.id}
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => handleAction(action)}
-                      >
-                        {action.label}
-                      </button>
-                    ),
-                  )}
-                </div>
-              )}
-            </article>
-          ))}
-          {ai && (
-            <article className="map-guide-hit is-ai" role="status">
-              <strong>Respuesta con evidencia (IA)</strong>
-              <p>{ai.message}</p>
-              {ai.answer && <p style={{ whiteSpace: "pre-wrap" }}>{ai.answer}</p>}
-              {(ai.spent_usd != null || ai.model) && (
-                <small>
-                  {ai.model ? `Modelo ${ai.model}. ` : ""}
-                  {ai.spent_usd != null
-                    ? `Gasto acumulado en ledger: USD ${ai.spent_usd.toFixed(4)}.`
-                    : ""}
-                </small>
-              )}
-            </article>
-          )}
-        </div>
-      )}
+      <div className="map-guide-results" aria-live="polite">
+        {hits.map((hit) => (
+          <article key={hit.id} className="map-guide-hit">
+            <strong>{hit.title}</strong>
+            <p>{hit.answer}</p>
+            {hit.suggestions.length > 0 && (
+              <div className="map-guide-hit-actions">
+                {hit.suggestions.map((action) =>
+                  action.href ? (
+                    <Link key={action.id} href={action.href}>
+                      {action.label}
+                    </Link>
+                  ) : (
+                    <button
+                      key={action.id}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => handleAction(action)}
+                    >
+                      {action.label}
+                    </button>
+                  ),
+                )}
+              </div>
+            )}
+          </article>
+        ))}
+        {ai && (
+          <article className="map-guide-hit is-ai" role="status">
+            <strong>Respuesta con evidencia (IA)</strong>
+            <p>{ai.message}</p>
+            {ai.answer && <p style={{ whiteSpace: "pre-wrap" }}>{ai.answer}</p>}
+            {(ai.spent_usd != null || ai.model) && (
+              <small>
+                {ai.model ? `Modelo ${ai.model}. ` : ""}
+                {ai.spent_usd != null
+                  ? `Gasto acumulado en ledger: USD ${ai.spent_usd.toFixed(4)}.`
+                  : ""}
+              </small>
+            )}
+          </article>
+        )}
+      </div>
     </div>
   );
 }
