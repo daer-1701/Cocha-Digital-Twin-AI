@@ -1709,28 +1709,9 @@ export default function StudyMap({
       data-intro={intro}
       data-intro-title={titlePhase}
       data-fs-cinema={fsCinema}
+      data-district-mode={showDistrictOutlines ? "on" : "off"}
     >
-      <div className="map-presentation-controls">
-        <button type="button" disabled={!loaded || introPlaying} onClick={() => {
-          introDone.current = false;
-          if (mode === "3d" && mapRef.current) playIntro(mapRef.current);
-          else setMode("3d");
-        }}>Ver introducción</button>
-        <details className="map-filter-popover"><summary>Fechas y variable</summary>
-          <div>{presentationControls}</div>
-        </details>
-        <div className="mode-switch" role="group" aria-label="Representación de los datos">
-          <button type="button" aria-pressed={!differenceActive} onClick={() => setDifference(false)}>Valores</button>
-          <button type="button" aria-pressed={differenceActive} disabled={!referenceScene || showDistrictOutlines}
-            onClick={() => setDifference(true)}>Diferencias</button>
-        </div>
-        <details className="map-filter-popover map-color-popover"><summary>Color</summary>
-        <div><label className="map-opacity">Intensidad del color
-          <input aria-label="Intensidad del color" type="range" min="0.2" max="1" step="0.05"
-            value={opacity} onChange={event => setOpacity(Number(event.target.value))} />
-        </label></div></details>
-      </div>
-      <div className="map-stage">
+      <div className="map-top-rail">
         {showDistrictOutlines && (
           <MapGuideSearch
             districts={districts}
@@ -1751,6 +1732,28 @@ export default function StudyMap({
             }}
           />
         )}
+        <div className="map-presentation-controls">
+          <button type="button" disabled={!loaded || introPlaying} onClick={() => {
+            introDone.current = false;
+            if (mode === "3d" && mapRef.current) playIntro(mapRef.current);
+            else setMode("3d");
+          }}>Ver introducción</button>
+          <details className="map-filter-popover"><summary>Fechas y variable</summary>
+            <div>{presentationControls}</div>
+          </details>
+          <div className="mode-switch" role="group" aria-label="Representación de los datos">
+            <button type="button" aria-pressed={!differenceActive} onClick={() => setDifference(false)}>Valores</button>
+            <button type="button" aria-pressed={differenceActive} disabled={!referenceScene || showDistrictOutlines}
+              onClick={() => setDifference(true)}>Diferencias</button>
+          </div>
+          <details className="map-filter-popover map-color-popover"><summary>Color</summary>
+          <div><label className="map-opacity">Intensidad del color
+            <input aria-label="Intensidad del color" type="range" min="0.2" max="1" step="0.05"
+              value={opacity} onChange={event => setOpacity(Number(event.target.value))} />
+          </label></div></details>
+        </div>
+      </div>
+      <div className="map-stage">
         <MapClimate
           district={
             selectedDistrict && selectedCentroid
