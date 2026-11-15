@@ -146,6 +146,7 @@ def test_assistant_status_does_not_leak_the_key_or_call_gemini(monkeypatch, tmp_
 
 
 def test_verified_prices_stay_visible_while_calls_stay_off(monkeypatch, tmp_path):
+    monkeypatch.setenv("GEMINI_CALLS_ENABLED", "false")
     monkeypatch.setenv("GEMINI_MODEL", "gemini-3.6-flash")
     monkeypatch.setenv("GEMINI_INPUT_USD_PER_MILLION_TOKENS", "0.75")
     monkeypatch.setenv("GEMINI_OUTPUT_USD_PER_MILLION_TOKENS", "3.75")
@@ -170,6 +171,7 @@ def test_corrupt_ledger_does_not_echo_file_contents(monkeypatch, tmp_path):
     secret = "super-secret-gemini-key"
     ledger = tmp_path / "ledger.json"
     ledger.write_text(secret, encoding="utf-8")
+    monkeypatch.setenv("GEMINI_CALLS_ENABLED", "false")
     monkeypatch.setenv("GEMINI_LEDGER_PATH", str(ledger))
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     get_settings.cache_clear()

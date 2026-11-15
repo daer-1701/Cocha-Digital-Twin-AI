@@ -210,7 +210,7 @@ export default async function Page({
               de LST y NDVI. Las celdas sin datos quedan vacías.
             </p>
           ) : null}
-          <div className="table-wrap">
+          <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos desplazable">
             <table>
               <caption>Resumen de las escenas incluidas en la descarga</caption>
               <thead>

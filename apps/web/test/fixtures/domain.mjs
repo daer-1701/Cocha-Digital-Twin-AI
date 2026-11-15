@@ -187,6 +187,7 @@ const unavailable = (reason, extra = {}) => ({
   status: "unavailable",
   reason: `Fixture: ${reason}`,
   items: [],
+  official_items: [],
   ...PAGE,
   ...extra,
 });

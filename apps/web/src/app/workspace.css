@@ -1,0 +1,197 @@
+/* Quiet application shell: the map carries the visual focus. */
+.mission-shell { background:#101e2b; }
+.mission-shell .topbar { padding-block:18px 0; }
+.mission-shell .identity-row { padding-bottom:16px; }
+.mission-shell .orbital-signature { display:none; }
+.workspace-nav { display:flex; align-items:start; gap:16px; border-top:1px solid #365064; padding:8px 0; }
+.nav-primary { display:flex; flex-wrap:wrap; gap:4px; flex:1; }
+.workspace-nav a,.nav-more summary { display:block; padding:10px 14px; border-radius:7px; color:#cbdce6; text-decoration:none; cursor:pointer; }
+.workspace-nav a[aria-current=page] { background:#c9e4ed; color:#143343; font-weight:700; }
+.workspace-nav a:hover,.nav-more summary:hover { background:#294355; color:#fff; }
+.nav-more { position:relative; }
+.nav-more>div { position:absolute; right:0; z-index:60; min-width:250px; background:#152a3a; border:1px solid #496275; border-radius:9px; padding:8px; box-shadow:0 12px 28px #0006; }
+.nav-state { display:block; font-size:12px; opacity:.75; }
+.mission-shell main { max-width:1480px; margin-inline:auto; }
+.mission-shell .page-header { margin-block:24px; }
+.mission-shell .page-header h1 { font-size:clamp(27px,3vw,42px); max-width:32ch; }
+.evidence-workbench .explorer-index { display:flex; flex-wrap:wrap; gap:24px; margin:20px 0; }
+.explorer-index a { color:#b4dce9; text-underline-offset:5px; }
+.evidence-workbench .explorer-toolbar { background:#182e3e; border:1px solid #365064; border-radius:12px; padding:18px; margin-bottom:18px; }
+.evidence-workbench .controls { margin:12px 0 0; padding:0; border:0; background:transparent; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
+.evidence-workbench .controls select { width:100%; }
+.evidence-workbench .observatory-view .stage { display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:0; padding:0; overflow:hidden; border:1px solid #365064; border-radius:12px; }
+.evidence-workbench .stage .hud { position:static; width:auto; max-width:none; background:#152a3a; border:0; border-left:1px solid #365064; border-radius:0; padding:24px; z-index:auto; }
+.evidence-workbench .stage .map-stage { height:clamp(380px,55vh,650px); }
+.evidence-workbench .map-readouts { display:grid; gap:12px; margin:20px 0; }
+.map-readouts>div { display:flex; justify-content:space-between; gap:12px; border-top:1px solid #365064; padding-top:10px; }
+.map-readouts dt { font-size:13px; color:#b5cbd8; }
+.map-readouts dd { margin:0; font-weight:700; font-variant-numeric:tabular-nums; }
+.basemap-note { font-size:12px; padding:8px 16px; color:#b5cbd8; }
+.evidence-workbench .map-chrome-dock { padding:14px; }
+.evidence-workbench .mode-switch button { min-height:44px; }
+.maplibregl-ctrl-attrib a { text-decoration:underline !important; }
+.evidence-workbench .evidence-heading { margin-top:32px; }
+.evidence-workbench .vital-signs { margin-block:16px 28px; }
+.evidence-workbench .metric { padding:20px; }
+.evidence-workbench .workspace { margin-block:20px; }
+.evidence-workbench #historial,.evidence-workbench #fuentes,.evidence-workbench #mapa { scroll-margin-top:24px; }
+.mission-shell .nav-entry,.mission-shell .brand,.mission-shell .page-header,.mission-shell .metric { animation:none; }
+.table-wrap:focus-visible { outline:3px solid #95cedf; outline-offset:4px; }
+.mission-shell .demo-banner { margin-inline:0; }
+@media(max-width:1000px) {
+ .evidence-workbench .observatory-view .stage { grid-template-columns:1fr; }
+ .evidence-workbench .stage .hud { border-left:0; border-top:1px solid #365064; }
+ .evidence-workbench .map-readouts { grid-template-columns:repeat(3,1fr); }
+ .map-readouts>div { display:block; }
+ .evidence-workbench .controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:560px) {
+ .workspace-nav { flex-wrap:wrap; gap:0; }
+ .nav-primary { flex-basis:100%; }
+ .workspace-nav a,.nav-more summary { padding:10px; font-size:14px; }
+ .nav-more>div { left:0; right:auto; }
+ .evidence-workbench .controls { grid-template-columns:1fr; }
+ .evidence-workbench .explorer-toolbar { padding:12px; }
+ .evidence-workbench .stage .hud { padding:18px; }
+}
+
+.reference-details { margin-block:24px; border:1px solid #365064; border-radius:10px; padding:18px; }
+.reference-details>summary { cursor:pointer; font-size:18px; font-weight:700; }
+.evidence-workbench .stage .study-map { height:100%; min-height:0; }
+.evidence-workbench .stage .map-shell { min-width:0; }
+.evidence-workbench .stage .hud { align-self:stretch; }
+
+.mission-shell .brand-name { font-size:32px; letter-spacing:-1px; }
+.mission-shell .brand-system { font-size:15px; }
+.mission-shell .brand-purpose { margin:4px 0 0; font-size:12px; }
+.mission-shell .identity-row { padding:0 0 8px; }
+.mission-shell .topbar { min-height:0; }
+.mission-shell .page-header { padding-block:0 12px; margin:18px 0 12px; }
+.mission-shell .page-header h1 { font-size:28px; max-width:none; }
+.observatory>.note { max-width:none; padding:8px 12px; font-size:13px; }
+.evidence-workbench .explorer-toolbar { display:grid; grid-template-columns: minmax(200px,1fr) 3fr; gap:18px; padding:14px; }
+.territory-select label { display:block; font-size:13px; margin-bottom:7px; }
+.territory-select select { width:100%; }
+.territory-select p { font-size:12px; line-height:1.4; margin:8px 0 0; color:#b5cbd8; }
+.evidence-workbench .controls { grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; gap:14px; }
+.evidence-workbench .controls small { font-size:11px; line-height:1.4; }
+.evidence-workbench .observatory-view .map-shell:not(:fullscreen) { display:block; padding:0; }
+.evidence-workbench .observatory-view .map-shell:not(:fullscreen)>.map-chrome-dock { gap:8px; padding:10px; }
+.evidence-workbench .stage .map-stage { height:480px; }
+.evidence-workbench .stage .hud-value { font-size:38px; }
+@media(max-width:1000px) {
+ .evidence-workbench .explorer-toolbar { grid-template-columns:1fr; }
+ .mission-shell .page-header { display:block; }
+}
+@media(max-width:560px) {
+ .evidence-workbench .controls { grid-template-columns:1fr; }
+ .mission-shell .page-header h1 { font-size:25px; }
+ .evidence-workbench .stage .map-stage { height:380px; }
+}
+
+/* Override the former presentation shell with compact application spacing. */
+body.mission-shell .presentation-header.topbar { position:relative; top:auto; padding:0; }
+body.mission-shell .presentation-header .identity-row { min-height:0; padding:14px 20px; }
+body.mission-shell .page-header { padding:16px 0; margin:0 0 12px; gap:20px; }
+body.mission-shell .page-header h1 { font-size:28px; max-width:30ch; opacity:1; transform:none; filter:none; }
+body.mission-shell .page-header .intro p { font-size:14px; }
+body.mission-shell .evidence-workbench .controls { padding:0; background:transparent; border:0; box-shadow:none; border-radius:0; }
+body.mission-shell main { animation:none; }
+@media(max-width:560px) {
+ body.mission-shell .presentation-header .identity-row { padding:12px 0; }
+ body.mission-shell .page-header h1 { font-size:25px; }
+}
+
+body.mission-shell .camera-tools button, body.mission-shell .mode-switch button { min-height:44px; }
+body.mission-shell .maplibregl-ctrl-group button { width:44px; height:44px; }
+
+/* Presentation controls stay inside the fullscreen map. */
+.map-presentation-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; padding:14px; background:#152a3a; border-bottom:1px solid #365064; }
+.map-presentation-controls label { display:grid; gap:5px; font-size:12px; flex:1 1 150px; min-width:0; }
+.map-presentation-controls select { width:100%; min-width:0; min-height:44px; }
+.map-presentation-controls .mode-switch { flex:0 0 auto; }
+.map-presentation-controls .map-opacity { flex:0 1 150px; }
+.map-opacity input { width:100%; accent-color:#9bd6ff; min-height:32px; }
+.map-data-key { position:absolute; top:64px; left:14px; z-index:3; display:grid; gap:7px; width:210px; max-width:calc(100% - 84px); padding:14px; border:1px solid #6d8a9a; border-radius:10px; background:#102331f2; color:#edf6fc; pointer-events:none; font-size:12px; box-shadow:0 4px 14px #0003; }
+.map-data-key strong { font-size:15px; }
+.map-data-key small { font-size:11px; line-height:1.4; color:#c1d4df; }
+.map-color-ramp { height:10px; border-radius:3px; }
+.map-color-ramp.lst { background:linear-gradient(90deg,#2357a6,#ffe9a1,#d43d42); }
+.map-color-ramp.ndvi { background:linear-gradient(90deg,#896a54,#efe3be,#087b53); }
+.map-color-ramp.difference { background:linear-gradient(90deg,#2166ac,#f7f7f7,#b2185b); }
+.map-scale-labels { display:flex; justify-content:space-between; font-variant-numeric:tabular-nums; }
+body.mission-shell .evidence-workbench .stage .map-stage { height:600px; }
+body.mission-shell .map-shell:fullscreen { display:flex; flex-direction:column; padding:0; background:#102331; }
+body.mission-shell .map-shell:fullscreen .map-stage { position:relative; inset:auto; height:auto; flex:1; min-height:0; }
+body.mission-shell .map-shell:fullscreen .study-map { height:100%; min-height:0; }
+body.mission-shell .map-shell:fullscreen .map-presentation-controls { flex-shrink:0; }
+body.mission-shell .map-shell:fullscreen .map-chrome-dock { position:relative; inset:auto; flex-shrink:0; padding:10px; }
+@media(max-width:600px) {
+ body.mission-shell .evidence-workbench .stage .map-stage { height:520px; }
+ .map-data-key { width:175px; gap:4px; padding:10px; }
+ .map-presentation-controls { gap:8px; padding:10px; }
+ .map-presentation-controls label { flex-basis:130px; }
+ body.mission-shell .map-shell:fullscreen { overflow:auto; }
+ body.mission-shell .map-shell:fullscreen .map-stage { min-height:350px; }
+}
+
+body.mission-shell .map-shell:fullscreen .map-chrome-dock { display:flex; flex-wrap:wrap; gap:10px; }
+body.mission-shell .map-shell:fullscreen .map-chrome-dock .map-view-cluster,
+body.mission-shell .map-shell:fullscreen .map-chrome-dock .camera-tools,
+body.mission-shell .map-shell:fullscreen .map-chrome-dock .map-evidence-label { position:static; margin:0; max-width:100%; }
+
+body.mission-shell .map-shell:fullscreen .map-chrome-dock .map-view-cluster,
+body.mission-shell .map-shell:fullscreen .map-chrome-dock .camera-tools,
+body.mission-shell .map-shell:fullscreen .map-chrome-dock .map-evidence-label { width:auto; flex:0 1 auto; }
+body.mission-shell .map-shell:fullscreen .map-chrome-dock { align-items:center; }
+body.mission-shell .map-shell:fullscreen .map-chrome-dock { width:100%; max-width:none; }
+
+.map-climate { position:absolute; z-index:4; top:64px; right:68px; width:300px; max-height:calc(100% - 115px); overflow:auto; padding:14px; border:1px solid #6d8a9a; border-radius:10px; background:#102331f5; color:#edf6fc; font-size:13px; }
+.map-climate summary { cursor:pointer; font-weight:700; line-height:1.4; }
+.map-climate-body { display:grid; gap:10px; padding-top:14px; }
+.map-climate-body p { margin:0; line-height:1.5; }
+.map-climate-body small { color:#c1d4df; line-height:1.4; }
+.map-climate-body a { color:#b4e2ff; text-decoration:underline; }
+.district-indicators { margin-top:14px; display:grid; gap:8px; }
+.district-indicators ul { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.district-indicators li { display:grid; gap:2px; padding-top:8px; border-top:1px solid #365064; }
+.district-indicators li span { font-variant-numeric:tabular-nums; font-weight:700; }
+.district-indicators li small { color:#b5cbd8; line-height:1.4; }
+.climate-readings { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0; }
+.climate-readings dt { color:#c1d4df; font-size:12px; }
+.climate-readings dd { margin:4px 0 0; font-size:20px; font-weight:700; }
+@media(max-width:700px) { .map-climate { top:auto; bottom:38px; left:10px; right:10px; width:auto; max-height:220px; } }
+
+/* Independent floating controls leave the map canvas uninterrupted. */
+body.mission-shell .map-shell { position:relative; }
+body.mission-shell .map-shell .map-presentation-controls { position:absolute; top:14px; left:68px; right:68px; z-index:8; display:flex; gap:8px; align-items:start; padding:0; border:0; background:none; pointer-events:none; }
+body.mission-shell .map-presentation-controls > * { pointer-events:auto; }
+body.mission-shell .map-presentation-controls > button,
+body.mission-shell .map-filter-popover > summary,
+body.mission-shell .map-presentation-controls > .mode-switch { border:1px solid #698898; border-radius:14px; background:#102331f2; color:#eef7ff; box-shadow:0 4px 14px #0004; }
+body.mission-shell .map-presentation-controls > button,
+body.mission-shell .map-filter-popover > summary { padding:12px 16px; min-height:44px; font-size:13px; cursor:pointer; }
+.map-filter-popover { position:relative; }
+.map-filter-popover > div { position:absolute; top:calc(100% + 8px); left:0; width:260px; max-width:calc(100vw - 100px); padding:16px; display:grid; gap:14px; border:1px solid #698898; border-radius:14px; background:#102331; box-shadow:0 10px 24px #0006; }
+.map-filter-popover label { margin:0; }
+.map-color-popover > div { width:200px; left:auto; right:0; }
+body.mission-shell .map-shell .map-chrome-dock { position:absolute; left:14px; right:14px; bottom:42px; top:auto; width:auto; max-width:none; z-index:6; display:flex; flex-wrap:wrap; align-items:end; gap:10px; padding:0; background:none; border:0; box-shadow:none; pointer-events:none; }
+body.mission-shell .map-shell .map-chrome-dock .map-view-cluster,
+body.mission-shell .map-shell .map-chrome-dock .camera-tools { position:static; width:auto; max-width:100%; margin:0; padding:6px; flex:0 1 auto; border:1px solid #698898; border-radius:16px; background:#102331f2; box-shadow:0 4px 14px #0004; pointer-events:auto; }
+body.mission-shell .map-shell .map-chrome-dock .map-evidence-label { display:none; }
+body.mission-shell .evidence-workbench .stage .map-stage { height:760px; }
+body.mission-shell .map-shell:fullscreen .map-stage { flex:1; height:100%; }
+body.mission-shell .map-shell .map-data-key,
+body.mission-shell .map-shell .map-climate { top:90px; max-height:calc(100% - 250px); }
+body.mission-shell .map-shell .cell-inspector { position:absolute; right:14px; bottom:125px; z-index:9; max-height:65%; overflow:auto; }
+@media(max-width:700px) {
+ body.mission-shell .map-shell .map-presentation-controls { left:12px; top:68px; right:12px; gap:6px; }
+ body.mission-shell .map-presentation-controls > button, body.mission-shell .map-filter-popover > summary { padding:10px; font-size:12px; }
+ body.mission-shell .map-shell .map-data-key { top:185px; max-height:230px; overflow:auto; pointer-events:auto; }
+ body.mission-shell .map-shell .map-climate { top:auto; bottom:190px; max-height:220px; }
+ body.mission-shell .map-shell .map-chrome-dock { bottom:36px; left:10px; right:10px; gap:6px; }
+ body.mission-shell .map-shell .camera-tools { flex-wrap:wrap; }
+ body.mission-shell .evidence-workbench .stage .map-stage { height:850px; }
+ .map-filter-popover > div { left:auto; right:0; }
+}
+body.mission-shell .map-shell:fullscreen .map-chrome-dock { position:absolute; left:14px; right:14px; bottom:42px; width:auto; padding:0; background:none; border:0; box-shadow:none; }

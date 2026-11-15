@@ -85,3 +85,25 @@ export function districtBounds(
   if (!Number.isFinite(west)) return null;
   return [west, south, east, north];
 }
+
+/** Approximate WGS84 centroid of the first exterior ring; for weather context only. */
+export function districtCentroid(
+  district: OfficialDistrict,
+): { lng: number; lat: number } | null {
+  const feature = districtFeatureCollection([district]).features[0];
+  if (!feature) return null;
+  const ring =
+    feature.geometry.type === "Polygon"
+      ? feature.geometry.coordinates[0]
+      : feature.geometry.coordinates[0]?.[0];
+  if (!ring || ring.length < 4) return null;
+  let lng = 0;
+  let lat = 0;
+  const count = ring.length - 1;
+  for (let i = 0; i < count; i++) {
+    lng += ring[i][0];
+    lat += ring[i][1];
+  }
+  if (count <= 0) return null;
+  return { lng: lng / count, lat: lat / count };
+}

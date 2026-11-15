@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     gemini_timeout_seconds: float = Field(default=20.0, gt=0, le=60)
     gemini_max_question_chars: int = Field(default=800, ge=50, le=4000)
     gemini_max_context_chars: int = Field(default=12000, ge=1000, le=60000)
-    gemini_max_output_tokens: int = Field(default=600, ge=50, le=4096)
+    gemini_max_output_tokens: int = Field(default=2048, ge=50, le=4096)
     # Upper bound per request; thinking tokens are billed as output.
     gemini_reserve_usd_per_request: float = Field(default=0.02, gt=0, le=1)
     gemini_rate_limit_requests: int = Field(default=10, ge=1, le=1000)

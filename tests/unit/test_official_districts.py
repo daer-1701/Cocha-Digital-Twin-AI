@@ -78,3 +78,28 @@ def test_rejects_non_official_boundary_prefix():
         raise AssertionError("expected OfficialDistrictError")
     except OfficialDistrictError as error:
         assert "gamc-official-" in str(error)
+
+
+def test_official_import_preserves_interior_rings():
+    payload = {"type": "FeatureCollection", "features": [_feature(n) for n in range(1, 16)]}
+    hole = _ring(-66.199, -17.399, -66.198, -17.398)
+    payload["features"][0]["geometry"]["coordinates"][0].append(hole)
+    polygons = parse_official_feature_collection(
+        payload, boundary_version="gamc-official-test", source_url="https://example.invalid/test"
+    )
+    assert polygons[0].holes == ((tuple(tuple(point) for point in hole),),)
+    assert "), (" in polygons[0].as_wkt()
+    assert abs(polygons[0].signed_area() - 0.000015) < 1e-10
+
+
+def test_nonfinite_coordinates_are_rejected():
+    import pytest
+
+    payload = {"type": "FeatureCollection", "features": [_feature(n) for n in range(1, 16)]}
+    payload["features"][0]["geometry"]["coordinates"][0][0][1][0] = float("nan")
+    with pytest.raises(OfficialDistrictError, match="finite"):
+        parse_official_feature_collection(
+            payload,
+            boundary_version="gamc-official-test",
+            source_url="https://example.invalid/test",
+        )

@@ -148,8 +148,27 @@ export const getStationObservations = (id: string, offset = 0) =>
     (b) => isEnvelope(b) && isObject(b) && Array.isArray(b.items) &&
       b.scope === "imported_records_review" && b.analysis_enabled === false,
     5000, reviewerHeaders());
-export const getSeries = () =>
-  getJson<Series>("/v1/series", (b) => isEnvelope(b) && hasArray(b, "items"));
+export const getSeries = (
+  offset = 0,
+  boundaryVersion?: string,
+  filters?: { districtNumber?: number; variable?: string; statistic?: string },
+) => {
+  const query = new URLSearchParams({ limit: "50", offset: String(offset) });
+  if (boundaryVersion) query.set("boundary_version", boundaryVersion);
+  if (filters?.districtNumber != null) {
+    query.set("district_number", String(filters.districtNumber));
+  }
+  if (filters?.variable) query.set("variable", filters.variable);
+  if (filters?.statistic) query.set("statistic", filters.statistic);
+  return getJson<Series>(
+    `/v1/series?${query}`,
+    (b) =>
+      isEnvelope(b) &&
+      hasArray(b, "items") &&
+      isObject(b) &&
+      Array.isArray(b.official_items),
+  );
+};
 export const getTrends = () =>
   getJson<Trends>(
     "/v1/trends",
@@ -207,7 +226,7 @@ export const getAssistantStatus = () =>
   getJson<AssistantStatus>(
     "/v1/assistant",
     (b) =>
-      isEnvelope(b, ["unavailable"]) &&
+      isEnvelope(b, ["available", "unavailable"]) &&
       isObject(b) &&
       typeof b.budget_usd === "number" &&
       typeof b.spent_usd === "number" &&

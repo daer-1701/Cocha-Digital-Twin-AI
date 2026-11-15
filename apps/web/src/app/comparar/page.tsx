@@ -20,11 +20,22 @@ const current = section("/comparar");
 export const metadata: Metadata = { title: current.title };
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
+export default async function Page({ searchParams }: {
+  searchParams: Promise<{ offset?: string | string[]; boundary_version?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const rawOffset = typeof params.offset === "string" ? Number(params.offset) : 0;
+  const offset = Number.isSafeInteger(rawOffset) && rawOffset >= 0 && rawOffset <= 100000 ? rawOffset : 0;
+  const version = typeof params.boundary_version === "string" ? params.boundary_version.slice(0, 100) || undefined : undefined;
+  const pageUrl = (next: number) => `/comparar?${new URLSearchParams({
+    offset: String(next),
+    ...(version ? { boundary_version: version } : {}),
+  })}`;
+
   const [territories, districts, series, trends] = await Promise.all([
     getTerritories(),
-    getDistricts({ includeGeometry: true }),
-    getSeries(),
+    getDistricts({ boundaryVersion: version }),
+    getSeries(offset, version),
     getTrends(),
   ]);
   const demo = mergeDemo(
@@ -34,8 +45,20 @@ export default async function Page() {
     trends.demo,
   );
   const vector = territories.data?.vector_districts;
-  const officialReady =
-    vector?.status === "available" && districts.data?.status === "available";
+  const versions = districts.data?.boundary_versions ?? [];
+  const versionPicker = (
+    <form method="get" className="controls">
+      <label>
+        Límites territoriales
+        <select name="boundary_version" defaultValue={version ?? ""}>
+          <option value="">Seleccionar versión</option>
+          {versions.map((value) => <option key={value} value={value}>{value}</option>)}
+        </select>
+      </label>
+      <button type="submit">Consultar versión</button>
+    </form>
+  );
+  const officialReady = districts.data?.status === "available";
   const reasons = [
     vector?.reason,
     districts.data?.reason,
@@ -61,6 +84,7 @@ export default async function Page() {
           items: reasons,
         }}
       >
+        {versionPicker}
         <section className="panel" aria-labelledby="district-evidence-status">
           <h2 id="district-evidence-status">Resultados distritales</h2>
           <p>
@@ -93,7 +117,7 @@ export default async function Page() {
           aceptadas.
         </p>
         <ServerDetail reason={vector?.reason} />
-        <div className="table-wrap">
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Datos distritales, tabla desplazable">
           <table>
             <caption>Límites oficiales publicados por el servidor</caption>
             <thead>
@@ -116,6 +140,12 @@ export default async function Page() {
         </div>
       </Panel>
 
+      {versionPicker}
+      <nav aria-label="Páginas de indicadores">
+        {offset > 0 && <Link href={pageUrl(Math.max(0, offset - 50))}>Anterior</Link>}
+        {" "}
+        {series.data?.has_more && <Link href={pageUrl(offset + 50)}>Siguiente</Link>}
+      </nav>
       <section className="panel" aria-labelledby="district-indicators-status">
         <h2 id="district-indicators-status">Indicadores por distrito</h2>
         {indicatorsReady ? (
@@ -124,7 +154,7 @@ export default async function Page() {
               Estadísticas zonales aceptadas sobre la versión oficial. LST es
               temperatura de superficie, no del aire.
             </p>
-            <div className="table-wrap">
+            <div className="table-wrap" tabIndex={0} role="region" aria-label="Datos distritales, tabla desplazable">
               <table>
                 <caption>Indicadores oficiales aceptados</caption>
                 <thead>
@@ -174,9 +204,9 @@ export default async function Page() {
             action={<Link href="/">Ver la malla Landsat en el explorador</Link>}
           >
             <p>
-              Los 15 límites oficiales ya están publicados. Todavía no hay
-              LST/NDVI por distrito calculados y aceptados; no se inventan
-              valores ni se muestran rectángulos sintéticos en su lugar.
+              No hay indicadores aceptados en esta página para la versión
+              consultada. Revisa la versión territorial o vuelve a la página
+              anterior si avanzaste en los resultados.
             </p>
             <ServerDetail reason={series.data?.reason} items={reasons} />
           </StatusPanel>

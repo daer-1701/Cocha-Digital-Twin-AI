@@ -30,7 +30,7 @@ export default async function Page({ searchParams }: {
     {!data ? <StatusPanel status="error" title="No se pudo consultar el procesamiento"
       action={<Link href="/procesamiento">Volver a intentar</Link>} /> : <>
       {!data.items?.length ? <StatusPanel status="empty" title="No hay ejecuciones en esta página" /> :
-        <div className="table-wrap"><table>
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos desplazable"><table>
           <caption>Ejecuciones recientes, primero las más nuevas</caption>
           <thead><tr><th>Proceso</th><th>Estado</th><th>Inicio</th><th>Fin</th><th>Referencia</th></tr></thead>
           <tbody>{data.items.map((job) => <tr key={job.id}>

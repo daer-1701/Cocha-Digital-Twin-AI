@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+from datetime import UTC, date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -50,7 +51,16 @@ def _key_configured() -> bool:
     return secret is not None and bool(secret.get_secret_value().strip())
 
 
-def _prices_verified(settings) -> bool:
+def _prices_verified(settings: Settings) -> bool:
+    try:
+        verified = date.fromisoformat(settings.gemini_prices_verified_on or "")
+    except ValueError:
+        return False
+    today = datetime.now(UTC).date()
+    if not 0 <= (today - verified).days <= 30:
+        return False
+    if verified < date(2027, 1, 1) <= today:
+        return False
     return bool(
         settings.gemini_prices_verified_on
         and settings.gemini_prices_source_url
@@ -196,7 +206,14 @@ def ask_assistant(
             {**cached, "request_id": payload.request_id, "cached": True}
         )
 
-    outcome = ledger.reserve(payload.request_id, settings.gemini_reserve_usd_per_request)
+    input_bound = len((SYSTEM_INSTRUCTION + user_prompt).encode("utf-8")) + 1024
+    conservative_cost = (
+        input_bound * (settings.gemini_input_usd_per_million_tokens or 0.0)
+        + settings.gemini_max_output_tokens * (settings.gemini_output_usd_per_million_tokens or 0.0)
+    ) / 1_000_000
+    outcome = ledger.reserve(
+        payload.request_id, max(settings.gemini_reserve_usd_per_request, conservative_cost)
+    )
     if outcome == "duplicate":
         raise HTTPException(status_code=409, detail="request_id is still in progress")
     if outcome == "exceeded":

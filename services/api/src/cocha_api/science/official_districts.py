@@ -8,6 +8,7 @@ operator explicitly labels a non-official review path. Full topology checks
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,6 +38,7 @@ class OfficialPolygon:
     boundary_version: str
     source_url: str
     official_id: str | None = None
+    holes: tuple[tuple[tuple[tuple[float, float], ...], ...], ...] = ()
 
     @property
     def ring(self) -> tuple[tuple[float, float], ...]:
@@ -44,9 +46,13 @@ class OfficialPolygon:
 
     def as_wkt(self) -> str:
         parts = []
-        for ring in self.rings:
+        for index, ring in enumerate(self.rings):
             coords = ", ".join(f"{x:.8f} {y:.8f}" for x, y in ring)
-            parts.append(f"(({coords}))")
+            interiors = self.holes[index] if self.holes else ()
+            encoded = [f"({coords})"]
+            for interior in interiors:
+                encoded.append("(" + ", ".join(f"{x:.8f} {y:.8f}" for x, y in interior) + ")")
+            parts.append("(" + ", ".join(encoded) + ")")
         return f"MULTIPOLYGON({', '.join(parts)})"
 
     def bbox(self) -> tuple[float, float, float, float]:
@@ -55,13 +61,21 @@ class OfficialPolygon:
         return min(xs), min(ys), max(xs), max(ys)
 
     def signed_area(self) -> float:
-        area = 0.0
-        for ring in self.rings:
-            for index in range(len(ring) - 1):
-                x1, y1 = ring[index]
-                x2, y2 = ring[index + 1]
-                area += x1 * y2 - x2 * y1
-        return area / 2.0
+        def area(ring: tuple[tuple[float, float], ...]) -> float:
+            return (
+                abs(
+                    math.fsum(
+                        x1 * y2 - x2 * y1
+                        for (x1, y1), (x2, y2) in zip(ring[:-1], ring[1:], strict=True)
+                    )
+                )
+                / 2
+            )
+
+        return math.fsum(
+            area(ring) - math.fsum(area(hole) for hole in (self.holes[index] if self.holes else ()))
+            for index, ring in enumerate(self.rings)
+        )
 
 
 def _parse_ring(ring_raw: object) -> tuple[tuple[float, float], ...]:
@@ -71,7 +85,13 @@ def _parse_ring(ring_raw: object) -> tuple[tuple[float, float], ...]:
     for point in ring_raw:
         if not isinstance(point, Sequence) or isinstance(point, str) or len(point) < 2:
             raise OfficialDistrictError("Coordinate is invalid")
-        ring.append((float(point[0]), float(point[1])))
+        try:
+            coordinate = (float(point[0]), float(point[1]))
+        except (TypeError, ValueError, OverflowError) as error:
+            raise OfficialDistrictError("Coordinate must be numeric") from error
+        if not all(math.isfinite(value) for value in coordinate):
+            raise OfficialDistrictError("Coordinate must be finite")
+        ring.append(coordinate)
     if ring[0] != ring[-1]:
         raise OfficialDistrictError("Exterior ring must be closed")
     return tuple(ring)
@@ -169,13 +189,24 @@ def parse_official_feature_collection(
         official_id = properties.get("official_id") or properties.get("id")
         if official_id is not None and not isinstance(official_id, str | int):
             raise OfficialDistrictError("official_id must be a string or integer when present")
-        rings = rings_from_geojson(feature.get("geometry"))
+        geometry = feature.get("geometry")
+        rings = rings_from_geojson(geometry)
+        if isinstance(geometry, str):
+            geometry = json.loads(geometry)
+        parts = (
+            [geometry["coordinates"]] if geometry["type"] == "Polygon" else geometry["coordinates"]
+        )
+        holes = tuple(tuple(_parse_ring(ring) for ring in part[1:]) for part in parts)
+        for interiors in holes:
+            for interior in interiors:
+                assert_within_municipal_extent(interior)
         for ring in rings:
             assert_within_municipal_extent(ring)
         polygon = OfficialPolygon(
             number=number,
             name=name.strip(),
             rings=rings,
+            holes=holes,
             boundary_version=boundary_version,
             source_url=source_url,
             official_id=str(official_id) if official_id is not None else None,

@@ -30,7 +30,8 @@ from cocha_api.schemas.explorer import Snapshot
 
 EvidenceKind = Literal["observation", "estimate", "scenario", "demo"]
 ReserveOutcome = Literal["reserved", "duplicate", "exceeded"]
-CITATION = re.compile(r"\[(E\d{1,3})\]")
+# Prefer [E1]; also accept (E1) so a near-miss format still grounds known evidence.
+CITATION = re.compile(r"\[(E\d{1,3})\]|\((E\d{1,3})\)")
 # Arbitrary constant shared by every API host for the budget advisory lock.
 BUDGET_LOCK_KEY = 0x0C0C4A
 
@@ -69,11 +70,12 @@ class TextProvider(Protocol):
 
 SYSTEM_INSTRUCTION = (
     "Eres el asistente de Cocha Digital Twin AI. Responde en español usando solo la "
-    "evidencia numerada. Cita cada afirmación con su identificador, por ejemplo [E1]. "
-    "Si la evidencia no basta, dilo y no completes con conocimiento externo. "
-    "LST es temperatura de superficie terrestre, no temperatura del aire. "
-    "Una asociación no demuestra causalidad. Los datos 'demo' son sintéticos. "
-    "No inventes cifras, límites oficiales ni predicciones."
+    "evidencia numerada del bloque Evidencia. Toda respuesta debe citar al menos un "
+    "identificador con el formato exacto [E1], [E2], etc.; no uses (E1), E1: ni otras "
+    "variantes. Si la evidencia no basta, dilo citando la limitación aplicable. "
+    "No completes con conocimiento externo. LST es temperatura de superficie terrestre, "
+    "no temperatura del aire. Una asociación no demuestra causalidad. Los datos 'demo' "
+    "son sintéticos. No inventes cifras, límites oficiales ni predicciones."
 )
 
 
@@ -138,7 +140,10 @@ def cited_ids(answer: str, evidence: list[EvidenceItem]) -> tuple[list[str], lis
     known = {item.id for item in evidence}
     valid: list[str] = []
     unknown: list[str] = []
-    for match in CITATION.findall(answer):
+    for group in CITATION.findall(answer):
+        match = group[0] or group[1]
+        if not match:
+            continue
         target = valid if match in known else unknown
         if match not in target:
             target.append(match)
@@ -290,7 +295,12 @@ class GeminiHttpProvider:
             {
                 "systemInstruction": {"parts": [{"text": system}]},
                 "contents": [{"role": "user", "parts": [{"text": user}]}],
-                "generationConfig": {"maxOutputTokens": max_output_tokens, "temperature": 0.2},
+                "generationConfig": {
+                    "maxOutputTokens": max_output_tokens,
+                    "temperature": 0.2,
+                    # Leave room for the visible answer after thinking tokens.
+                    "thinkingConfig": {"thinkingBudget": 256},
+                },
             }
         ).encode("utf-8")
         request = urllib.request.Request(
@@ -323,8 +333,17 @@ def parse_generate_content(payload: object) -> Completion:
     parts = content.get("parts") if isinstance(content, dict) else None
     if not isinstance(parts, list):
         raise ProviderFailure("no_parts")
-    texts = [part.get("text") for part in parts if isinstance(part, dict)]
+    # Thinking models may return thought parts first; only visible text answers users.
+    texts = [
+        part.get("text")
+        for part in parts
+        if isinstance(part, dict) and part.get("thought") is not True
+    ]
     answer = "".join(item for item in texts if isinstance(item, str)).strip()
+    if not answer:
+        # Fallback: some payloads omit the thought flag but still interleave scratch text.
+        texts = [part.get("text") for part in parts if isinstance(part, dict)]
+        answer = "".join(item for item in texts if isinstance(item, str)).strip()
     if not answer:
         raise ProviderFailure("empty_answer")
     usage = payload.get("usageMetadata")

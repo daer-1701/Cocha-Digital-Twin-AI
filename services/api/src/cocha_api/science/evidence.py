@@ -9,6 +9,11 @@ from pydantic import ValidationError
 
 from cocha_api.schemas.explorer import Snapshot
 
+
+class EvidenceUnavailableError(RuntimeError):
+    """Published evidence is corrupt or unreadable."""
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +42,7 @@ def read_snapshot(path: Path) -> Snapshot:
 
 
 def load_snapshot(path: Path) -> Snapshot | None:
-    """Return a snapshot, or None when the file is missing or invalid."""
+    """Return a snapshot or None if missing; corrupted evidence is a service error."""
 
     try:
         return read_snapshot(path)
@@ -45,7 +50,7 @@ def load_snapshot(path: Path) -> Snapshot | None:
         return None
     except OSError:
         logger.error("Pilot snapshot could not be read")
-        return None
+        raise EvidenceUnavailableError("Evidence unavailable") from None
     except (ValidationError, json.JSONDecodeError, UnicodeError, ValueError):
         logger.error("Pilot snapshot is invalid")
-        return None
+        raise EvidenceUnavailableError("Evidence unavailable") from None

@@ -32,7 +32,7 @@ export default async function Page({ params, searchParams }: {
       {data.status === "unavailable" ? <StatusPanel status="pending" title="Revisión de registros desactivada">
         <p>El operador debe habilitar la revisión local y confirmar los permisos antes de publicar estos datos.</p>
       </StatusPanel> : !data.items?.length ? <StatusPanel status="empty" title="No hay registros en esta página" /> :
-        <div className="table-wrap"><table>
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos desplazable"><table>
           <caption>PM10 importado, de más reciente a más antiguo. «Sin datos» no equivale a cero.</caption>
           <thead><tr><th>Fecha original, huso no aplicado</th><th>PM10</th><th>Unidad</th><th>Calidad</th><th>Importación</th></tr></thead>
           <tbody>{data.items.map((item) => <tr key={item.id}>

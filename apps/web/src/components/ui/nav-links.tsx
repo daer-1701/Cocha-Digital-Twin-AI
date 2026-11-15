@@ -2,46 +2,36 @@
 
 import Link from "next/link";
 import { useCurrentPathname } from "../../lib/current-pathname";
-import { SECTIONS } from "../../lib/navigation";
-import { motion, useReducedMotion } from "motion/react";
+import { SECTIONS, type Section } from "../../lib/navigation";
+
+const primaryPaths = new Set(["/", "/analisis", "/comparar", "/estaciones", "/informes"]);
+const primary = SECTIONS.filter((section) => primaryPaths.has(section.href));
+const secondary = SECTIONS.filter((section) => !primaryPaths.has(section.href));
 
 export function NavLinks() {
   const pathname = useCurrentPathname();
-  const reduced = useReducedMotion();
+  const entry = (section: Section) => (
+    <Link
+      key={section.href}
+      href={section.href}
+      aria-current={
+        pathname === section.href || (section.href !== "/" && pathname.startsWith(section.href + "/"))
+          ? "page"
+          : undefined
+      }
+    >
+      {section.label}
+      {!section.available && <span className="nav-state">En preparación</span>}
+    </Link>
+  );
+
   return (
-    <nav aria-label="Secciones">
-      <ul className="nav">
-        {SECTIONS.map((s, index) => {
-          const current =
-            pathname === s.href || (s.href !== "/" && pathname.startsWith(`${s.href}/`));
-          return (
-            <li
-              key={s.href}
-              className="nav-entry"
-              style={{ animationDelay: `${120 + index * 70}ms` }}
-            >
-              <Link
-                href={s.href}
-                aria-current={current ? "page" : undefined}
-                className={s.available ? undefined : "nav-pending"}
-              >
-                {current && (
-                  <motion.span
-                    aria-hidden="true"
-                    className="nav-active-surface"
-                    layoutId="active-section"
-                    transition={
-                      reduced ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 34 }
-                    }
-                  />
-                )}
-                {s.label}
-                {!s.available && <span className="sr-only"> (en preparación)</span>}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+    <nav aria-label="Secciones" className="workspace-nav">
+      <div className="nav-primary">{primary.map(entry)}</div>
+      <details className="nav-more" key={pathname}>
+        <summary>Herramientas</summary>
+        <div>{secondary.map(entry)}</div>
+      </details>
     </nav>
   );
 }

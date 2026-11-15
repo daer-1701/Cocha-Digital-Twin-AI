@@ -2,9 +2,7 @@ import Link from "next/link";
 import {
   getDistricts,
   getEvidence,
-  getSeries,
   getTerritories,
-  getTrends,
   mergeDemo,
 } from "../lib/api";
 import {
@@ -26,21 +24,17 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const [{ data, error, demo }, territories, districts, trends, series, params] =
+  const [{ data, error, demo }, territories, districts, params] =
     await Promise.all([
       getEvidence(),
       getTerritories(),
       getDistricts({ includeGeometry: true }),
-      getTrends(),
-      getSeries(),
       searchParams,
     ]);
   const pageDemo = mergeDemo(
     demo,
     territories.demo,
     districts.demo,
-    trends.demo,
-    series.demo,
   );
   const officialDistricts =
     districts.data?.status === "available" ? (districts.data.items ?? []) : [];
@@ -57,10 +51,10 @@ export default async function Home({
     <div className="observatory">
       <DemoBanner state={pageDemo} />
       <PageHeader title="Temperatura superficial y vegetación">
-        <p>Área de estudio de Cochabamba. Adquisiciones, cobertura y fuentes a la vista.</p>
+        <p>Explora una fecha, selecciona una zona y consulta qué sabemos de su superficie.</p>
       </PageHeader>
       {demo === "off" && data?.scenes.length === 12 && data.scenes[0]?.acquired_at.startsWith("2014") && (
-        <p className="note">Paquete local verificado: 12 adquisiciones de julio, 2014–2025.
+        <p className="note">12 adquisiciones de julio entre 2014 y 2025.
           {" "}<Link href="/analisis">Ver análisis estadístico y comprobar los datos</Link>.
           Las cifras del mapa son medias por escena; las pruebas usan píxeles comunes.</p>
       )}
@@ -73,8 +67,6 @@ export default async function Home({
           notices={parsed.notices}
           catalog={territories.data}
           districts={officialDistricts}
-          trends={trends.data}
-          series={series.data}
         />
       ) : error ? (
         <StatusPanel

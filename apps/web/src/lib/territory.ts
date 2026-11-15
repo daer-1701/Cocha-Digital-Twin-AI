@@ -20,11 +20,10 @@ export type TerritoryOption = {
 export const DEFAULT_TERRITORY: TerritoryId = "piloto";
 
 /**
- * Prefer official GAMC districts when the API publishes them.
+ * Open on the pilot where measured values are available.
  * The Landsat cell grid remains available as the pilot study window.
  */
 export function preferredTerritory(available: TerritoryId[]): TerritoryId {
-  if (available.includes("distritos")) return "distritos";
   if (available.includes(DEFAULT_TERRITORY)) return DEFAULT_TERRITORY;
   return available[0] ?? DEFAULT_TERRITORY;
 }
@@ -54,7 +53,7 @@ export function territoryOptions(
       id: "piloto",
       label: evidence.area_name,
       description:
-        "Ventana de estudio Landsat (~360 m por celda). No son distritos municipales. Al hacer clic, la celda se eleva.",
+        "Ventana de estudio Landsat (~360 m por celda). No son distritos municipales. Selecciona una celda para consultar sus valores.",
       available: true,
     },
   ];

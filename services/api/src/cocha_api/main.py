@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from cocha_api.core.config import get_settings
 from cocha_api.core.logging import configure_logging
 from cocha_api.routes import assistant, datasets, domain, explorer, gamc_wms, health, territories
+from cocha_api.science.evidence import EvidenceUnavailableError
 
 
 @asynccontextmanager
@@ -35,6 +36,10 @@ def create_app() -> FastAPI:
         allow_methods=["GET"],
         allow_headers=["Accept"],
     )
+
+    @app.exception_handler(EvidenceUnavailableError)
+    async def evidence_error(request: Request, exc: EvidenceUnavailableError):
+        return JSONResponse(status_code=503, content={"detail": "Evidence unavailable"})
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(request: Request, exc: SQLAlchemyError):

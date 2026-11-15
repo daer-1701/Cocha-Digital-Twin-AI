@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { components } from "@cocha/shared";
+import { MapClimate } from "./map-climate";
 import { CellCombobox } from "./cell-combobox";
 import { ThemeToggle, useTheme } from "./ui/theme-provider";
+import { cellKey } from "../lib/cell-identity";
 import type { Variable } from "../lib/filters";
 import {
   districtBounds,
+  districtCentroid,
   districtFeatureCollection,
   type OfficialDistrict,
 } from "../lib/districts-geojson";
+import {
+  loadDistrictIndicators,
+  type DistrictSeriesResult,
+} from "../app/map-actions";
 import {
   GAMC_BLOCKS_ID,
   GAMC_DISTRICTS_ID,
@@ -82,6 +89,12 @@ const TERRAIN_EXAGGERATION = 1.5;
 const TERRARIUM = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
 const TERRAIN_ATTRIBUTION =
   'Elevación: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles, AWS Open Data</a>';
+/** Esri World Imagery: realistic orthophoto basemap without a project API key. */
+const SATELLITE_TILES =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const SATELLITE_ATTRIBUTION =
+  'Imágenes: <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics';
+type Basemap = "streets" | "satellite";
 const VIEW_3D = { pitch: 55, bearing: -24 };
 /** Cinematic valley entrance: brief hold → slow fly-in with place name → controls. */
 const INTRO_HOLD_MS = 400;
@@ -162,8 +175,16 @@ function mixLight(from: MapLight, to: MapLight, t: number): MapLight {
 }
 
 function paintMapLight(map: maplibregl.Map, light: MapLight) {
-  if (map.getLayer("base")) {
-    map.setPaintProperty("base", "raster-brightness-max", light.brightness);
+  if (map.getLayer("base-streets")) {
+    map.setPaintProperty("base-streets", "raster-brightness-max", light.brightness);
+  }
+  if (map.getLayer("base-satellite")) {
+    // Keep orthophotos readable under the night theme without washing colours out.
+    map.setPaintProperty(
+      "base-satellite",
+      "raster-brightness-max",
+      Math.min(1, 0.55 + light.brightness * 0.45),
+    );
   }
   if (map.getLayer("hillshade")) {
     map.setPaintProperty("hillshade", "hillshade-highlight-color", light.hillshade);
@@ -215,10 +236,7 @@ function reducedMotion(): boolean {
 }
 
 function initialMode(): MapMode {
-  const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
-  // Prefer 3D so cell lift is visible. Reduced motion only calms the lift curve.
-  const weak = (nav.hardwareConcurrency ?? 4) <= 2 || nav.connection?.saveData === true;
-  return weak ? "2d" : "3d";
+  return reducedMotion() ? "2d" : "3d";
 }
 
 function cellFeatures(
@@ -335,11 +353,15 @@ export default function StudyMap({
   synthetic = false,
   placeInfo = false,
   selectedCell = null,
+  referenceScene = null,
+  presentationControls,
   onSelectCell,
   onShellElement,
   onRequestEvidence,
 }: {
   scene: Scene;
+  referenceScene?: Scene | null;
+  presentationControls?: ReactNode;
   variable: Variable;
   bounds: number[];
   territory?: TerritoryId;
@@ -358,6 +380,26 @@ export default function StudyMap({
 }) {
   /** District outlines are context only; the Landsat cell grid + lift stay on. */
   const showDistrictOutlines = territory === "distritos" && districts.length > 0;
+  const [difference, setDifference] = useState(false);
+  const [opacity, setOpacity] = useState(0.85);
+  const differenceActive = difference && referenceScene !== null && !showDistrictOutlines;
+  const referenceCells = useMemo(() => new Map(
+    referenceScene?.cells.map(cell => [cellKey(cell.bounds), cell]) ?? [],
+  ), [referenceScene]);
+  const displayScene = useMemo(() => {
+    if (!differenceActive) return scene;
+    return { ...scene, cells: scene.cells.map(cell => {
+      const before = referenceCells.get(cellKey(cell.bounds))?.[variable];
+      const after = cell[variable];
+      return { ...cell, [variable]: before == null || after == null ? null : after - before };
+    }) };
+  }, [scene, variable, differenceActive, referenceCells]);
+  const displayedValues = useMemo(() => displayScene.cells.map(cell => cell[variable])
+    .filter((value): value is number => value != null && Number.isFinite(value)), [displayScene, variable]);
+  const scaleLimit = variable === "lst" ? 5 : 0.25;
+  const colorScale = useMemo<maplibregl.ExpressionSpecification>(() => differenceActive
+    ? ["interpolate", ["linear"], ["get", "value"], -scaleLimit, "#2166ac", 0, "#f7f7f7", scaleLimit, "#b2185b"]
+    : FILL[variable], [differenceActive, scaleLimit, variable]);
   const municipalBounds = showDistrictOutlines ? districtBounds(districts) : null;
   // When districts are on, frame the municipality so the 15 polygons are visible.
   const viewBounds = (municipalBounds ?? bounds) as [number, number, number, number];
@@ -369,7 +411,7 @@ export default function StudyMap({
   const selectRef = useRef(onSelectCell);
   const [mode, setMode] = useState<MapMode>(initialMode);
   const modeRef = useRef(mode);
-  const introDone = useRef(true);
+  const introDone = useRef(false);
   const introLock = useRef(false);
   const introToken = useRef(0);
   const introTimers = useRef<number[]>([]);
@@ -377,6 +419,10 @@ export default function StudyMap({
   const [intro, setIntro] = useState<IntroState>("done");
   const [titlePhase, setTitlePhase] = useState<TitlePhase>("off");
   const [selectedDistrictName, setSelectedDistrictName] = useState<string | null>(null);
+  const [districtSeries, setDistrictSeries] = useState<
+    DistrictSeriesResult | { status: "loading" } | null
+  >(null);
+  const districtSeriesGen = useRef(0);
   const districtLiftFrame = useRef(0);
   const districtLiftHeight = useRef(0);
   const liftedDistrictIndex = useRef(-1);
@@ -446,6 +492,35 @@ export default function StudyMap({
     };
   }, [theme, loaded, mode]);
   const [baseError, setBaseError] = useState(false);
+  const [contextLost, setContextLost] = useState(false);
+  const [basemap, setBasemap] = useState<Basemap>("streets");
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!loaded || !map) return;
+    setBaseError(false);
+    if (map.getLayer("base-streets")) {
+      map.setLayoutProperty(
+        "base-streets",
+        "visibility",
+        basemap === "streets" ? "visible" : "none",
+      );
+    }
+    if (map.getLayer("base-satellite")) {
+      map.setLayoutProperty(
+        "base-satellite",
+        "visibility",
+        basemap === "satellite" ? "visible" : "none",
+      );
+    }
+    if (map.getLayer("hillshade")) {
+      map.setLayoutProperty("hillshade", "visibility", mode === "3d" ? "visible" : "none");
+      map.setPaintProperty(
+        "hillshade",
+        "hillshade-exaggeration",
+        basemap === "satellite" ? 0.25 : 0.55,
+      );
+    }
+  }, [basemap, loaded, mode]);
   const [initError, setInitError] = useState(false);
   const [orbiting, setOrbiting] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -525,6 +600,8 @@ export default function StudyMap({
   };
   const closeDistrict = () => {
     setSelectedDistrictName(null);
+    setDistrictSeries(null);
+    districtSeriesGen.current += 1;
     animateDistrictHeight(0, () => {
       liftedDistrictIndex.current = -1;
       mapRef.current?.setFilter("district-selected", ["==", ["get", "index"], -1]);
@@ -538,10 +615,13 @@ export default function StudyMap({
     publishPick(null);
     setPlace(null);
     setSelectedDistrictName(district.name);
-    setMode("3d");
+    setDistrictSeries({ status: "loading" });
     const collection = districtFeatureCollection(districts);
-    const feature = collection.features.find(feature => feature.properties.number === district.number);
+    const feature = collection.features.find(
+      (row) => row.properties.number === district.number,
+    );
     if (!feature) return;
+    const threeD = modeRef.current === "3d" && !reducedMotion();
     const raise = () => {
       if (mapRef.current !== map) return;
       (map.getSource("districts") as maplibregl.GeoJSONSource).setData(collection);
@@ -549,17 +629,72 @@ export default function StudyMap({
       map.setFilter("district-selected", ["==", ["get", "index"], feature.properties.index]);
       map.moveLayer("district-selected");
       const box = districtBounds([district]);
-      if (box) map.fitBounds([[box[0], box[1]], [box[2], box[3]]], {
-        padding: 65, pitch: 55, bearing: map.getBearing(), duration: reducedMotion() ? 0 : 1600,
-      });
-      animateDistrictHeight(800);
+      if (box) {
+        map.fitBounds(
+          [
+            [box[0], box[1]],
+            [box[2], box[3]],
+          ],
+          {
+            padding: 65,
+            pitch: threeD ? 55 : 0,
+            bearing: threeD ? map.getBearing() : 0,
+            duration: reducedMotion() ? 0 : threeD ? 900 : 450,
+          },
+        );
+      }
+      if (threeD) animateDistrictHeight(800);
+      else {
+        districtLiftHeight.current = 0;
+        if (map.getLayer("district-selected")) {
+          map.setPaintProperty("district-selected", "fill-extrusion-height", 0);
+        }
+      }
     };
-    if (liftedDistrictIndex.current !== feature.properties.index && districtLiftHeight.current > 0) {
+    if (
+      threeD &&
+      liftedDistrictIndex.current !== feature.properties.index &&
+      districtLiftHeight.current > 0
+    ) {
       animateDistrictHeight(0, raise);
     } else raise();
   };
   useEffect(() => { districtSelectRef.current = selectDistrict; });
   useEffect(() => () => cancelAnimationFrame(districtLiftFrame.current), []);
+
+  const selectedDistrict = selectedDistrictName
+    ? districts.find((district) => district.name === selectedDistrictName) ?? null
+    : null;
+  const selectedCentroid = selectedDistrict
+    ? districtCentroid(selectedDistrict)
+    : null;
+
+  useEffect(() => {
+    if (!selectedDistrict) return;
+    const requestId = ++districtSeriesGen.current;
+    let cancelled = false;
+    loadDistrictIndicators({
+      districtNumber: selectedDistrict.number,
+      boundaryVersion: selectedDistrict.boundary_version,
+    })
+      .then((result) => {
+        if (!cancelled && districtSeriesGen.current === requestId) {
+          setDistrictSeries(result);
+        }
+      })
+      .catch(() => {
+        if (!cancelled && districtSeriesGen.current === requestId) {
+          setDistrictSeries({
+            status: "error",
+            reason: "No se pudo cargar la serie oficial del distrito.",
+            items: [],
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDistrict]);
 
 
   const lookup = (lng: number, lat: number) => {
@@ -643,6 +778,12 @@ export default function StudyMap({
               tileSize: 256,
               attribution: "© OpenStreetMap contributors",
             },
+            satellite: {
+              type: "raster",
+              tiles: [SATELLITE_TILES],
+              tileSize: 256,
+              attribution: SATELLITE_ATTRIBUTION,
+            },
             dem: {
               type: "raster-dem",
               tiles: [TERRARIUM],
@@ -670,14 +811,22 @@ export default function StudyMap({
           },
           layers: [
             {
-              id: "base",
+              id: "base-streets",
               type: "raster",
               source: "osm",
               paint: { "raster-saturation": -0.85, "raster-brightness-max": 0.62 },
             },
             {
+              id: "base-satellite",
+              type: "raster",
+              source: "satellite",
+              layout: { visibility: "none" },
+              paint: { "raster-saturation": 0, "raster-brightness-max": 1 },
+            },
+            {
               id: "hillshade",
               type: "hillshade",
+              layout: { visibility: "none" },
               source: "shade",
               paint: {
                 "hillshade-exaggeration": 0.55,
@@ -688,6 +837,7 @@ export default function StudyMap({
             },
           ],
         },
+        locale: { "NavigationControl.ZoomIn": "Acercar", "NavigationControl.ZoomOut": "Alejar", "NavigationControl.ResetBearing": "Orientar al norte", "AttributionControl.ToggleAttribution": "Mostrar fuentes" },
         doubleClickZoom: false,
         maxZoom: 16,
         maxPitch: 78,
@@ -696,6 +846,11 @@ export default function StudyMap({
       queueMicrotask(() => setInitError(true));
       return;
     }
+    map.on("webglcontextlost", () => { setContextLost(true); setOrbiting(false); });
+    map.on("webglcontextrestored", () => setContextLost(false));
+    map.on("movestart", (event) => { if (event.originalEvent) setOrbiting(false); });
+
+    map.getCanvas().setAttribute("aria-label", "Mapa de observaciones");
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
     map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
     map.on("error", (event: maplibregl.ErrorEvent & { sourceId?: string }) => {
@@ -743,7 +898,7 @@ export default function StudyMap({
         type: "fill",
         source: "evidence",
         // Tiny opacity keeps the layer queryable for click-to-lift.
-        paint: { "fill-color": "#000000", "fill-opacity": 0.01 },
+        paint: { "fill-color": FILL.lst, "fill-opacity": 0.65 },
       });
       map.addLayer({
         id: "cell-borders",
@@ -751,8 +906,8 @@ export default function StudyMap({
         source: "evidence",
         paint: {
           "line-color": "#e8f4fa",
-          "line-width": 1.5,
-          "line-opacity": 0.92,
+          "line-width": 0.7,
+          "line-opacity": 0.5,
         },
       });
       // Official outlines above the cell grid so the 15 districts stay readable.
@@ -830,7 +985,7 @@ export default function StudyMap({
         if (!Number.isFinite(index)) return;
         setOrbiting(false);
         // Cell lift is a 3D extrusion — switch out of flat 2D when picking.
-        if (modeRef.current === "2d") setMode("3d");
+        // Preserve the chosen view; selection also works in 2D.
         const next = { sceneId: sceneRef.current, index };
         if (selectRef.current) selectRef.current(next);
         else
@@ -858,7 +1013,7 @@ export default function StudyMap({
         });
         if (index >= 0) {
           setOrbiting(false);
-          if (modeRef.current === "2d") setMode("3d");
+          // Preserve the chosen view; selection also works in 2D.
           const next = { sceneId: sceneRef.current, index };
           if (selectRef.current) selectRef.current(next);
           else setInternalPick(next);
@@ -950,15 +1105,19 @@ export default function StudyMap({
     const map = mapRef.current;
     if (!loaded || !map) return;
     (map.getSource("evidence") as maplibregl.GeoJSONSource).setData(
-      cellFeatures(scene, variable),
+      cellFeatures(displayScene, variable),
     );
     (map.getSource("evidence-3d") as maplibregl.GeoJSONSource).setData(
-      cellFeatures(scene, variable, 0.06),
+      cellFeatures(displayScene, variable, 0.06),
     );
-    map.setPaintProperty("cells", "fill-color", FILL[variable]);
-    map.setPaintProperty("cells", "fill-opacity", 0.01);
-    map.setPaintProperty("selected-lift", "fill-extrusion-color", FILL[variable]);
-  }, [loaded, scene, variable]);
+    map.setPaintProperty("cells", "fill-color", colorScale);
+    map.setPaintProperty("selected-lift", "fill-extrusion-color", colorScale);
+  }, [loaded, displayScene, variable, colorScale]);
+
+  useEffect(() => {
+    if (!loaded || !mapRef.current) return;
+    mapRef.current.setPaintProperty("cells", "fill-opacity", showDistrictOutlines ? 0.01 : opacity);
+  }, [loaded, showDistrictOutlines, opacity]);
 
   const clearIntroTimers = () => {
     for (const id of introTimers.current) window.clearTimeout(id);
@@ -982,8 +1141,6 @@ export default function StudyMap({
     setIntro("done");
   };
 
-  // Retained for the explicit entrance control only.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const playIntro = (map: maplibregl.Map) => {
     clearIntroTimers();
     const token = ++introToken.current;
@@ -1074,9 +1231,12 @@ export default function StudyMap({
       else map.easeTo({ ...flat, duration: 1200 });
       return;
     }
+    if (!introDone.current) { playIntro(map); return; }
     // Normal view settles without an automatic cinematic sequence.
     if (reducedMotion()) map.jumpTo(VIEW_3D);
     else map.easeTo({ ...VIEW_3D, duration: 1200 });
+  // Camera lifecycle intentionally reacts to view changes, not callback identity.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, mode, west, south, east, north, showDistrictOutlines]);
 
   // Skip with Escape or map interaction while the entrance is playing.
@@ -1121,14 +1281,14 @@ export default function StudyMap({
     };
     frame = requestAnimationFrame(tick);
     const canvas = map.getCanvas();
-    canvas.addEventListener("pointerdown", stop);
+    map.getContainer().addEventListener("pointerdown", stop, true);
     canvas.addEventListener("wheel", stop);
     canvas.addEventListener("keydown", stop);
     document.addEventListener("visibilitychange", visibility);
     motion.addEventListener("change", stop);
     return () => {
       cancelAnimationFrame(frame);
-      canvas.removeEventListener("pointerdown", stop);
+      map.getContainer().removeEventListener("pointerdown", stop, true);
       canvas.removeEventListener("wheel", stop);
       canvas.removeEventListener("keydown", stop);
       document.removeEventListener("visibilitychange", visibility);
@@ -1150,6 +1310,8 @@ export default function StudyMap({
     }
   };
 
+  // Retained as an optional cinematic sequence; presentations open immediately.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const playFsCinema = (map: maplibregl.Map) => {
     clearFsTimers();
     const token = ++fsToken.current;
@@ -1213,7 +1375,18 @@ export default function StudyMap({
       mapRef.current?.resize();
       // Cinema only when entering fullscreen — never on exit.
       if (entering && mapRef.current) {
-        playFsCinema(mapRef.current);
+        setOrbiting(false);
+        setFsCinema("done");
+        requestAnimationFrame(() => {
+          const map = mapRef.current;
+          if (!map || document.fullscreenElement !== shell.current) return;
+          map.resize();
+          map.fitBounds([[west, south], [east, north]], {
+            padding: window.innerWidth > 800 ? { top: 50, bottom: 50, left: 260, right: 80 } : 55,
+            duration: 0,
+            pitch: modeRef.current === "3d" ? VIEW_3D.pitch : 0,
+          });
+        });
       } else if (leaving) {
         endFsCinema(true);
         setFsCinema("idle");
@@ -1222,13 +1395,14 @@ export default function StudyMap({
     document.addEventListener("fullscreenchange", changed);
     const observer = new ResizeObserver(() => mapRef.current?.resize());
     if (shell.current) observer.observe(shell.current);
+    if (container.current) observer.observe(container.current);
     return () => {
       document.removeEventListener("fullscreenchange", changed);
       observer.disconnect();
       clearFsTimers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [west, south, east, north]);
 
   useEffect(() => {
     if (!fsActive) return;
@@ -1521,7 +1695,54 @@ export default function StudyMap({
       data-intro-title={titlePhase}
       data-fs-cinema={fsCinema}
     >
+      <div className="map-presentation-controls">
+        <button type="button" disabled={!loaded || introPlaying} onClick={() => {
+          introDone.current = false;
+          if (mode === "3d" && mapRef.current) playIntro(mapRef.current);
+          else setMode("3d");
+        }}>Ver introducción</button>
+        <details className="map-filter-popover"><summary>Fechas y variable</summary>
+          <div>{presentationControls}</div>
+        </details>
+        <div className="mode-switch" role="group" aria-label="Representación de los datos">
+          <button type="button" aria-pressed={!differenceActive} onClick={() => setDifference(false)}>Valores</button>
+          <button type="button" aria-pressed={differenceActive} disabled={!referenceScene || showDistrictOutlines}
+            onClick={() => setDifference(true)}>Diferencias</button>
+        </div>
+        <details className="map-filter-popover map-color-popover"><summary>Color</summary>
+        <div><label className="map-opacity">Intensidad del color
+          <input aria-label="Intensidad del color" type="range" min="0.2" max="1" step="0.05"
+            value={opacity} onChange={event => setOpacity(Number(event.target.value))} />
+        </label></div></details>
+      </div>
       <div className="map-stage">
+        <MapClimate
+          district={
+            selectedDistrict && selectedCentroid
+              ? {
+                  number: selectedDistrict.number,
+                  name: selectedDistrict.name,
+                  boundaryVersion: selectedDistrict.boundary_version,
+                  latitude: selectedCentroid.lat,
+                  longitude: selectedCentroid.lng,
+                }
+              : null
+          }
+        />
+        {!showDistrictOutlines && <aside className="map-data-key" aria-label="Leyenda de datos del mapa">
+          <strong>{differenceActive ? "Diferencia de " : ""}{variable === "lst" ? "LST · °C" : "NDVI · sin unidad"}</strong>
+          <span>{scene.acquired_at.slice(0, 10)}{differenceActive && referenceScene ? ` menos ${referenceScene.acquired_at.slice(0, 10)}` : ""}</span>
+          <div className={`map-color-ramp ${differenceActive ? "difference" : variable}`} />
+          <div className="map-scale-labels"><span>{differenceActive ? `−${scaleLimit}` : variable === "lst" ? "0" : "−1"}</span>
+            <span>{differenceActive ? "0" : variable === "lst" ? "25" : "0"}</span>
+            <span>{differenceActive ? `+${scaleLimit}` : variable === "lst" ? "50" : "1"}</span></div>
+          <small>{differenceActive ? "Azul: disminución · rosa: aumento" : "Escala fija para todas las fechas"}. Extremos saturados.</small>
+          <span>{displayedValues.length} / {scene.cells.length} celdas con datos</span>
+          {displayedValues.length > 0 && <span>Rango: {Math.min(...displayedValues).toFixed(variable === "lst" ? 1 : 3)} a {Math.max(...displayedValues).toFixed(variable === "lst" ? 1 : 3)}</span>}
+          <small>{differenceActive ? "Diferencia descriptiva; puede variar el soporte válido. No demuestra tendencia ni causalidad." : "Landsat · LST no es temperatura del aire."} {synthetic ? "Datos sintéticos." : ""}</small>
+          {differenceActive && displayedValues.length === 0 && <strong>Sin celdas coincidentes con datos</strong>}
+        </aside>}
+
         <div
           ref={container}
           className="study-map"
@@ -1596,6 +1817,24 @@ export default function StudyMap({
               }}
             >
               2D
+            </button>
+          </div>
+          <div className="mode-switch" role="group" aria-label="Fondo del mapa">
+            <button
+              type="button"
+              aria-pressed={basemap === "streets"}
+              disabled={!loaded || introPlaying || fsActive}
+              onClick={() => setBasemap("streets")}
+            >
+              Calles
+            </button>
+            <button
+              type="button"
+              aria-pressed={basemap === "satellite"}
+              disabled={!loaded || introPlaying || fsActive}
+              onClick={() => setBasemap("satellite")}
+            >
+              Satélite
             </button>
           </div>
           {mode === "3d" && (
@@ -1678,7 +1917,9 @@ export default function StudyMap({
           <span>
             {showDistrictOutlines
               ? `${districts.length} polígonos`
-              : variable === "lst"
+              : differenceActive
+                ? `Diferencia: ±${scaleLimit}${variable === "lst" ? " °C" : " NDVI"}`
+                : variable === "lst"
                 ? "LST 0–50 °C"
                 : "NDVI −1 a 1"}
           </span>
@@ -1686,7 +1927,7 @@ export default function StudyMap({
             <small>
               {showDistrictOutlines
                 ? "Polígonos municipales reales. Sin LST/NDVI distrital inventado."
-                : "Malla Landsat (no distritos); al seleccionar, la celda sube."}
+                : "Selecciona una celda para consultar sus datos."}
             </small>
           )}
         </div>
@@ -1694,16 +1935,56 @@ export default function StudyMap({
       {!loaded && <p className="map-loading" role="status">Preparando el relieve y las observaciones…</p>}
       {fullscreenError && <p className="map-warning" role="status">El navegador no permite pantalla completa en esta ventana.</p>}
       <AnimatePresence>
-      {selectedDistrictName && <motion.aside key="district-info" className="district-selection-info" aria-live="polite"
+      {selectedDistrict && <motion.aside key="district-info" className="district-selection-info" aria-live="polite"
         initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: reduceMotion ? 0 : 8 }} transition={{ duration: reduceMotion ? 0 : .3 }}>
-        <div className="selection-heading"><span className="selection-kind">Distrito municipal</span><strong>{selectedDistrictName}</strong></div>
+        <div className="selection-heading">
+          <span className="selection-kind">Distrito municipal {selectedDistrict.number}</span>
+          <strong>{selectedDistrict.name}</strong>
+        </div>
         <InfoFields items={[
-          ["Fuente", "GAMC"],
-          ["Versión del límite", districts.find((district) => district.name === selectedDistrictName)?.boundary_version],
-          ["Comuna", place?.status === "ready" ? place.district?.Comuna : null],
+          ["Número", selectedDistrict.number],
+          ["Fuente del límite", selectedDistrict.source_url],
+          ["Versión territorial", selectedDistrict.boundary_version],
+          ["Comuna (WMS)", place?.status === "ready" ? place.district?.Comuna : null],
         ]} />
-        <small className="cell-inspector-note">La elevación destaca el perímetro seleccionado.</small>
+        <div className="district-indicators">
+          <strong>Indicadores oficiales aceptados</strong>
+          {!districtSeries || districtSeries.status === "loading" ? (
+            <p role="status">Consultando /v1/series…</p>
+          ) : districtSeries.status === "error" ? (
+            <p role="status">{districtSeries.reason}</p>
+          ) : districtSeries.status === "unavailable" || districtSeries.items.length === 0 ? (
+            <p role="status">
+              {districtSeries.reason || "Todavía no hay estadísticas zonales aceptadas para este polígono."}
+              {" "}La media Landsat de la ventana piloto no se muestra aquí como medición distrital.
+            </p>
+          ) : (
+            <ul>
+              {districtSeries.items.map((row) => (
+                <li key={`${row.variable}-${row.statistic}-${row.period_start}-${row.period_end}`}>
+                  <strong>{row.variable}</strong> · {row.statistic}
+                  <span>
+                    {row.value == null ? "sin dato" : `${row.value} ${row.units ?? ""}`.trim()}
+                  </span>
+                  <small>
+                    {row.period_start}–{row.period_end}
+                    {row.valid_fraction != null
+                      ? ` · cobertura válida ${(row.valid_fraction * 100).toFixed(0)}%`
+                      : ""}
+                    {row.n != null ? ` · n=${row.n}` : ""}
+                    {row.provenance && typeof row.provenance.product === "string"
+                      ? ` · ${row.provenance.product}`
+                      : ""}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <small className="cell-inspector-note">
+          La selección funciona en 2D y 3D. El resalte marca el polígono; los valores solo aparecen si hay filas aceptadas en la API.
+        </small>
         <button type="button" onClick={closeDistrict}>Cerrar selección</button>
       </motion.aside>}
       </AnimatePresence>
@@ -1753,7 +2034,7 @@ export default function StudyMap({
                 <span>Valor de celda · no es la media territorial</span>
               </p>
               <dl className="cell-inspector-metrics">
-                {inspected.lst != null && <div className="metric-lst">
+                {<div className="metric-lst">
                   <dt>LST</dt>
                   <dd>
                     {inspected.lst == null
@@ -1761,7 +2042,7 @@ export default function StudyMap({
                       : `${inspected.lst.toFixed(1)} °C`}
                   </dd>
                 </div>}
-                {inspected.ndvi != null && <div className="metric-ndvi">
+                {<div className="metric-ndvi">
                   <dt>NDVI</dt>
                   <dd>
                     {inspected.ndvi == null
@@ -1770,6 +2051,13 @@ export default function StudyMap({
                   </dd>
                 </div>}
               </dl>
+              {differenceActive && <p className="cell-difference">
+                Diferencia de {variable === "lst" ? "LST" : "NDVI"}: {(() => {
+                  const before = referenceCells.get(cellKey(inspected.bounds))?.[variable];
+                  const after = inspected[variable];
+                  return before == null || after == null ? "Sin datos comparables" : `${after - before > 0 ? "+" : ""}${(after - before).toFixed(variable === "lst" ? 1 : 3)}${variable === "lst" ? " °C" : ""}`;
+                })()}
+              </p>}
               <dl className="cell-inspector-facts">
                 <div>
                   <dt>Naturaleza</dt>
@@ -1854,6 +2142,8 @@ export default function StudyMap({
           <button type="button" onClick={showCoverage}>Ir a la cobertura</button>
         </p>
       )}
+      {contextLost && <p className="map-warning" role="alert">Se perdió el contexto gráfico. Consulta la tabla de observaciones o recarga el mapa.</p>}
+      {basemap === "satellite" && <p className="basemap-note">Fondo Esri de referencia: su fecha puede diferir de la adquisición Landsat seleccionada.</p>}
       {baseError && (
         <p className="map-warning" role="status">
           No se pudo cargar parte del mapa. La tabla sigue disponible.

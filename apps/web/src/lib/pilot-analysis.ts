@@ -1,5 +1,5 @@
 import "server-only";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import type { Evidence } from "./api";
@@ -18,6 +18,9 @@ export type PilotAnalysis = {
   manifest_sha256: string;
 };
 
+type Package = { evidence: Evidence; analysis: PilotAnalysis };
+let cached: { key: string; value: Package } | undefined;
+
 export async function getPilotPackage(): Promise<{
   evidence: Evidence; analysis: PilotAnalysis;
 } | null> {
@@ -31,6 +34,13 @@ export async function getPilotPackage(): Promise<{
       if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
       throw new Error("No se pudo validar el paquete científico local.");
     }
+    const names = ["checksums.json", "analysis.json", "explorer.json", "manifest.json", "series.csv", "trends.png"];
+    const revisions = await Promise.all(names.map(async name => {
+      const info = await stat(/* turbopackIgnore: true */ path.join(/* turbopackIgnore: true */ root, name));
+      return `${name}:${info.mtimeMs}:${info.ctimeMs}:${info.size}`;
+    }));
+    const key = root + revisions.join("|");
+    if (cached?.key === key) return cached.value;
     const readVerified = async (name: string) => {
       // Public assets are copied explicitly by the Dockerfile, not traced as server code.
       const bytes = await readFile(/* turbopackIgnore: true */ path.join(/* turbopackIgnore: true */ root, name));
@@ -50,7 +60,9 @@ export async function getPilotPackage(): Promise<{
         !analysis.series.every((row) => Number.isFinite(row.lst_celsius) &&
           Number.isFinite(row.ndvi) && evidence.scenes.some((s) => s.id === row.scene_id)))
       throw new Error("Paquete científico incompleto.");
-    return { analysis, evidence };
+    const value = { analysis, evidence };
+    cached = { key, value };
+    return value;
   }
   return null;
 }

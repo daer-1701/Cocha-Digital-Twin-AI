@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { Evidence, PilotTrend, Series, Territories, Trends } from "../lib/api";
+import type { Evidence, Territories } from "../lib/api";
 import type { OfficialDistrict } from "../lib/districts-geojson";
 import { findMatchingCellIndex } from "../lib/cell-identity";
 import { useCurrentPathname } from "../lib/current-pathname";
@@ -30,7 +30,6 @@ import { TerritorySelector } from "./territory-selector";
 import { VariableSwitch } from "./variable-switch";
 import { NatureBadge } from "./ui/nature-badge";
 import { Panel } from "./ui/panel";
-import { ServerDetail } from "./ui/server-detail";
 import { SignalGauge } from "./ui/signal-gauge";
 import { StatusPanel } from "./ui/status-panel";
 const format = (value: number | null | undefined, digits = 2) =>
@@ -39,78 +38,6 @@ const format = (value: number | null | undefined, digits = 2) =>
 type CopyState = "idle" | "copied" | "failed";
 type CellSelection = { sceneId: string; index: number; bounds: [number, number, number, number] };
 
-function PilotSlope({ item, variable }: { item: PilotTrend; variable: Variable }) {
-  const lst = variable === "lst";
-  const label = lst ? "LST" : "NDVI";
-  const counts = `${item.n_finite} escenas con valor; mínimo requerido: ${item.min_n}.`;
-  if (item.status === "inconclusive" || item.slope_per_step == null)
-    return (
-      <div className="pilot-slope">
-        <p>
-          Pendiente descriptiva del {label} en la área de estudio: no concluyente. {counts}
-        </p>
-        <ServerDetail reason={item.note} />
-      </div>
-    );
-  const slope = item.slope_per_step;
-  const value = `${slope > 0 ? "+" : slope < 0 ? "−" : ""}${Math.abs(slope).toFixed(lst ? 2 : 3)}`;
-  return (
-    <div className="pilot-slope">
-      <p>
-        Pendiente descriptiva del {label} en la área de estudio:{" "}
-        <strong>
-          {value}
-          {lst ? " °C" : ""}
-        </strong>{" "}
-        por escena, en orden de adquisición. {counts}
-      </p>
-      <p className="caption">
-        Resume las fechas disponibles con una recta; no es una tendencia por
-        distrito, no tiene escala temporal anual y no publica significancia ni
-        causas.
-      </p>
-      <ServerDetail reason={item.note} />
-    </div>
-  );
-}
-
-function TrendStatus({ trends, variable }: { trends: Trends | null; variable: Variable }) {
-  if (!trends)
-    return <p>No se pudo consultar en el servidor si hay tendencias publicadas.</p>;
-  const text = {
-    unavailable:
-      "Por distrito, todavía no. El servidor no publica tendencias: hace falta una serie más larga y comparable por distrito, tratando la estacionalidad y la autocorrelación.",
-    empty: "El servidor no tiene tendencias por distrito calculadas para esta área.",
-    available:
-      "El servidor publicó tendencias por distrito, pero esta vista todavía no las muestra.",
-  }[trends.status];
-  const key = variable === "lst" ? "lst_mean" : "ndvi_mean";
-  const pilot = trends.pilot_trends?.find((item) => item.variable === key);
-  return (
-    <>
-      <p>{text}</p>
-      <ServerDetail reason={trends.reason} />
-      {pilot && <PilotSlope item={pilot} variable={variable} />}
-    </>
-  );
-}
-
-function SeriesStatus({ series }: { series: Series | null }) {
-  const text = !series
-    ? "No se pudo consultar el estado de las series por distrito."
-    : {
-        unavailable: "Series por distrito: todavía no disponibles en el servidor.",
-        empty: "Series por distrito: el servidor no tiene registros.",
-        available: "Series por distrito: publicadas, pendientes de integrar en esta vista.",
-      }[series.status];
-  return (
-    <div className="series-status">
-      <p className="caption">{text}</p>
-      <ServerDetail reason={series?.reason} />
-    </div>
-  );
-}
-
 export function Explorer({
   evidence,
   synthetic,
@@ -118,8 +45,6 @@ export function Explorer({
   notices,
   catalog,
   districts,
-  trends,
-  series,
 }: {
   evidence: Evidence;
   synthetic: boolean;
@@ -127,8 +52,6 @@ export function Explorer({
   notices: string[];
   catalog: Territories | null;
   districts: OfficialDistrict[];
-  trends: Trends | null;
-  series: Series | null;
 }) {
   const pathname = useCurrentPathname();
   const [filters, setFilters] = useState(initial);
@@ -271,115 +194,19 @@ export function Explorer({
   };
 
   return (
-    <>
-      <div className="observatory-view" data-layer-phase={layerPhase}>
-        {!curtain ? (
-          <section className="stage" aria-label={`Valle de Cochabamba, ${date}`}>
-            <StudyMap
-              scene={scene}
-              variable={displayVariable}
-              bounds={evidence.bounds}
-              territory={filters.territory}
-              districts={districts}
-              overlays={overlays}
-              onOverlayError={overlayFailed}
-              synthetic={synthetic}
-              placeInfo={placeInfo}
-              selectedCell={
-                mapSelectedCell?.sceneId === scene.id ? mapSelectedCell : null
-              }
-              onSelectCell={onPickCell}
-              onShellElement={setMapShell}
-              onRequestEvidence={() => {
-                if (!activePicked || !picked) return;
-                openEvidence({
-                  kind: "cell",
-                  scene,
-                  cell: activePicked,
-                  cellIndex: picked.index,
-                  variable: displayVariable,
-                });
-              }}
-            />
-            <div className="hud">
-              <div className="hud-context">
-                <span className="observatory-mark" aria-hidden="true" />
-                {showDistrictOutlines
-                  ? `${districts.length} distritos oficiales GAMC`
-                  : "Ventana piloto Landsat (no son distritos)"}
-              </div>
-              <VariableSwitch value={variable} onChange={changeVariable} />
-              <p className="hud-date">
-                <time dateTime={scene.acquired_at}>{date}</time>, {scene.platform}
-              </p>
-              <p className="hud-value" data-variable={displayVariable}>
-                {mean == null ? "Sin datos" : mean.toFixed(lst ? 1 : 3)}
-                {mean != null && lst && <small> °C</small>}
-              </p>
-              <p className="hud-label">
-                {lst ? "Temperatura superficial media" : "NDVI medio"} de los
-                píxeles válidos
-              </p>
-              <div className="legend">
-                <span>{lst ? "0 °C" : "−1"}</span>
-                <div className={lst ? "gradient heat" : "gradient green"} />
-                <span>{lst ? "50 °C" : "1"}</span>
-              </div>
-              <details className="hud-method">
-                <summary>Cómo leer el mapa</summary>
-                <p className="hud-note">
-                  {showDistrictOutlines
-                    ? "Se dibujan los 15 polígonos oficiales del GAMC (límites irregulares reales). La cuadrícula blanca de celdas Landsat queda oculta aquí para no confundirla con distritos. Sin LST/NDVI distrital inventado."
-                    : "La malla blanca es la ventana de estudio Landsat (~360 m por celda), no distritos municipales. Al seleccionar una celda sube con color."}
-                </p>
-              </details>
-              <EvidenceTrigger
-                onClick={() =>
-                  openEvidence({ kind: "scene", scene, variable: displayVariable })
-                }
-              />
-            </div>
-          </section>
-        ) : compared ? (
-          <CompareCurtain
-            left={scene}
-            right={compared}
-            variable={displayVariable}
-            bounds={evidence.bounds}
-            synthetic={synthetic}
-            onExit={() => setCurtain(false)}
-          />
-        ) : (
-          <StatusPanel status="empty" title="Falta la segunda adquisición">
-            <p>Elige una fecha en «Comparar con» para abrir la cortina espacial.</p>
-            <button type="button" onClick={() => setCurtain(false)}>
-              Volver al mapa
-            </button>
-          </StatusPanel>
-        )}
-        {!curtain && (
-          <SceneTimeline
-            scenes={evidence.scenes}
-            selectedId={scene.id}
-            onSelect={(sceneId) => update({ sceneId })}
-          />
-        )}
-      </div>
-      {selectionNote && (
-        <p className="selection-status" role="status">
-          {selectionNote}
-        </p>
-      )}
-      {notices.length > 0 && (
-        <div className="link-notice" role="status">
-          <p>Algunos filtros del enlace no se pudieron aplicar:</p>
-          <ul>
-            {notices.map((notice) => (
-              <li key={notice}>{notice}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+    <div className="evidence-workbench">
+      <nav className="explorer-index" aria-label="En esta página"><a href="#mapa">Explorar el mapa</a><a href="#historial">Comparar fechas</a><a href="#fuentes">Fuentes y límites</a></nav>
+      <div className="explorer-toolbar">
+        <TerritorySelector
+          options={territoryOptions(evidence, catalog)}
+          value={filters.territory}
+          onChange={(territory) => {
+            setPicked(null);
+            setSelectionNote(null);
+            setCurtain(false);
+            update({ territory });
+          }}
+        />
       <section className="controls" aria-label="Filtros">
         <div className="field">
           <label htmlFor="scene">Fecha de adquisición</label>
@@ -433,17 +260,6 @@ export function Explorer({
           )}
         </div>
         <div className="field">
-          <label htmlFor="variable">Variable</label>
-          <select
-            id="variable"
-            value={variable}
-            onChange={(e) => changeVariable(e.target.value as Variable)}
-          >
-            <option value="lst">Temperatura superficial (LST)</option>
-            <option value="ndvi">Índice de vegetación (NDVI)</option>
-          </select>
-        </div>
-        <div className="field">
           <span className="field-label">Compartir</span>
           <button type="button" onClick={copyLink}>
             Copiar enlace a esta vista
@@ -460,6 +276,134 @@ export function Explorer({
           </Link>
         </div>
       </section>
+      </div>
+      <div id="mapa" className="observatory-view" data-layer-phase={layerPhase}>
+        {!curtain ? (
+          <section className="stage" aria-label={`Valle de Cochabamba, ${date}`}>
+            <StudyMap
+              scene={scene}
+              referenceScene={compared ?? null}
+              presentationControls={<>
+                <label>Fecha del mapa<select aria-label="Fecha del mapa" value={scene.id} onChange={event => update({ sceneId: event.target.value })}>
+                  {evidence.scenes.map(item => <option key={item.id} value={item.id}>{item.acquired_at.slice(0, 10)}</option>)}
+                </select></label>
+                <label>Fecha de referencia<select aria-label="Fecha de referencia" value={compared?.id ?? ""} onChange={event => update({ compareId: event.target.value })}>
+                  <option value="">Selecciona para ver cambios</option>
+                  {evidence.scenes.filter(item => item.id !== scene.id).map(item => <option key={item.id} value={item.id}>{item.acquired_at.slice(0, 10)}</option>)}
+                </select></label>
+                <label>Dato del mapa<select aria-label="Dato del mapa" value={variable} onChange={event => changeVariable(event.target.value as Variable)}>
+                  <option value="lst">Temperatura superficial</option><option value="ndvi">Vegetación · NDVI</option>
+                </select></label>
+              </>}
+              variable={displayVariable}
+              bounds={evidence.bounds}
+              territory={filters.territory}
+              districts={districts}
+              overlays={overlays}
+              onOverlayError={overlayFailed}
+              synthetic={synthetic}
+              placeInfo={placeInfo}
+              selectedCell={
+                mapSelectedCell?.sceneId === scene.id ? mapSelectedCell : null
+              }
+              onSelectCell={onPickCell}
+              onShellElement={setMapShell}
+              onRequestEvidence={() => {
+                if (!activePicked || !picked) return;
+                openEvidence({
+                  kind: "cell",
+                  scene,
+                  cell: activePicked,
+                  cellIndex: picked.index,
+                  variable: displayVariable,
+                });
+              }}
+            />
+            <div className="hud">
+              <div className="hud-context">
+                <span className="observatory-mark" aria-hidden="true" />
+                {showDistrictOutlines
+                  ? `${districts.length} distritos oficiales GAMC`
+                  : "Ventana piloto Landsat (no son distritos)"}
+              </div>
+              <VariableSwitch value={variable} onChange={changeVariable} />
+              <p className="hud-date">
+                <time dateTime={scene.acquired_at}>{date}</time>, {scene.platform}
+              </p>
+              <p className="hud-value" data-variable={displayVariable}>
+                {mean == null ? "Sin datos" : mean.toFixed(lst ? 1 : 3)}
+                {mean != null && lst && <small> °C</small>}
+              </p>
+              <p className="hud-label">
+                {lst ? "Temperatura superficial media" : "NDVI medio"} de los
+                píxeles válidos
+              </p>
+              <div className="legend">
+                <span>{lst ? "0 °C" : "−1"}</span>
+                <div className={lst ? "gradient heat" : "gradient green"} />
+                <span>{lst ? "50 °C" : "1"}</span>
+              </div>
+              <details className="hud-method">
+                <summary>Cómo leer el mapa</summary>
+                <p className="hud-note">
+                  {showDistrictOutlines
+                    ? "Se dibujan los 15 polígonos oficiales del GAMC (límites irregulares reales). La cuadrícula blanca de celdas Landsat queda oculta aquí para no confundirla con distritos. Sin LST/NDVI distrital inventado."
+                    : "El color representa la variable seleccionada en celdas de unos 360 m. Las celdas sin valor quedan transparentes. Selecciona una para ver LST, NDVI y cobertura."}
+                </p>
+              </details>
+              <dl className="map-readouts">
+                <div><dt>LST · superficie</dt><dd>{format(scene.lst_mean, 1)} °C</dd></div>
+                <div><dt>NDVI · vegetación</dt><dd>{format(scene.ndvi_mean, 3)}</dd></div>
+                <div><dt>Cobertura válida</dt><dd>{format(scene.valid_fraction * 100, 1)} %</dd></div>
+              </dl>
+              <p className="caption">Selecciona una celda para consultar sus valores y procedencia. Las medias corresponden a la ventana piloto.</p>
+              <EvidenceTrigger
+                onClick={() =>
+                  openEvidence({ kind: "scene", scene, variable: displayVariable })
+                }
+              />
+            </div>
+          </section>
+        ) : compared ? (
+          <CompareCurtain
+            left={scene}
+            right={compared}
+            variable={displayVariable}
+            bounds={evidence.bounds}
+            synthetic={synthetic}
+            onExit={() => setCurtain(false)}
+          />
+        ) : (
+          <StatusPanel status="empty" title="Falta la segunda adquisición">
+            <p>Elige una fecha en «Comparar con» para abrir la cortina espacial.</p>
+            <button type="button" onClick={() => setCurtain(false)}>
+              Volver al mapa
+            </button>
+          </StatusPanel>
+        )}
+        {!curtain && (
+          <SceneTimeline
+            scenes={evidence.scenes}
+            selectedId={scene.id}
+            onSelect={(sceneId) => update({ sceneId })}
+          />
+        )}
+      </div>
+      {selectionNote && (
+        <p className="selection-status" role="status">
+          {selectionNote}
+        </p>
+      )}
+      {notices.length > 0 && (
+        <div className="link-notice" role="status">
+          <p>Algunos filtros del enlace no se pudieron aplicar:</p>
+          <ul>
+            {notices.map((notice) => (
+              <li key={notice}>{notice}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <header className="evidence-heading" id="indicadores">
         <div>
           <p className="section-kicker">
@@ -559,22 +503,13 @@ export function Explorer({
         </div>
       </header>
       <div className="territory">
-        <TerritorySelector
-          options={territoryOptions(evidence, catalog)}
-          value={filters.territory}
-          onChange={(territory) => {
-            setPicked(null);
-            setSelectionNote(null);
-            setCurtain(false);
-            update({ territory });
-          }}
-        />
         <TerritoryCard
           evidence={evidence}
           territory={filters.territory}
           districts={districts}
         />
       </div>
+      <details className="reference-details"><summary>Capas municipales y guía de interpretación</summary>
       <div className="workspace">
         <Panel title="Capas de referencia" meta={date} className="map-panel">
           <p className="caption">
@@ -605,7 +540,7 @@ export function Explorer({
             <p>El análisis exploratorio 2014–2025 evalúa el cambio por año y su
               significancia en LST y NDVI. <Link href="/analisis">Ver resultados, intervalos y datos</Link>.
               El mapa usa medias por escena; las pruebas usan soporte común.</p>
-          ) : <TrendStatus trends={trends} variable={variable} />}
+          ) : <p>Las diferencias entre estas fechas son descriptivas. <Link href="/comparar">Consultar series distritales aceptadas</Link>.</p>}
           <h3>Calidad de esta escena</h3>
           <div
             className="quality-meter"
@@ -633,6 +568,7 @@ export function Explorer({
           </div>
         </aside>
       </div>
+      </details>
       <DateComparison scenes={evidence.scenes} />
       <div id="historial" className="history-section">
       <Panel
@@ -649,7 +585,7 @@ export function Explorer({
           selectedCellBounds={picked?.bounds ?? null}
         />
         </div>
-        <div className="table-wrap">
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Observaciones, tabla desplazable">
           <table>
             <caption>
               Comparación descriptiva entre adquisiciones, con todos los valores
@@ -676,54 +612,11 @@ export function Explorer({
           </table>
         </div>
         </div>
-        <SeriesStatus series={series} />
+        <p><Link href="/comparar">Consultar indicadores y series por distrito</Link></p>
       </Panel>
       </div>
+      <div id="fuentes" />
       <ProvenancePanel evidence={evidence} scene={scene} synthetic={synthetic} />
-      <section className="evidence-closing" id="cierre" aria-labelledby="closing-title">
-        <div>
-          <p className="closing-place">Cochabamba, desde la evidencia</p>
-          <h2 id="closing-title">
-            Observar. Comparar.
-            <br />
-            Comprender.
-          </h2>
-          <p>
-            Cocha Digital Twin AI conecta cada valor con su territorio, su adquisición y
-            su fuente.
-          </p>
-        </div>
-        <div className="closing-evidence">
-          <h3>Lo que podemos mostrar</h3>
-          <dl className="closing-readouts">
-            <div className="readout" data-signal="coverage">
-              <dt>Adquisiciones disponibles</dt>
-              <dd>{evidence.scenes.length}</dd>
-            </div>
-            <div className="readout" data-signal="ground">
-              <dt>Producto publicado</dt>
-              <dd>{evidence.product_version}</dd>
-            </div>
-            <div className="readout" data-signal="heat">
-              <dt>Escena seleccionada</dt>
-              <dd>{date} UTC</dd>
-            </div>
-            <div className="readout" data-signal="vegetation">
-              <dt>Naturaleza</dt>
-              <dd>
-                <NatureBadge nature={synthetic ? "synthetic" : "observed"} />
-              </dd>
-            </div>
-          </dl>
-          <p>
-            Las diferencias entre adquisiciones son descriptivas. No demuestran causas
-            ni una tendencia climática.
-          </p>
-          <Link href={`/informes?contenido=escenas&escena=${encodeURIComponent(scene.id)}`}>
-            Llevar la evidencia: informes y descargas
-          </Link>
-        </div>
-      </section>
       <EvidenceDrawer
         open={evidenceOpen}
         onClose={() => setEvidenceOpen(false)}
@@ -738,6 +631,6 @@ export function Explorer({
             : null
         }
       />
-    </>
+    </div>
   );
 }

@@ -22,3 +22,15 @@ def test_corrupt_snapshot_returns_sanitized_failure(tmp_path):
             response = client.get("/v1/explorer")
     assert response.status_code == 503
     assert response.json() == {"detail": "Evidence unavailable"}
+
+
+def test_domain_snapshot_corruption_is_not_an_empty_dataset(tmp_path):
+    import pytest
+    from cocha_api.science.evidence import EvidenceUnavailableError, load_snapshot
+
+    assert load_snapshot(tmp_path / "missing.json") is None
+    broken = tmp_path / "broken.json"
+    broken.write_text("broken")
+    with pytest.raises(EvidenceUnavailableError) as failure:
+        load_snapshot(broken)
+    assert str(failure.value) == "Evidence unavailable"

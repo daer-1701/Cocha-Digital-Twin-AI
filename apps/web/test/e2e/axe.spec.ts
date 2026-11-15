@@ -5,12 +5,6 @@ import { useScenario } from "./helpers";
 const KANATA = "00000000-0000-4000-8000-000000005a01";
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
-// Open incidents in docs/qa-report.md; their own fixme tests below fail until fixed.
-const KNOWN = new Set([
-  "scrollable-region-focusable", // QA-01
-  "link-in-text-block", // QA-02, MapLibre attribution
-]);
-
 const PAGES: [scenario: string, route: string][] = [
   ["available", "/"],
   ["available", "/comparar"],
@@ -41,12 +35,12 @@ for (const width of [1280, 390])
         await page.goto(route);
         await expect(page.locator("main h1")).toBeVisible();
         const found = await violations(page);
-        expect(found.filter((v) => !KNOWN.has(v.split(" ")[0]))).toEqual([]);
+        expect(found).toEqual([]);
       });
   });
 
-test.describe("incidencias de accesibilidad abiertas", () => {
-  test.fixme("QA-01: las tablas con desplazamiento horizontal se alcanzan con teclado", async ({ page }) => {
+test.describe("regresiones de accesibilidad", () => {
+  test("QA-01: las tablas con desplazamiento horizontal se alcanzan con teclado", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 900 });
     await useScenario("monica-review");
     for (const route of ["/informes", "/procesamiento", `/estaciones/${KANATA}`]) {
@@ -55,7 +49,7 @@ test.describe("incidencias de accesibilidad abiertas", () => {
     }
   });
 
-  test.fixme("QA-02: los enlaces de atribución del mapa se distinguen sin depender del color", async ({ page }) => {
+  test("QA-02: los enlaces de atribución del mapa se distinguen sin depender del color", async ({ page }) => {
     await useScenario("available");
     await page.goto("/");
     await expect(page.locator(".maplibregl-ctrl-attrib")).toBeAttached();

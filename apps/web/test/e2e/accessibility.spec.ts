@@ -51,7 +51,8 @@ test.describe("teclado y estructura", () => {
         [...document.querySelectorAll("input, select, button, a[href]")]
           .filter((el) => {
             const html = el as HTMLElement;
-            if (html.closest("[hidden]") || html.getClientRects().length === 0) return false;
+            // Closed details can retain layout boxes while their content is not visible.
+            if (!html.checkVisibility()) return false;
             const field = el.matches("input, select");
             const labelled =
               (el as HTMLInputElement).labels?.length ||
