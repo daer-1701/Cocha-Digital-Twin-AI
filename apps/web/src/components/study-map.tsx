@@ -7,7 +7,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { components } from "@cocha/shared";
 import { MapClimate } from "./map-climate";
 import { DistrictClimateFx } from "./district-climate-fx";
-import { CellCombobox } from "./cell-combobox";
+import { DistrictResultCard } from "./district-result-card";
+import { MapGuideSearch } from "./map-guide-search";
 import { ThemeToggle, useTheme } from "./ui/theme-provider";
 import { cellKey } from "../lib/cell-identity";
 import type { Variable } from "../lib/filters";
@@ -18,8 +19,10 @@ import {
   type OfficialDistrict,
 } from "../lib/districts-geojson";
 import {
+  explainDistrictEvidence,
   loadDistrictIndicators,
   type DistrictSeriesResult,
+  type ExplainResult,
   type WeatherReading,
 } from "../app/map-actions";
 import {
@@ -426,6 +429,8 @@ export default function StudyMap({
   >(null);
   const [districtWeather, setDistrictWeather] = useState<WeatherReading | null>(null);
   const [districtWeatherLoading, setDistrictWeatherLoading] = useState(false);
+  const [districtAi, setDistrictAi] = useState<ExplainResult | null>(null);
+  const [districtAiBusy, setDistrictAiBusy] = useState(false);
   const districtSeriesGen = useRef(0);
   const districtLiftFrame = useRef(0);
   const districtLiftHeight = useRef(0);
@@ -677,6 +682,12 @@ export default function StudyMap({
     if (!selectedDistrict) return;
     const requestId = ++districtSeriesGen.current;
     let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled && districtSeriesGen.current === requestId) {
+        setDistrictSeries({ status: "loading" });
+        setDistrictAi(null);
+      }
+    });
     loadDistrictIndicators({
       districtNumber: selectedDistrict.number,
       boundaryVersion: selectedDistrict.boundary_version,
@@ -1656,10 +1667,10 @@ export default function StudyMap({
           map.addSource(sourceId, { type: "image", url, coordinates });
           map.addLayer(
             {
-              id: sourceId,
-              type: "raster",
-              source: sourceId,
-              paint: { "raster-opacity": 0.85, "raster-fade-duration": 0 },
+            id: sourceId,
+            type: "raster",
+            source: sourceId,
+            paint: { "raster-opacity": 0.85, "raster-fade-duration": 0 },
             },
             "cells",
           );
@@ -1720,6 +1731,26 @@ export default function StudyMap({
         </label></div></details>
       </div>
       <div className="map-stage">
+        {showDistrictOutlines && (
+          <MapGuideSearch
+            districts={districts}
+            selectedIndex={
+              selectedDistrictName
+                ? districts.findIndex((district) => district.name === selectedDistrictName)
+                : null
+            }
+            disabled={!loaded || introPlaying || fsActive || districts.length === 0}
+            onSelectDistrict={(index) => {
+              if (index !== null) selectDistrict(index);
+              else closeDistrict();
+            }}
+            onGuideAction={(action) => {
+              if (action.intent === "pick-district" && districts.length > 0 && !selectedDistrictName) {
+                selectDistrict(0);
+              }
+            }}
+          />
+        )}
         <MapClimate
           district={
             selectedDistrict && selectedCentroid
@@ -1758,12 +1789,12 @@ export default function StudyMap({
           {differenceActive && displayedValues.length === 0 && <strong>Sin celdas coincidentes con datos</strong>}
         </aside>}
 
-        <div
-          ref={container}
-          className="study-map"
-          role="region"
-          aria-label="Mapa de observaciones; valores disponibles en la tabla inferior"
-        />
+      <div
+        ref={container}
+        className="study-map"
+        role="region"
+        aria-label="Mapa de observaciones; valores disponibles en la tabla inferior"
+      />
         <button
           type="button"
           className="map-fs-toggle"
@@ -1859,17 +1890,6 @@ export default function StudyMap({
           )}
         </div>
         <div className="camera-tools" role="group" aria-label="Explorar el valle">
-          <CellCombobox
-            value={selectedDistrictName ? districts.findIndex(district => district.name === selectedDistrictName) : null}
-            options={districts.map((district, index) => ({ value: index, label: district.name }))}
-            disabled={!loaded || introPlaying || fsActive || districts.length === 0}
-            onSelect={(index) => {
-              if (index !== null) selectDistrict(index);
-              else {
-                closeDistrict();
-              }
-            }}
-          />
           <div className="camera-tools-group" role="group" aria-label="Relieve">
             <button
               type="button"
@@ -1957,48 +1977,49 @@ export default function StudyMap({
           <span className="selection-kind">Distrito municipal {selectedDistrict.number}</span>
           <strong>{selectedDistrict.name}</strong>
         </div>
+        <p className="district-selection-lead">
+          Ficha del polígono oficial. Abajo van las cifras aceptadas, en lenguaje claro; a la
+          derecha, el microclima modelado de aire (no LST).
+        </p>
         <InfoFields items={[
           ["Número", selectedDistrict.number],
           ["Fuente del límite", selectedDistrict.source_url],
           ["Versión territorial", selectedDistrict.boundary_version],
           ["Comuna (WMS)", place?.status === "ready" ? place.district?.Comuna : null],
         ]} />
-        <div className="district-indicators">
-          <strong>Indicadores oficiales aceptados</strong>
-          {!districtSeries || districtSeries.status === "loading" ? (
-            <p role="status">Consultando /v1/series…</p>
-          ) : districtSeries.status === "error" ? (
-            <p role="status">{districtSeries.reason}</p>
-          ) : districtSeries.status === "unavailable" || districtSeries.items.length === 0 ? (
-            <p role="status">
-              {districtSeries.reason || "Todavía no hay estadísticas zonales aceptadas para este polígono."}
-              {" "}La media Landsat de la ventana piloto no se muestra aquí como medición distrital.
-            </p>
-          ) : (
-            <ul>
-              {districtSeries.items.map((row) => (
-                <li key={`${row.variable}-${row.statistic}-${row.period_start}-${row.period_end}`}>
-                  <strong>{row.variable}</strong> · {row.statistic}
-                  <span>
-                    {row.value == null ? "sin dato" : `${row.value} ${row.units ?? ""}`.trim()}
-                  </span>
-                  <small>
-                    {row.period_start}–{row.period_end}
-                    {row.valid_fraction != null
-                      ? ` · cobertura válida ${(row.valid_fraction * 100).toFixed(0)}%`
-                      : ""}
-                    {row.n != null ? ` · n=${row.n}` : ""}
-                    {row.provenance && typeof row.provenance.product === "string"
-                      ? ` · ${row.provenance.product}`
-                      : ""}
-                  </small>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <DistrictResultCard
+          series={districtSeries}
+          districtName={selectedDistrict.name}
+          askBusy={districtAiBusy}
+          onAskAi={async () => {
+            setDistrictAiBusy(true);
+            try {
+              const result = await explainDistrictEvidence({
+                districtNumber: selectedDistrict.number,
+                boundaryVersion: selectedDistrict.boundary_version,
+              });
+              setDistrictAi(result);
+            } catch {
+              setDistrictAi({
+                answer: null,
+                message: "No se pudo consultar el asistente para este distrito.",
+              });
+            } finally {
+              setDistrictAiBusy(false);
+            }
+          }}
+        />
+        {districtAi && (
+          <div className="district-ai-note" role="status">
+            <p>{districtAi.message}</p>
+            {districtAi.answer && (
+              <p style={{ whiteSpace: "pre-wrap" }}>{districtAi.answer}</p>
+            )}
+          </div>
+        )}
         <small className="cell-inspector-note">
-          La selección funciona en 2D y 3D. El resalte marca el polígono; los valores solo aparecen si hay filas aceptadas en la API.
+          Pulsa el polígono o usa el buscador de arriba. Los valores solo aparecen si hay filas
+          aceptadas en la API.
         </small>
         <button type="button" onClick={closeDistrict}>Cerrar selección</button>
       </motion.aside>}

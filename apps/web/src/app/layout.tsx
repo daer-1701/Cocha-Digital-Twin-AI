@@ -14,6 +14,7 @@ import "./entrance-motion.css";
 import "./workspace.css";
 import "./starfield.css";
 import "./climate-fx.css";
+import "./map-guide.css";
 
 const font = Atkinson_Hyperlegible({
   subsets: ["latin"],
