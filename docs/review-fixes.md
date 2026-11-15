@@ -65,10 +65,21 @@ comprueba disponibilidad actual del GAMC ni consume Gemini.
 
 ## Pendientes del producto
 
-Vector distrital oficial y agregación zonal verificada; metadatos y validación
-MÓNICA; cobertura multitemporal suficiente; inferencia, ML y escenarios
-validados; proveedor Gemini real; orquestación distribuida; despliegue y
+Metadatos y validación MÓNICA; cobertura multitemporal municipal completa;
+inferencia, ML y escenarios validados; orquestación distribuida; despliegue y
 restauración de backups. Ver `team-plan.md` y `andres-blockers.md`.
+
+### Series distritales oficiales — 15/11/2026
+
+Se ejecutó el lote local
+`ingest_landsat.py --replay-manifest … --district-version gamc-official-20261114`
+y se aceptaron 90 filas (`area_weighted_mean_shared_qa`, LST/NDVI × 15 distritos ×
+3 escenas julio 2022–2024). La cobertura (`valid_fraction`) usa el área completa
+del polígono oficial frente a la ventana piloto Landsat: varios distritos tienen
+cobertura baja o nula y valores nulos. Aceptación local etiquetada
+`local-zonal-replay-20261115`; la revisión científica formal de Mateo (MF04)
+sigue pendiente. El asistente puede adjuntar esa serie aceptada cuando la
+petición incluye `district_number` y `boundary_version`.
 
 
 ## Reorganización y rendimiento — 15/11/2026

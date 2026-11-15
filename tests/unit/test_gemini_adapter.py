@@ -14,6 +14,7 @@ from cocha_api.science.gemini import (
     ProviderFailure,
     cited_ids,
     cost_usd,
+    district_series_evidence,
     evidence_block,
     parse_generate_content,
 )
@@ -155,3 +156,15 @@ def test_ask_route_requires_role_and_stays_unavailable_without_authorization(mon
         session.execute.assert_not_called()
     finally:
         get_settings.cache_clear()
+
+
+def test_district_series_evidence_reports_missing_accepted_rows():
+    session = MagicMock()
+    session.execute.return_value.all.return_value = []
+    items = district_series_evidence(
+        session, district_number=5, boundary_version="gamc-official-20261114", start_id=3
+    )
+    assert len(items) == 1
+    assert items[0].id == "E3"
+    assert "sin serie aceptada" in items[0].title.lower()
+    assert "ventana piloto" in items[0].text.lower()

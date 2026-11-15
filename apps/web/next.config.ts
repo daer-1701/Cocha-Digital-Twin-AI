@@ -5,6 +5,9 @@ const config: NextConfig = {
   poweredByHeader: false,
   agentRules: false,
   transpilePackages: ["@cocha/shared"],
+  outputFileTracingIncludes: {
+    "/*": ["./public/pilot-analysis/**/*"],
+  },
 };
 
 export default config;

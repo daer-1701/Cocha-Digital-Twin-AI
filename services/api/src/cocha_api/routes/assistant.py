@@ -28,6 +28,7 @@ from cocha_api.science.gemini import (
     SYSTEM_INSTRUCTION,
     AnswerCache,
     CentralBudgetLedger,
+    EvidenceItem,
     GeminiHttpProvider,
     LiveCallsDisabled,
     ProviderFailure,
@@ -36,6 +37,7 @@ from cocha_api.science.gemini import (
     cache_key,
     cited_ids,
     cost_usd,
+    district_series_evidence,
     evidence_block,
     snapshot_evidence,
 )
@@ -190,8 +192,34 @@ def ask_assistant(
         if not allowed:
             raise HTTPException(status_code=429, detail="Assistant quota exhausted; retry later")
 
+    if (payload.district_number is None) ^ (payload.boundary_version is None):
+        raise HTTPException(
+            status_code=422,
+            detail="district_number and boundary_version must be provided together",
+        )
+    evidence_items = snapshot_evidence(load_snapshot(settings.evidence_path))
+    if payload.district_number is not None and payload.boundary_version is not None:
+        evidence_items = [
+            *district_series_evidence(
+                session,
+                district_number=payload.district_number,
+                boundary_version=payload.boundary_version,
+                start_id=1,
+            ),
+            *evidence_items,
+        ]
+        evidence_items = [
+            EvidenceItem(
+                id=f"E{index}",
+                kind=item.kind,
+                title=item.title,
+                source=item.source,
+                text=item.text,
+            )
+            for index, item in enumerate(evidence_items, start=1)
+        ]
     evidence_text, evidence = evidence_block(
-        snapshot_evidence(load_snapshot(settings.evidence_path)),
+        evidence_items,
         settings.gemini_max_context_chars,
     )
     if not evidence:

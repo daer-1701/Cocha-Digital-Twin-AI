@@ -114,6 +114,76 @@ def snapshot_evidence(snapshot: Snapshot | None) -> list[EvidenceItem]:
     return items
 
 
+def district_series_evidence(
+    session: Session,
+    *,
+    district_number: int,
+    boundary_version: str,
+    start_id: int = 1,
+) -> list[EvidenceItem]:
+    """Accepted official zonal rows for one district; IDs continue from start_id."""
+
+    from cocha_api.db.models import District, DistrictIndicator
+
+    rows = session.execute(
+        select(DistrictIndicator, District.number, District.name, District.source_url)
+        .join(District, DistrictIndicator.district_id == District.id)
+        .where(
+            DistrictIndicator.publication_status == "accepted",
+            District.number == district_number,
+            District.boundary_version == boundary_version,
+            DistrictIndicator.boundary_version == boundary_version,
+        )
+        .order_by(
+            DistrictIndicator.variable,
+            DistrictIndicator.statistic,
+            DistrictIndicator.period_start,
+            DistrictIndicator.id,
+        )
+        .limit(40)
+    ).all()
+    items: list[EvidenceItem] = []
+    for index, (row, number, name, source_url) in enumerate(rows, start=start_id):
+        value = "sin dato" if row.value is None else f"{row.value}"
+        coverage = "n/d" if row.valid_fraction is None else f"{row.valid_fraction:.4f}"
+        provenance = row.provenance if isinstance(row.provenance, dict) else {}
+        scene = provenance.get("scene_id") or "escena no declarada"
+        source = str(provenance.get("source_url") or source_url or "serie oficial aceptada")
+        items.append(
+            EvidenceItem(
+                id=f"E{index}",
+                kind="estimate",
+                title=(
+                    f"{name} · {row.variable} · {row.period_start.isoformat()}"
+                    f"–{row.period_end.isoformat()}"
+                ),
+                source=source,
+                text=(
+                    f"Indicador zonal aceptado del distrito {number} "
+                    f"(versión {boundary_version}). Estadístico {row.statistic}; "
+                    f"valor {value} {row.units or ''}; cobertura válida {coverage}; "
+                    f"escena {scene}. LST es superficie, no aire. La cobertura usa el "
+                    f"área completa del polígono oficial."
+                ),
+            )
+        )
+    if not items:
+        items.append(
+            EvidenceItem(
+                id=f"E{start_id}",
+                kind="observation",
+                title=f"Distrito {district_number} sin serie aceptada",
+                source=boundary_version,
+                text=(
+                    f"No hay indicadores aceptados en district_indicators para el "
+                    f"distrito {district_number} y la versión {boundary_version}. "
+                    "No sustituir con la media de la ventana piloto Landsat."
+                ),
+            )
+        )
+    return items
+
+
 def evidence_block(items: list[EvidenceItem], max_chars: int) -> tuple[str, list[EvidenceItem]]:
     """Serialize evidence until max_chars; returns the text and the items included."""
 

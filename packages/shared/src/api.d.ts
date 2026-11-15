@@ -441,6 +441,10 @@ export interface components {
             request_id: string;
             /** Question */
             question: string;
+            /** District Number */
+            district_number?: number | null;
+            /** Boundary Version */
+            boundary_version?: string | null;
         };
         /** AskResponse */
         AskResponse: {

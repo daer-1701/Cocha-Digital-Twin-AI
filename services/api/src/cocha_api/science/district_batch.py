@@ -13,10 +13,19 @@ from sqlalchemy.orm import Session
 
 from cocha_api.db.models import District, DistrictIndicator, ProcessingRun
 from cocha_api.science.demo_districts import DEMO_BOUNDARY_VERSION, DEMO_SOURCE
-from cocha_api.science.landsat import PILOT_METHOD, read_scene_grids, scene_manifest
+from cocha_api.science.landsat import (
+    PILOT_BOUNDS_WGS84,
+    PILOT_METHOD,
+    STAC_ROOT,
+    read_scene_grids,
+    scene_manifest,
+)
 from cocha_api.science.zonal import district_raster_means
 
 RUN_KIND = "landsat_district_indicators"
+PRODUCT = "USGS Landsat Collection 2 Level-2"
+PRODUCT_VERSION = "02"
+QA_MASK = "QA_PIXEL bits 0-5 excluded; QA_RADSAT=0; shared valid LST/NDVI mask"
 
 
 def persist_district_batch(
@@ -88,6 +97,9 @@ def persist_district_batch(
         ):
             raise ValueError("Require a north-up raster in an EPSG projected metre CRS")
         period = datetime.fromisoformat(item["properties"]["datetime"]).astimezone(UTC).date()
+        manifest = scene_manifest(folder, item)
+        scene_id = str(item["id"])
+        source_url = f"{STAC_ROOT}/collections/landsat-c2-l2/items/{scene_id}"
         for district in districts:
             wkt = session.scalar(
                 select(func.ST_AsText(func.ST_Transform(District.geometry, srid))).where(
@@ -119,7 +131,25 @@ def persist_district_batch(
                         value=result.mean,
                         units=unit,
                         valid_fraction=result.valid_fraction,
+                        n=None,
                         processing_run_id=run_id,
+                        provenance={
+                            "source_url": source_url,
+                            "product": PRODUCT,
+                            "product_version": PRODUCT_VERSION,
+                            "qa_mask": QA_MASK,
+                            "resolution_m": 30.0,
+                            "crs": f"EPSG:{srid}",
+                            "method": PILOT_METHOD,
+                            "scene_id": scene_id,
+                            "files": manifest["files"],
+                            "raster_window_wgs84": list(PILOT_BOUNDS_WGS84),
+                            "coverage_note": (
+                                "valid_fraction uses the full official district area; "
+                                "the Landsat grid is the pilot study window, so districts "
+                                "mostly outside that window have low or zero coverage."
+                            ),
+                        },
                     )
                 )
                 count += 1

@@ -41,6 +41,9 @@ class AskRequest(AvailabilityModel):
     # Client-generated id; retrying with the same id never pays twice.
     request_id: str = Field(pattern=r"^[A-Za-z0-9_-]{8,100}$")
     question: str = Field(min_length=3, max_length=4000)
+    # Optional district scope: the server loads accepted series; client numbers are not trusted.
+    district_number: int | None = Field(default=None, ge=1, le=15)
+    boundary_version: str | None = Field(default=None, min_length=1, max_length=100)
 
 
 class AskCitation(AvailabilityModel):

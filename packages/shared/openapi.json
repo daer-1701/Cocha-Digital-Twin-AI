@@ -1541,6 +1541,32 @@
             "maxLength": 4000,
             "minLength": 3,
             "title": "Question"
+          },
+          "district_number": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 15.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Number"
+          },
+          "boundary_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boundary Version"
           }
         },
         "additionalProperties": false,

@@ -238,25 +238,14 @@ export async function explainDistrictEvidence(input: {
     if (match?.source_url) sourceUrl = String(match.source_url);
   }
 
-  const evidenceLines =
-    series.status === "available" && series.items.length > 0
-      ? series.items.map(
-          (row) =>
-            `- ${row.variable} (${row.statistic}): ${row.value == null ? "sin dato" : row.value} ${row.units ?? ""} · período ${row.period_start}–${row.period_end} · cobertura válida ${row.valid_fraction ?? "n/d"} · n=${row.n ?? "n/d"}`,
-        )
-      : [
-          `- No hay indicadores distritales aceptados en /v1/series para boundary_version=${version} y district_number=${number}.`,
-          `- Estado de serie: ${series.status}. ${series.reason}`,
-          "- No uses la media Landsat de la ventana piloto como si fuera una medición de este polígono.",
-        ];
-
   const question = [
     `Explica en español el contexto de microclima urbano del distrito municipal «${name}» (número ${number}).`,
-    `Versión territorial: ${version}. Fuente del límite: ${sourceUrl}.`,
-    "Usa únicamente la evidencia siguiente, obtenida del servidor. Cita fuentes y fechas. Distingue LST (superficie) de temperatura del aire. No inventes valores ni tendencias no publicadas.",
-    "Evidencia oficial aceptada:",
-    ...evidenceLines,
-    "Si falta evidencia distrital, dilo con claridad y limita la respuesta a lo que sí está publicado (por ejemplo el piloto Landsat como ventana de estudio, no como estadística del polígono).",
+    `Versión territorial: ${version}. Fuente del límite consultada en servidor: ${sourceUrl}.`,
+    "El servidor adjuntará la serie oficial aceptada de este distrito y la evidencia piloto publicada.",
+    "Cita identificadores [En]. Distingue LST (superficie) de temperatura del aire.",
+    "No inventes valores. Si la cobertura distrital es baja o nula, dilo con claridad.",
+    "No trates la media de la ventana piloto como medición del polígono completo.",
+    `Estado previo de /v1/series visto por el cliente: ${series.status}.`,
   ].join("\n");
 
   const requestId = `dist-${number}-${Date.now().toString(36)}`;
@@ -266,7 +255,12 @@ export async function explainDistrictEvidence(input: {
       cache: "no-store",
       signal: AbortSignal.timeout(45000),
       headers,
-      body: JSON.stringify({ request_id: requestId, question }),
+      body: JSON.stringify({
+        request_id: requestId,
+        question,
+        district_number: number,
+        boundary_version: version,
+      }),
     });
     const result = await response.json().catch(() => null);
     if (!response.ok) {
