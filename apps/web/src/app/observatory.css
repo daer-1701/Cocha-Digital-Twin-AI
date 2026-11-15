@@ -1,0 +1,470 @@
+/* First explorer pass: terrain-led composition and quiet, consistent controls.
+   Scoped to the home page; scientific colour ramps remain in globals.css. */
+.observatory {
+  --observatory-accent: var(--color-accent);
+  --observatory-glass: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  --observatory-radius: 12px;
+}
+
+body:has(.observatory) {
+  max-width: none;
+  padding-inline: 24px;
+  background: var(--color-bg);
+}
+body:has(.observatory) .topbar {
+  min-height: 64px;
+  gap: 16px;
+  border-color: var(--color-border);
+}
+body:has(.observatory) .brand { font-size: 15px; white-space: nowrap; }
+body:has(.observatory) .topbar nav { position: relative; min-width: 0; }
+body:has(.observatory) .nav { gap: 4px; flex-wrap: nowrap; }
+body:has(.observatory) .nav a {
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+body:has(.observatory) .nav a[aria-current="page"] {
+  background: var(--color-surface-raised);
+  color: var(--color-text-strong);
+  box-shadow: none;
+  border-bottom-color: transparent;
+}
+body:has(.observatory) .nav a:hover { background: var(--color-surface-raised); color: var(--color-text-strong); }
+.observatory .page-header {
+  margin: 22px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.observatory .page-header h1 {
+  font-size: clamp(1.4rem, 2.1vw, 2rem);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  margin: 0;
+  animation: none;
+}
+.observatory .intro { max-width: 450px; }
+.observatory .intro p { font-size: 14px; line-height: 1.45; }
+.observatory .demo-banner { margin: 12px 0; padding: 10px 16px; font-size: 13px; }
+
+.observatory-view {
+  border: 1px solid var(--color-border);
+  border-radius: var(--observatory-radius);
+  overflow: clip;
+  margin-bottom: 24px;
+  background: var(--color-bg);
+}
+.observatory .stage { margin: 0; border: 0; background: var(--color-bg); }
+.observatory .stage .map-stage,
+.observatory .stage .study-map,
+.observatory .stage .map-placeholder {
+  height: clamp(400px, calc(100dvh - 370px), 720px);
+  min-height: 400px;
+}
+.observatory .map-view-cluster {
+  left: 66px;
+  top: 20px;
+  gap: 8px;
+}
+.observatory .mode-switch {
+  border-radius: 9px;
+  background: var(--observatory-glass);
+  border-color: var(--color-border);
+  backdrop-filter: none;
+}
+.observatory .mode-switch button {
+  min-height: 38px;
+  border-radius: 6px;
+  padding-inline: 14px;
+}
+.observatory .mode-switch button[aria-pressed="true"] {
+  background: var(--color-surface-raised);
+  color: var(--color-text-strong);
+}
+.observatory .camera-tools { left: 20px; top: 78px; gap: 6px; }
+.observatory .map-shell:fullscreen .camera-tools { top: 86px; left: 24px; }
+.observatory .map-fs-toggle {
+  border-color: var(--color-border-strong);
+  background: var(--observatory-glass);
+  color: var(--color-text-strong);
+  backdrop-filter: none;
+}
+.observatory .map-fs-toggle:hover:not(:disabled) {
+  border-color: var(--observatory-accent);
+  color: var(--color-text-strong);
+}
+.observatory .camera-tools-group {
+  background: var(--observatory-glass);
+  border-color: var(--color-border);
+  backdrop-filter: none;
+}
+.observatory .camera-tools button {
+  background: transparent;
+  border-color: transparent;
+  border-radius: 7px;
+}
+.observatory .camera-tools button[aria-pressed="true"] {
+  color: var(--observatory-accent);
+  border-color: var(--observatory-accent);
+  background: color-mix(in srgb, var(--observatory-accent) 14%, transparent);
+}
+.observatory .hud {
+  left: 20px;
+  bottom: 38px;
+  width: 294px;
+  padding: 14px 18px;
+  background: var(--observatory-glass);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  backdrop-filter: none;
+  animation: observatory-enter 400ms ease-out both;
+}
+.observatory .hud-context { margin-bottom: 12px; color: var(--color-text-muted); }
+.observatory .observatory-mark { background: var(--observatory-accent); border-color: var(--observatory-accent); box-shadow: inset 0 0 0 3px var(--color-bg); }
+.observatory .variable-switch {
+  margin-bottom: 14px;
+}
+.observatory-view[data-layer-phase="out"] .hud-value,
+.observatory-view[data-layer-phase="out"] .hud-label,
+.observatory-view[data-layer-phase="out"] .legend {
+  opacity: 0.25;
+}
+.observatory-view[data-layer-phase="in"] .hud-value,
+.observatory-view[data-layer-phase="in"] .hud-label,
+.observatory-view[data-layer-phase="in"] .legend {
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+.observatory-view .hud-value,
+.observatory-view .hud-label,
+.observatory-view .legend {
+  transition: opacity 160ms ease;
+}
+.observatory .hud .hud-value { font-size: 40px; margin-block: 8px 6px; }
+.observatory .hud-label { line-height: 1.4; }
+.observatory .hud .legend { margin-block: 14px 10px; }
+.observatory .hud-method { font-size: 12px; color: var(--color-text-muted); }
+.observatory .hud-method summary { cursor: pointer; min-height: 24px; padding-block: 4px; }
+.observatory .hud-method[open] .hud-note { margin-top: 8px; }
+.observatory .map-evidence-label {
+  top: 20px;
+  right: 20px;
+  max-width: 250px;
+  padding: 10px 14px;
+  background: var(--observatory-glass);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+}
+.observatory .cell-inspector { background: var(--observatory-glass); border-color: var(--color-border-strong); border-radius: 10px; backdrop-filter: none; }
+.observatory .scene-timeline {
+  --timeline-accent: var(--observatory-accent);
+  margin: 0;
+  padding: 14px 20px 10px;
+  background: var(--color-surface);
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+}
+.observatory .timeline-intro strong { font-size: 15px; }
+.observatory .timeline-intro p { margin: 3px 0 0; font-size: 12px; }
+.observatory .scene-timeline .timeline-play {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-strong);
+  padding: 7px 14px;
+  min-height: 38px;
+  font-size: 13px;
+}
+.observatory .scene-timeline input[type="range"] { min-height: 26px; }
+.observatory .timeline-dates { padding-block: 2px; gap: 6px; }
+.observatory .timeline-dates button { padding: 7px 10px; gap: 2px; border-radius: 6px; font-size: 13px; }
+.observatory .timeline-dates button[aria-pressed="true"] { background: var(--color-surface-raised); border-color: var(--color-border-strong); color: var(--color-text-strong); }
+.observatory .timeline-dates button:hover { background: var(--color-surface-raised); }
+.observatory button { transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
+.observatory button:disabled { cursor: not-allowed; }
+.observatory .controls { border-color: var(--color-border); border-radius: 10px; }
+.observatory .metrics { gap: 16px; }
+.observatory .metric { box-shadow: none; }
+.observatory .map-shell:fullscreen .map-stage,
+.observatory .map-shell:fullscreen .study-map { height: 100dvh; min-height: 0; }
+
+/* Cinematic valley entrance: slow zoom with place name fade in/out. */
+.observatory .valley-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 48%, rgb(6 12 18 / 55%), transparent 70%);
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+.observatory .map-shell[data-intro="playing"] .valley-intro {
+  opacity: 1;
+}
+.observatory .valley-intro-title {
+  margin: 0;
+  font-family: var(--font-display), var(--font-brand), system-ui, sans-serif;
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  font-weight: 600;
+  font-stretch: 112%;
+  letter-spacing: 0.08em;
+  color: #f3f6f8;
+  text-shadow: 0 1px 0 #0b141866, 0 12px 40px #000c;
+  opacity: 0;
+  transform: translateY(14px);
+}
+.observatory .map-shell[data-intro-title="in"] .valley-intro-title {
+  animation: valley-title-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.observatory .map-shell[data-intro-title="out"] .valley-intro-title {
+  animation: valley-title-out 700ms ease both;
+}
+.observatory .valley-intro-skip {
+  pointer-events: auto;
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid #6d8593;
+  border-radius: 6px;
+  background: rgb(12 20 28 / 78%);
+  color: #e8eef2;
+  font-size: 13px;
+}
+.observatory .valley-intro-skip:hover { border-color: var(--observatory-accent); color: #fff; }
+.observatory .map-shell .map-chrome,
+.observatory .map-shell .map-fs-toggle {
+  transition: opacity 420ms ease, visibility 420ms ease;
+}
+.observatory .map-shell[data-intro="playing"] .map-chrome,
+.observatory .map-shell[data-intro="pending"] .map-chrome,
+.observatory .map-shell[data-intro="playing"] .map-fs-toggle,
+.observatory .map-shell[data-intro="pending"] .map-fs-toggle {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.observatory .observatory-view:has(.map-shell[data-intro="playing"]) .hud,
+.observatory .observatory-view:has(.map-shell[data-intro="pending"]) .hud,
+.observatory .observatory-view:has(.map-shell[data-intro="playing"]) .scene-timeline,
+.observatory .observatory-view:has(.map-shell[data-intro="pending"]) .scene-timeline {
+  animation: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 420ms ease, visibility 420ms ease;
+}
+.observatory .observatory-view .hud,
+.observatory .observatory-view .scene-timeline {
+  transition: opacity 500ms ease, visibility 500ms ease;
+}
+@keyframes valley-title-in {
+  from { opacity: 0; transform: translateY(14px); letter-spacing: 0.16em; }
+  to { opacity: 1; transform: none; letter-spacing: 0.08em; }
+}
+@keyframes valley-title-out {
+  from { opacity: 1; transform: none; letter-spacing: 0.08em; }
+  to { opacity: 0; transform: translateY(-8px); letter-spacing: 0.12em; }
+}
+@keyframes observatory-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 1150px) {
+  body:has(.observatory) .topbar { align-items: flex-start; flex-direction: column; padding-block: 12px; gap: 8px; }
+  body:has(.observatory) .topbar nav { max-width: 100%; overflow-x: auto; }
+}
+@media (max-width: 900px) {
+  body:has(.observatory) { padding-inline: 16px; }
+  .observatory .page-header { display: block; }
+  .observatory .intro { margin-top: 8px; }
+  .observatory .hud { position: static; width: auto; border-inline: 0; border-bottom: 0; border-radius: 0; }
+  .observatory .stage .map-stage,
+  .observatory .stage .study-map,
+  .observatory .stage .map-placeholder { height: 50dvh; min-height: 350px; }
+  .observatory .map-view-cluster { left: 60px; }
+  .observatory .map-evidence-label { top: auto; right: auto; left: 12px; bottom: 38px; max-width: 220px; }
+  .observatory .timeline-intro { gap: 12px; }
+  .observatory .timeline-intro p { margin-bottom: 0; }
+  .observatory .timeline-play { margin-bottom: 0; }
+  .observatory .camera-tools { left: 20px; top: 80px; max-width: calc(100% - 40px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .observatory .hud { animation: none; }
+  .observatory button, body:has(.observatory) .nav a { transition: none; }
+  .observatory .map-shell .map-chrome,
+  .observatory-view .hud,
+  .observatory-view .scene-timeline { transition: none; }
+  .observatory .map-shell[data-intro-title="in"] .valley-intro-title,
+  .observatory .map-shell[data-intro-title="out"] .valley-intro-title {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Normal viewport: chrome row above the map; FS stays overlaid on the canvas. */
+.observatory .stage:has(.map-shell:not(:fullscreen)) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 0 16px;
+}
+.observatory .stage:has(.map-shell:not(:fullscreen)) > .hud {
+  position: static;
+  width: auto;
+  margin: 0;
+  border-radius: 0;
+  height: auto;
+  max-height: none;
+}
+.observatory .map-shell:not(:fullscreen) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px;
+  background: var(--color-surface);
+}
+.observatory .map-shell:not(:fullscreen) > .map-stage {
+  order: 5;
+  width: 100%;
+  flex-basis: 100%;
+  height: 480px;
+}
+.observatory .map-shell:not(:fullscreen) > .map-chrome-dock {
+  position: static;
+  order: 0;
+  display: contents;
+  pointer-events: auto;
+}
+.observatory .map-shell:not(:fullscreen) .map-view-cluster,
+.observatory .map-shell:not(:fullscreen) .camera-tools,
+.observatory .map-shell:not(:fullscreen) .map-evidence-label,
+.observatory .map-shell:not(:fullscreen) > .cell-inspector {
+  position: static;
+  max-width: 100%;
+  margin: 0;
+  transform: none;
+}
+.observatory .map-shell:not(:fullscreen) .map-view-cluster {
+  order: 0;
+  left: auto;
+  top: auto;
+}
+.observatory .map-shell:not(:fullscreen) .camera-tools {
+  order: 2;
+  flex: 1 1 auto;
+  top: auto;
+  left: auto;
+}
+.observatory .map-shell:not(:fullscreen) .map-evidence-label { order: 3; }
+.observatory .map-shell:not(:fullscreen) .map-stage .map-fs-toggle {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+}
+.observatory .map-shell:not(:fullscreen) > .cell-inspector {
+  order: 6;
+  width: 100%;
+  flex-basis: 100%;
+  max-height: none;
+}
+.map-light-control { position: relative; z-index: 3; }
+.observatory .theme-toggle {
+  border-color: var(--color-border);
+  background: var(--observatory-glass);
+  backdrop-filter: none;
+  min-width: 0;
+  padding: 6px 8px;
+  gap: 6px;
+}
+.observatory .theme-toggle-copy {
+  display: none;
+}
+.observatory .theme-toggle-copy strong { color: var(--color-text-strong); }
+.observatory .theme-toggle-copy span { color: var(--color-text-muted); }
+.observatory .theme-toggle-switch {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+.observatory .map-shell:not(:fullscreen) .camera-tools select { width: auto; max-width: 100%; }
+@media (max-width: 1000px) {
+  .observatory .stage:has(.map-shell:not(:fullscreen)) { grid-template-columns: 1fr; }
+}
+.district-selection-info { order:7; flex-basis:100%; padding:20px; border:1px solid var(--color-border-strong); background:var(--color-surface); border-radius:10px; }
+.map-shell:fullscreen .district-selection-info { position:absolute; right:24px; bottom:40px; width:300px; z-index:10; }
+/* Selection facts: compact reading groups; absent values have no row. */
+.selection-heading { display:grid; gap:8px; margin-bottom:20px; }
+.selection-kind { color:var(--color-text-subtle); font-size:12px; }
+.selection-heading strong { font-size:22px; line-height:1.2; font-weight:600; }
+.district-selection-info .cell-inspector-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-block:16px; }
+.district-selection-info .cell-inspector-facts dd { margin:5px 0 0; overflow-wrap:anywhere; }
+.district-selection-info .cell-inspector-facts dt { font-size:12px; color:var(--color-text-subtle); }
+.district-selection-info > button { margin-top:16px; }
+.cell-inspector-metrics:empty { display:none; }
+.cell-inspector-note { max-width:60ch; }
+@media(max-width:500px) { .district-selection-info .cell-inspector-facts { grid-template-columns:1fr; } }
+.cell-combobox { position:relative; width:240px; max-width:100%; z-index:12; }
+.cell-combobox input { width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--color-border-strong); border-radius:7px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; box-sizing:border-box; }
+.cell-options-panel { position:absolute; top:calc(100% + 6px); left:0; width:100%; background:var(--color-surface); border:1px solid var(--color-border-strong); border-radius:8px; box-shadow:0 14px 30px #0005; overflow:hidden; }
+.cell-options-panel [role=listbox] { max-height:250px; overflow-y:auto; overscroll-behavior:contain; }
+.cell-options-panel [role=option] { padding:12px; cursor:pointer; font-size:13px; }
+.cell-options-panel [data-active=true] { background:var(--color-surface-raised); }
+.cell-options-panel [aria-selected=true] { color:var(--color-link); }
+.cell-options-panel p { padding:12px; font-size:13px; }
+.cell-options-panel > button { width:100%; border:0; border-top:1px solid var(--color-border); border-radius:0; }
+@media(prefers-reduced-motion:no-preference) {
+ .map-shell[data-view-mode="2d"] .map-stage { animation:map-flat-reveal 1.2s ease both; }
+ .map-shell[data-view-mode="3d"] .map-stage { animation:map-depth-reveal 1.2s ease both; }
+ @keyframes map-flat-reveal { 0%,100% { opacity:1; } 35% { opacity:.72; } }
+ @keyframes map-depth-reveal { 0%,100% { opacity:1; } 35% { opacity:.72; } }
+ .map-shell[data-light-shift="to-day"] .map-stage { animation:map-day-reveal 1.9s ease both; }
+ .map-shell[data-light-shift="to-night"] .map-stage { animation:map-night-reveal 1.9s ease both; }
+ @keyframes map-day-reveal { 0%,100% { opacity:1; } 25% { opacity:.8; } }
+ @keyframes map-night-reveal { 0%,100% { opacity:1; } 25% { opacity:.8; } }
+}
+/* Controls use two explicit rows instead of competing absolute coordinates. */
+.observatory .map-shell:not(:fullscreen) > .map-chrome-dock { display:grid; position:relative; inset:auto; width:100%; grid-template-columns:1fr; gap:12px; z-index:15; }
+.observatory .map-shell .map-view-cluster { position:static; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.observatory .map-shell .map-view-cluster .mode-switch { position:static; inset:auto; flex-shrink:0; }
+.observatory .map-shell .camera-tools { position:static; display:flex; gap:12px; align-items:center; flex-wrap:wrap; max-width:100%; }
+.observatory .map-shell .map-evidence-label { position:static; max-width:100%; }
+.observatory .map-shell .map-light-control { position:static; }
+.observatory .map-shell:fullscreen > .map-chrome-dock { inset:16px auto auto 16px; width:min(680px,calc(100% - 80px)); display:grid; gap:12px; pointer-events:auto; }
+.observatory .map-shell:fullscreen .map-view-cluster,.observatory .map-shell:fullscreen .camera-tools { background:var(--color-surface); border-radius:8px; padding:8px; }
+.observatory .cell-combobox { flex:1 1 260px; width:280px; min-width:0; }
+.observatory .map-shell .camera-tools-group { display:flex; flex-wrap:wrap; gap:8px; }
+@media(prefers-reduced-motion:no-preference) {
+ .map-shell[data-view-mode="2d"] .map-stage { animation:map-flat-reveal 1.4s ease both; }
+ .map-shell[data-view-mode="3d"] .map-stage { animation:map-depth-reveal 1.4s ease both; }
+ @keyframes map-flat-reveal { 0%,100% { opacity:1; } 30% { opacity:.45; } }
+ @keyframes map-depth-reveal { 0%,100% { opacity:1; } 30% { opacity:.45; } }
+}
+/* Fullscreen exit opposite 2D/3D; leave MapLibre zoom/compass on the far right. */
+.observatory .map-shell:fullscreen .map-stage .map-fs-toggle {
+  position: absolute;
+  top: 16px;
+  left: auto;
+  right: 54px;
+  z-index: 25;
+}
+.observatory .map-shell:fullscreen > .map-chrome-dock {
+  width: min(680px, calc(100% - 120px));
+}
+@media (max-width: 600px) {
+  .observatory .map-shell:fullscreen > .map-chrome-dock {
+    inset: 76px 12px auto;
+    width: auto;
+  }
+  .observatory .map-shell:fullscreen .map-stage .map-fs-toggle {
+    top: 16px;
+    right: 54px;
+  }
+}

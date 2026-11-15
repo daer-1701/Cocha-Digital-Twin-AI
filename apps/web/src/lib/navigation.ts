@@ -23,12 +23,19 @@ export const SECTIONS: Section[] = [
     nature: "observed",
   },
   {
+    href: "/analisis",
+    label: "Análisis 2014–2025",
+    title: "Análisis de la ventana piloto",
+    summary: "Doce adquisiciones Landsat, cambio por año y significancia estadística.",
+    available: true,
+  },
+  {
     href: "/comparar",
     label: "Comparar distritos",
     title: "Comparar distritos",
     summary:
-      "Ver qué distritos cambian más, con magnitud, cobertura e incertidumbre visibles.",
-    available: false,
+      "Catálogo oficial de distritos GAMC. La comparación LST/NDVI aparece cuando existan estadísticas zonales aceptadas.",
+    available: true,
     nature: "observed",
     requires: [
       "Límites oficiales de los 15 distritos en formato vectorial, con versión y licencia.",
@@ -50,7 +57,7 @@ export const SECTIONS: Section[] = [
     label: "Informes",
     title: "Informes y descargas",
     summary:
-      "Descargar las observaciones de la ventana piloto en CSV o JSON, con fuente, unidades, período y limitaciones.",
+      "Descargar las observaciones de la área de estudio en CSV o JSON, con fuente, unidades, período y limitaciones.",
     available: true,
     nature: "observed",
   },

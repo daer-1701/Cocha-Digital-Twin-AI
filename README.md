@@ -56,10 +56,14 @@ Detalles de método, alcance y verificación: [MVP Landsat](docs/mvp.md).
 Desde la raíz, en PowerShell:
 
 ```powershell
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-# Editar POSTGRES_PASSWORD en .env antes de continuar.
-docker compose up --build --wait
+./scripts/start_docker.ps1
 ```
+
+El script crea `.env` solo si no existe, genera una contraseña local aleatoria,
+prepara la carpeta de snapshots, comprueba el motor Linux, construye las imágenes
+y espera los healthchecks de base, API y web. Verifica también el acceso HTTP
+desde Windows. Conserva configuraciones existentes y volúmenes de datos.
+Para preparar únicamente los archivos: `./scripts/start_docker.ps1 -PrepareOnly`.
 
 Servicios:
 

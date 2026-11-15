@@ -58,7 +58,7 @@ export function DistrictBoard({
     const lst = of("lst_celsius");
     return {
       number,
-      name: lst?.district_name ?? of("ndvi")?.district_name ?? `Demo ${number}`,
+      name: lst?.district_name ?? of("ndvi")?.district_name ?? `Área sintética ${number}`,
       lst,
       ndvi: of("ndvi"),
       lstTrend: trends.find(
@@ -89,7 +89,7 @@ export function DistrictBoard({
       </p>
       <div className="board">
         <figure className="tile-map">
-          <div className="tiles" role="img" aria-label="Mosaico de LST media por rectángulo demo; mismos valores en la tabla">
+          <div className="tiles" role="img" aria-label="Mosaico de LST media por rectángulo sintético; mismos valores en la tabla">
             {tiles.map((row) => (
               <div
                 key={row.number}

@@ -1,10 +1,12 @@
 import "server-only";
 import type { components } from "@cocha/shared";
+import { getPilotPackage } from "./pilot-analysis";
 
 type Schemas = components["schemas"];
 export type Health = Schemas["HealthResponse"];
 export type Evidence = Schemas["Snapshot"];
 export type Territories = Schemas["TerritoriesResponse"];
+export type Districts = Schemas["DistrictsResponse"];
 export type Stations = Schemas["StationsResponse"];
 export type Series = Schemas["SeriesResponse"];
 export type Trends = Schemas["TrendsResponse"];
@@ -92,6 +94,10 @@ export async function getEvidence(): Promise<ApiResult<Evidence>> {
       isObject(body) &&
       (body.evidence == null || isObject(body.evidence)),
   );
+  if (result.demo === "off") {
+    const local = await getPilotPackage();
+    if (local) return { data: local.evidence, error: false, demo: "off" };
+  }
   return { ...result, data: result.data?.evidence ?? null };
 }
 
@@ -103,8 +109,29 @@ export const getTerritories = () =>
       isObject(body) &&
       isObject(body.pilot) &&
       Array.isArray(body.wms_layers) &&
-      isObject(body.vector_districts),
+      isObject(body.vector_districts) &&
+      typeof body.vector_districts.status === "string" &&
+      AVAILABILITY.includes(body.vector_districts.status as string),
   );
+
+export const getDistricts = (options?: {
+  boundaryVersion?: string;
+  includeGeometry?: boolean;
+}) => {
+  const query = new URLSearchParams({ limit: "15" });
+  if (options?.boundaryVersion) query.set("boundary_version", options.boundaryVersion);
+  if (options?.includeGeometry) query.set("include_geometry", "true");
+  // Geometries are ~270 KB for the 15 official polygons.
+  return getJson<Districts>(
+    `/v1/territories/districts?${query}`,
+    (body) =>
+      isEnvelope(body) &&
+      isObject(body) &&
+      Array.isArray(body.items) &&
+      Array.isArray(body.boundary_versions),
+    options?.includeGeometry ? 15000 : 5000,
+  );
+};
 
 export const getStations = () =>
   getJson<Stations>("/v1/stations", (b) => isEnvelope(b) && hasArray(b, "items"));
@@ -128,8 +155,8 @@ export const getTrends = () =>
     "/v1/trends",
     (b) => isEnvelope(b) && hasArray(b, "items") && hasArray(b, "pilot_trends"),
   );
-export const getReports = () =>
-  getJson<Reports>(
+export const getReports = async () => {
+  const result = await getJson<Reports>(
     "/v1/reports",
     (b) =>
       isEnvelope(b) &&
@@ -140,6 +167,24 @@ export const getReports = () =>
           isObject(b.observation_export.evidence) &&
           Array.isArray(b.observation_export.evidence.scenes))),
   );
+  if (result.demo === "off") {
+    const local = await getPilotPackage();
+    if (local) {
+      return {
+        error: false, demo: "off" as const,
+        data: {
+          ...(result.data ?? { status: "unavailable" as const, limit: 50, offset: 0, items: [] }),
+          observation_export: {
+            kind: "observation_export" as const, scope: "pilot_window" as const,
+            district_report: false as const, evidence: local.evidence,
+            note: "Paquete local verificado 2014–2025. Medias por escena; análisis sobre soporte común en /analisis.",
+          },
+        },
+      };
+    }
+  }
+  return result;
+};
 export const getIndicators = (sceneId?: string) => {
   // One scene has at most 15 rectangles × 2 variables, within this page size.
   const query = new URLSearchParams({ limit: "100" });

@@ -16,6 +16,9 @@ RUN apt-get update \
 RUN uv sync --frozen --group science --no-editable
 COPY alembic.ini ./
 COPY services/api/migrations services/api/migrations
+COPY services/workers services/workers
+COPY scripts scripts
+COPY data/fixtures data/fixtures
 COPY tests tests
 COPY scripts scripts
 COPY services/workers services/workers

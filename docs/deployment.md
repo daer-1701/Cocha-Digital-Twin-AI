@@ -2,6 +2,31 @@
 
 ## Desarrollo y demo
 
+Arranque desde PowerShell en la raíz:
+
+```powershell
+./scripts/start_docker.ps1
+```
+
+Requiere Docker Desktop iniciado con motor Linux y WSL 2 operativo. Si falta
+WSL, su instalación puede pedir elevación de administrador y reinicio de Windows;
+el script del proyecto no reinicia el equipo ni modifica características del sistema.
+Después de instalar Docker, el script también busca el ejecutable en las rutas
+estándar de instalación por usuario y para todos los usuarios, además de la
+ubicación registrada en Windows para instalaciones en otro disco. Si el motor
+no responde, inicia Docker Desktop y lo espera hasta 90 segundos.
+
+Si no existe `.env`, genera uno desde `.env.example` con una contraseña aleatoria
+sin mostrarla. Si existe, lo conserva íntegro. `-PrepareOnly` prepara los archivos
+sin necesitar Docker. Un volumen PostgreSQL existente conserva su contraseña:
+no borrar el volumen ni regenerar `.env` para intentar reparar autenticación.
+
+La API recibe las variables opcionales de GAMC, Gemini y límites desde Compose;
+no se incluyen archivos `.env` en las imágenes. Configurar una clave Gemini no
+habilita llamadas facturables. Los snapshots se montan en solo lectura desde
+`data/processed`; su ausencia produce un estado vacío y no genera datos ficticios.
+El arranque no descarga datos satelitales.
+
 El Compose raíz está orientado a un equipo local con Docker Desktop Linux.
 Los contenedores web/API corren sin root; PostgreSQL usa la imagen PostGIS.
 La cuenta POSTGRES_USER de esa imagen inicializa la base con privilegios altos:

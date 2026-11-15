@@ -1,0 +1,134 @@
+/* Demo chrome motion. Content entrances are WAAPI-only (no React class mutation).
+   Gated by html[data-motion="on"]. Opt out with ?motion=reduce */
+
+:root {
+  --enter-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-motion="on"] body.mission-shell .presentation-header .identity-row {
+  animation: shell-drop 900ms var(--enter-ease) both;
+}
+
+html[data-motion="on"] body.mission-shell .presentation-header .nav-entry {
+  animation: nav-entry-arrive 650ms var(--enter-ease) both;
+}
+
+html[data-motion="on"] body.mission-shell .brand-name {
+  animation: brand-arrive 1100ms var(--enter-ease) both;
+}
+
+html[data-motion="on"] body.mission-shell .brand-system {
+  animation: brand-arrive 1100ms 160ms var(--enter-ease) both;
+}
+
+html[data-motion="on"] body.mission-shell .brand-purpose {
+  animation: brand-arrive 1100ms 280ms var(--enter-ease) both;
+}
+
+html[data-motion="on"] .orbital-signature {
+  animation: orbit-arrive 1600ms var(--enter-ease) both;
+}
+
+html[data-motion="on"][data-route-motion="enter"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background: linear-gradient(180deg, #9bd6ff55, transparent 40%, transparent 60%, #69baff33);
+  animation: route-scan 820ms var(--enter-ease) both;
+}
+
+html[data-motion="on"] .mission-shell .orbital-signature ellipse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orbital-drift 18s linear infinite;
+}
+
+html[data-motion="on"] .mission-shell .orbital-signature ellipse:nth-child(2) {
+  animation-direction: reverse;
+  animation-duration: 25s;
+}
+
+html[data-motion="on"] .mission-shell .orbital-core {
+  animation: orbital-breathe 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+html[data-motion="on"] .mission-shell .orbital-satellite {
+  animation: satellite-pulse 2.8s ease-in-out infinite;
+}
+
+html[data-motion="on"] .mission-shell .signal-dot {
+  animation: signal-live 1.8s ease-in-out infinite;
+}
+
+html[data-motion="on"] body.mission-shell :is(main button, main select, main summary, main .downloads a, .presentation-header .nav a):not(:is(.map-shell, .map-panel, .map-stage, .observatory-view, .compare-curtain, .study-map, .evidence-drawer) *) {
+  transition: translate 320ms var(--enter-ease), scale 320ms, color 220ms, background-color 220ms, border-color 220ms, box-shadow 320ms;
+}
+
+@media (hover: hover) {
+  html[data-motion="on"] body.mission-shell :is(main button, main select, main summary, main .downloads a, .presentation-header .nav a):not(:is(.map-shell, .map-panel, .map-stage, .observatory-view, .compare-curtain, .study-map, .evidence-drawer) *):hover:not(:disabled) {
+    translate: 0 -5px;
+    border-color: #b6e6ff;
+    box-shadow: 0 12px 32px #69baff38, inset 0 1px #d7f0ff30;
+  }
+
+  html[data-motion="on"] body.mission-shell :is(.metric-signal, .analysis-results > section, .readout):not(:is(.map-shell, .map-panel, .observatory-view, .compare-curtain, .study-map) *):hover {
+    translate: 0 -14px;
+    border-color: var(--signal-color, #9bd6ff);
+    box-shadow:
+      0 28px 60px #0008,
+      0 0 40px color-mix(in srgb, var(--signal-color, #9bd6ff) 28%, transparent);
+  }
+}
+
+@keyframes shell-drop {
+  from { opacity: 0; transform: translateY(-28px); filter: blur(10px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+@keyframes nav-entry-arrive {
+  from { opacity: 0; transform: translateY(24px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes brand-arrive {
+  from { opacity: 0; transform: translateY(36px) scale(0.96); filter: blur(12px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+@keyframes orbit-arrive {
+  from { opacity: 0; stroke-dasharray: 800; stroke-dashoffset: 800; transform: scale(0.85); }
+  to { opacity: 0.7; stroke-dasharray: 800; stroke-dashoffset: 0; transform: scale(1); }
+}
+
+@keyframes route-scan {
+  0% { opacity: 0; transform: translateY(-14%); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(20%); }
+}
+
+@keyframes orbital-drift { from { rotate: 0deg; } to { rotate: 360deg; } }
+@keyframes orbital-breathe { 50% { scale: 1.55; opacity: 0.45; } }
+@keyframes satellite-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; filter: drop-shadow(0 0 10px #9bd6ff); }
+}
+@keyframes signal-live {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 #9bd6ff00; }
+  50% { transform: scale(1.35); box-shadow: 0 0 0 8px #9bd6ff22; }
+}
+
+html[data-motion-mode="reduce"] .nav-entry,
+html[data-motion-mode="reduce"] .brand-name,
+html[data-motion-mode="reduce"] .brand-system,
+html[data-motion-mode="reduce"] .brand-purpose,
+html[data-motion-mode="reduce"] .identity-row,
+html[data-motion-mode="reduce"] .orbital-signature {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  animation: none !important;
+}

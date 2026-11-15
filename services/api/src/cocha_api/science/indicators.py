@@ -17,6 +17,12 @@ DISTRICT_VECTOR_REASON = (
     "District indicators are unavailable because verified district geometries are missing. "
     "WMS and bounding boxes are not district polygons."
 )
+OFFICIAL_VECTOR_NO_DEMO_REASON = (
+    "Official GAMC district polygons are imported, but this endpoint only serves "
+    "demo synthetic centroid means on demo-synthetic-v1 rectangles. "
+    "Official zonal statistics belong on /v1/series after acceptance. "
+    "Demo rectangles were not imported."
+)
 SERIES_REASON = (
     "District time series are unavailable until verified district geometries "
     "and accepted multitemporal indicators exist."

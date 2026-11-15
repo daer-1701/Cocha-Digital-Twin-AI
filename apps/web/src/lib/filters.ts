@@ -1,4 +1,8 @@
-import { DEFAULT_TERRITORY, isTerritoryId, type TerritoryId } from "./territory";
+import {
+  isTerritoryId,
+  preferredTerritory,
+  type TerritoryId,
+} from "./territory";
 
 export type Variable = "lst" | "ndvi";
 
@@ -27,7 +31,7 @@ export function parseFilters(
   const notices: string[] = [];
   const latest = sceneIds[sceneIds.length - 1] ?? "";
 
-  let territory = DEFAULT_TERRITORY;
+  let territory = preferredTerritory(availableTerritories);
   const requestedTerritory = first(params.territorio);
   if (requestedTerritory !== undefined) {
     if (
@@ -37,7 +41,7 @@ export function parseFilters(
       territory = requestedTerritory;
     else
       notices.push(
-        "El territorio del enlace todavía no está disponible. Se muestra la ventana piloto.",
+        "El territorio del enlace todavía no está disponible. Se muestran los distritos oficiales si existen, o la ventana piloto.",
       );
   }
 

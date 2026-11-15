@@ -16,32 +16,46 @@ export type TerritoryOption = {
   detail?: string | null;
 };
 
+/** Default when official polygons are not published yet. */
 export const DEFAULT_TERRITORY: TerritoryId = "piloto";
 
+/**
+ * Prefer official GAMC districts when the API publishes them.
+ * The Landsat cell grid remains available as the pilot study window.
+ */
+export function preferredTerritory(available: TerritoryId[]): TerritoryId {
+  if (available.includes("distritos")) return "distritos";
+  if (available.includes(DEFAULT_TERRITORY)) return DEFAULT_TERRITORY;
+  return available[0] ?? DEFAULT_TERRITORY;
+}
+
 // WMS district images only orient the map (see components/map-layers.tsx);
-// indicators by district require the complete vector catalog.
+// indicators by district require accepted zonal statistics on /v1/series.
 export function territoryOptions(
   evidence: Snapshot,
   catalog: Territories | null,
 ): TerritoryOption[] {
   return [
     {
+      id: "distritos",
+      label: "Distritos municipales",
+      description:
+        "Los 15 polígonos oficiales GAMC (Tunari, Molle, Alejo Calatayud…). Sin LST/NDVI distrital inventado.",
+      available: catalog?.vector_districts.status === "available",
+      pending:
+        catalog?.vector_districts.status === "available"
+          ? undefined
+          : catalog
+            ? "Pendiente: el servidor todavía no publica los 15 polígonos oficiales verificados."
+            : "No se pudo consultar el catálogo territorial del servidor.",
+      detail: catalog?.vector_districts.reason,
+    },
+    {
       id: "piloto",
       label: evidence.area_name,
       description:
-        "Ventana rectangular de estudio. Los indicadores describen todo el rectángulo.",
+        "Ventana de estudio Landsat (~360 m por celda). No son distritos municipales. Al hacer clic, la celda se eleva.",
       available: true,
-    },
-    {
-      id: "distritos",
-      label: "Distritos con análisis",
-      description:
-        "Polígonos completos de cada distrito, con versión y licencia, para calcular indicadores por distrito.",
-      available: false,
-      pending: catalog
-        ? "Pendiente: el servidor todavía no tiene polígonos completos y verificados de los 15 distritos."
-        : "No se pudo consultar el catálogo territorial del servidor.",
-      detail: catalog?.vector_districts.reason,
     },
   ];
 }

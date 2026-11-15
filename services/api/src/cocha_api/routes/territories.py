@@ -22,6 +22,7 @@ from cocha_api.science.demo_districts import DEMO_BOUNDARY_VERSION
 from cocha_api.science.gamc_catalog import (
     GAMC_WMS_LAYERS,
     PILOT_BOUNDS_WGS84,
+    VECTOR_DISTRICTS_AVAILABLE,
     VECTOR_DISTRICTS_BLOCKER,
 )
 
@@ -31,6 +32,63 @@ OFFICIAL_DISTRICTS_REASON = (
     "Boundary versions imported from an authorized source. Check source_url and "
     "boundary_version before comparing results across versions."
 )
+EXPECTED_DISTRICT_COUNT = 15
+
+
+def _official_boundary_filter():
+    return District.boundary_version != DEMO_BOUNDARY_VERSION
+
+
+def _vector_districts_availability(session: Session) -> VectorDistrictsAvailability:
+    """Report official PostGIS districts; never promote demo rectangles."""
+
+    versions = list(
+        session.scalars(
+            select(District.boundary_version)
+            .where(_official_boundary_filter())
+            .distinct()
+            .order_by(District.boundary_version)
+        )
+    )
+    if not versions:
+        return VectorDistrictsAvailability(
+            status="unavailable",
+            reason=VECTOR_DISTRICTS_BLOCKER,
+        )
+
+    selected = versions[0] if len(versions) == 1 else None
+    if selected is None:
+        return VectorDistrictsAvailability(
+            status="empty",
+            reason=(
+                "Several official boundary versions are imported; pass "
+                "boundary_version on /v1/territories/districts before comparing."
+            ),
+            boundary_versions=versions,
+        )
+
+    count = session.scalar(
+        select(func.count()).select_from(District).where(District.boundary_version == selected)
+    )
+    count = int(count or 0)
+    if count != EXPECTED_DISTRICT_COUNT:
+        return VectorDistrictsAvailability(
+            status="empty",
+            reason=(
+                f"Official boundary_version={selected} has {count} districts; "
+                f"expected {EXPECTED_DISTRICT_COUNT} complete municipal polygons."
+            ),
+            boundary_version=selected,
+            boundary_versions=versions,
+            count=count,
+        )
+    return VectorDistrictsAvailability(
+        status="available",
+        reason=VECTOR_DISTRICTS_AVAILABLE,
+        boundary_version=selected,
+        boundary_versions=versions,
+        count=count,
+    )
 
 
 @router.get("/districts", response_model=DistrictsResponse)
@@ -43,11 +101,10 @@ def list_official_districts(
 ) -> DistrictsResponse:
     """Official district boundaries. Demo rectangles are excluded by construction."""
 
-    official = District.boundary_version != DEMO_BOUNDARY_VERSION
     versions = list(
         session.scalars(
             select(District.boundary_version)
-            .where(official)
+            .where(_official_boundary_filter())
             .distinct()
             .order_by(District.boundary_version)
         )
@@ -111,7 +168,9 @@ def list_official_districts(
 
 
 @router.get("", response_model=TerritoriesResponse)
-def territories() -> TerritoriesResponse:
+def territories(
+    session: Annotated[Session, Depends(get_session)],
+) -> TerritoriesResponse:
     settings = get_settings()
     key_configured = bool(
         settings.gamc_wms_api_key and settings.gamc_wms_api_key.get_secret_value().strip()
@@ -127,16 +186,15 @@ def territories() -> TerritoriesResponse:
         )
         for layer in GAMC_WMS_LAYERS
     ]
+    vector = _vector_districts_availability(session)
+    reason_parts: list[str] = []
+    if not key_configured:
+        reason_parts.append("WMS layers need GAMC_WMS_API_KEY")
+    if vector.status != "available":
+        reason_parts.append("official vector districts are not ready for analysis")
     return TerritoriesResponse(
         status="available",
-        reason=(
-            None
-            if key_configured
-            else (
-                "Pilot area is available; WMS layers need GAMC_WMS_API_KEY; "
-                "vector districts blocked."
-            )
-        ),
+        reason="; ".join(reason_parts) if reason_parts else None,
         pilot=PilotTerritory(
             name="Landsat pilot window",
             bounds_wgs84=PILOT_BOUNDS_WGS84,
@@ -144,6 +202,6 @@ def territories() -> TerritoriesResponse:
             note="Pilot raster evidence window; not a municipal district boundary.",
         ),
         wms_layers=wms_layers,
-        vector_districts=VectorDistrictsAvailability(reason=VECTOR_DISTRICTS_BLOCKER),
+        vector_districts=vector,
         generated_at=datetime.now(UTC),
     )

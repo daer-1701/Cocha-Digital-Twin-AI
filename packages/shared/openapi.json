@@ -4027,21 +4027,60 @@
         "properties": {
           "status": {
             "type": "string",
-            "const": "unavailable",
+            "enum": [
+              "available",
+              "empty",
+              "unavailable"
+            ],
             "title": "Status",
             "default": "unavailable"
           },
           "reason": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Reason"
+          },
+          "boundary_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boundary Version"
+          },
+          "boundary_versions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Boundary Versions"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "reason"
-        ],
-        "title": "VectorDistrictsAvailability"
+        "title": "VectorDistrictsAvailability",
+        "description": "Official GAMC Limite Distritos import status (not WMS imagery)."
       },
       "WmsLayerAvailability": {
         "properties": {

@@ -1,0 +1,38 @@
+/* Shared interaction language: quiet surfaces, deliberate responses. */
+.reading-progress { position: fixed; inset: 0 0 auto; height: 2px; z-index: 100; background: var(--color-link); transform-origin: left; pointer-events: none; }
+.topbar { position: relative; z-index: 5; }
+.nav a { position: relative; isolation: isolate; border-radius: 7px; transition: color 180ms ease, background-color 180ms ease; }
+.nav-active-surface { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--color-surface-raised); }
+.nav a[aria-current="page"] { border-bottom-color: transparent; }
+button, select, summary { transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease; }
+button:active:not(:disabled) { translate: 0 1px; }
+button:focus-visible, select:focus-visible, summary:focus-visible { outline-offset: 4px; }
+.panel { border-color: color-mix(in srgb, var(--color-border) 70%, transparent); }
+tbody tr { transition: background-color 180ms ease; }
+tbody tr:hover { background: var(--color-surface-raised); }
+.metric { transition: border-color 220ms ease, background-color 220ms ease; }
+.metric:hover { border-color: var(--color-border-strong); background: var(--color-surface-raised); }
+.page-header h1 { animation: none; }
+@keyframes inspector-arrive { from { opacity: 0; translate: 12px 0; } to { opacity: 1; translate: 0 0; } }
+@supports (interpolate-size: allow-keywords) {
+  details { interpolate-size: allow-keywords; }
+  details::details-content { block-size: 0; overflow: clip; transition: block-size 250ms ease, content-visibility 250ms allow-discrete; }
+  details[open]::details-content { block-size: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell-inspector { animation: none; }
+  button:active:not(:disabled) { translate: none; }
+  details::details-content { transition: none; }
+}
+
+.selected-cell-label { background:#edf7ff; color:#112733; padding:8px 14px; border-radius:4px; font-weight:700; box-shadow:0 4px 20px #0008; }
+@media(prefers-reduced-motion:no-preference) {
+main { animation:page-unveil 820ms cubic-bezier(.16,1,.3,1) both; }
+nav a:hover { transform:translateY(-2px); }
+button:hover:not(:disabled) { box-shadow:0 3px 12px #0002; }
+@keyframes page-unveil {
+  from { opacity:0; clip-path:inset(0 0 28% 0); filter:blur(6px); }
+  to { opacity:1; clip-path:inset(0); filter:blur(0); }
+}
+}
+.cell-inspector { animation: none; }

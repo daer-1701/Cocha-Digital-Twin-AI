@@ -1,0 +1,1047 @@
+/* Presentation shell. Deliberately excludes map canvas chrome.
+   Visual brief: NASA Earth Information Center vital signs — serious telemetry,
+   color by measured quantity, never hide pitch data behind expanders. */
+
+body:has(main) .presentation-header.topbar {
+  display: block;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg) 92%, transparent), var(--color-bg));
+  backdrop-filter: blur(10px);
+}
+.presentation-header .identity-row {
+  min-height: 96px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  border-left: 3px solid var(--signal-ground);
+  padding-left: 18px;
+  margin-block: 16px;
+}
+body:has(main) .presentation-header .brand {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(25px, 3vw, 42px);
+  font-weight: 650;
+  font-stretch: 100%;
+  letter-spacing: -0.045em;
+  color: var(--color-text-strong);
+  line-height: 1.1;
+}
+.brand-purpose {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.015em;
+}
+.identity-tools {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.project-stage {
+  color: var(--color-text-subtle);
+  font-size: 13px;
+}
+body:has(main) .presentation-header nav {
+  max-width: none;
+  overflow: visible;
+  border-block: 1px solid var(--color-border);
+  padding: 8px 0;
+}
+body:has(main) .presentation-header .nav {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 5px;
+}
+body:has(main) .presentation-header .nav a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 5px;
+  font-size: 14px;
+  white-space: normal;
+  border: 0;
+  border-radius: 6px;
+}
+body:has(main) .presentation-header .nav a[aria-current="page"] {
+  color: var(--color-text-strong);
+  background: var(--color-surface-raised);
+}
+body:has(main) .presentation-header .nav a:hover {
+  background: var(--color-surface);
+  transform: none;
+}
+
+.observatory .page-header {
+  padding: 6px 0;
+  margin: 24px 0 12px;
+}
+.observatory .page-header h1 {
+  font-stretch: 100%;
+  font-weight: 550;
+  font-size: clamp(22px, 2.3vw, 32px);
+  letter-spacing: -0.035em;
+}
+
+/* Pitch route: jumps only, never hides content. */
+.presentation-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 24px;
+  padding: 16px 0 24px;
+}
+.route-caption {
+  font-size: 13px;
+  color: var(--color-text-subtle);
+}
+.route-stops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.route-stops button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--color-text-muted);
+  padding: 8px 12px;
+}
+.route-stops button[aria-current="step"] {
+  border-bottom-color: var(--signal-ground);
+  color: var(--color-text-strong);
+}
+.route-controls {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.route-controls button {
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+.evidence-index {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 0 0 20px;
+}
+.evidence-index a {
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--color-text-muted);
+  position: relative;
+  padding-bottom: 5px;
+}
+.evidence-index a::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: var(--color-link);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 220ms ease;
+}
+.evidence-index a:hover::after,
+.evidence-index a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+.signal-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 22%, transparent);
+}
+.signal-dot.signal-heat,
+.signal-chip.signal-heat {
+  color: var(--signal-heat);
+  background: var(--signal-heat);
+}
+.signal-dot.signal-vegetation,
+.signal-chip.signal-vegetation {
+  color: var(--signal-vegetation);
+  background: var(--signal-vegetation);
+}
+.signal-dot.signal-coverage,
+.signal-chip.signal-coverage {
+  color: var(--signal-coverage);
+  background: var(--signal-coverage);
+}
+.signal-dot.signal-ground,
+.signal-chip.signal-ground {
+  color: var(--signal-ground);
+  background: var(--signal-ground);
+}
+.signal-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.6rem;
+  padding: 2px 7px;
+  margin-right: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #0b1218 !important;
+  vertical-align: 2px;
+}
+
+.evidence-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+  margin: 64px 0 24px;
+  scroll-margin-top: 180px;
+}
+.evidence-heading p {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.evidence-heading h2 {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(25px, 2.6vw, 36px);
+  font-weight: 550;
+  letter-spacing: -0.04em;
+}
+.evidence-heading > div:last-child:not(:first-child) {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+/* Vital signs strip — one hue per quantity. */
+.observatory .presentation-metrics.vital-signs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  background: transparent;
+  border: 0;
+  padding: 8px 0 8px;
+}
+.observatory .presentation-metrics .metric-signal {
+  position: relative;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--signal-color) 10%, var(--color-surface)) 0%,
+      var(--color-surface) 42%
+    );
+  border: 1px solid color-mix(in srgb, var(--signal-color) 35%, var(--color-border));
+  border-radius: 14px;
+  padding: 22px 22px 26px;
+  box-shadow: inset 3px 0 0 var(--signal-color);
+  overflow: clip;
+}
+.observatory .presentation-metrics .metric-signal::before {
+  content: "";
+  position: absolute;
+  inset: auto -20% -40% 40%;
+  height: 70%;
+  background: radial-gradient(circle, var(--signal-soft), transparent 68%);
+  pointer-events: none;
+}
+.metric-signal[data-signal="heat"] {
+  --signal-color: var(--signal-heat);
+  --signal-soft: var(--signal-heat-soft);
+}
+.metric-signal[data-signal="vegetation"] {
+  --signal-color: var(--signal-vegetation);
+  --signal-soft: var(--signal-vegetation-soft);
+}
+.metric-signal[data-signal="coverage"] {
+  --signal-color: var(--signal-coverage);
+  --signal-soft: var(--signal-coverage-soft);
+}
+.presentation-metrics .metric-label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+.presentation-metrics .metric-value {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 550;
+  font-stretch: 100%;
+  letter-spacing: -0.05em;
+  font-size: clamp(44px, 5vw, 72px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  margin-block: 14px 10px;
+  color: var(--color-text-strong);
+  position: relative;
+}
+.presentation-metrics .metric-signal[data-signal="heat"] .metric-value:not(.metric-missing) {
+  color: color-mix(in srgb, var(--signal-heat) 55%, var(--color-text-strong));
+}
+.presentation-metrics .metric-signal[data-signal="vegetation"] .metric-value:not(.metric-missing) {
+  color: color-mix(in srgb, var(--signal-vegetation) 45%, var(--color-text-strong));
+}
+.presentation-metrics .metric-signal[data-signal="coverage"] .metric-value:not(.metric-missing) {
+  color: color-mix(in srgb, var(--signal-coverage) 45%, var(--color-text-strong));
+}
+.presentation-metrics .metric-value small {
+  font-size: 22px;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+.presentation-metrics .metric-note {
+  font-size: 14px;
+  margin-top: 10px;
+}
+.presentation-metrics .metric-actions {
+  margin-top: 18px;
+  position: relative;
+}
+
+.signal-gauge {
+  margin-top: 6px;
+}
+.signal-gauge-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+  overflow: visible;
+}
+.signal-gauge-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  min-width: 0;
+  background: linear-gradient(90deg, transparent, var(--gauge-color));
+}
+.signal-gauge-fill[data-missing] {
+  width: 0;
+  background: transparent;
+}
+.signal-gauge-marker {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gauge-color);
+  border: 2px solid var(--color-bg);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gauge-color) 28%, transparent);
+}
+.signal-gauge-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--color-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+.signal-heat {
+  --gauge-color: var(--signal-heat);
+}
+.signal-vegetation {
+  --gauge-color: var(--signal-vegetation);
+}
+.signal-coverage {
+  --gauge-color: var(--signal-coverage);
+}
+
+.observatory .territory {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 28px;
+  margin-bottom: 32px;
+  padding: 24px;
+  border-radius: 16px;
+  background:
+    var(--atmosphere-glow),
+    var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.territory-card .facts-readouts,
+.facts.facts-readouts,
+.facts-readouts,
+.closing-readouts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 0;
+}
+.readout {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+  gap: 10px 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--readout-color, var(--color-border-strong));
+}
+.readout[data-signal="heat"] {
+  --readout-color: var(--signal-heat);
+}
+.readout[data-signal="vegetation"] {
+  --readout-color: var(--signal-vegetation);
+}
+.readout[data-signal="coverage"] {
+  --readout-color: var(--signal-coverage);
+}
+.readout[data-signal="ground"] {
+  --readout-color: var(--signal-ground);
+}
+.readout dt {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 13px;
+}
+.readout dd {
+  margin: 0;
+  color: var(--color-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.observatory .workspace {
+  gap: 28px;
+  margin-block: 32px;
+}
+.observatory .workspace > .panel {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  padding: 24px;
+}
+.observatory .workspace h2 {
+  font-size: 24px;
+  font-weight: 550;
+}
+.reading-panel .note {
+  border-left: 3px solid var(--signal-heat);
+  background: var(--signal-heat-soft);
+}
+.quality-meter {
+  display: grid;
+  gap: 12px;
+}
+.quality-meter-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+.quality-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--signal-coverage);
+}
+.quality-meter[data-level="caution"] .quality-meter-fill {
+  background: var(--signal-heat);
+}
+.quality-meter[data-level="empty"] .quality-meter-fill {
+  background: var(--color-danger);
+  width: 4px !important;
+}
+
+.comparison-signals {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.comparison-signal {
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--signal-color, var(--color-border-strong));
+  background: color-mix(in srgb, var(--signal-soft, transparent) 70%, var(--color-surface));
+}
+.comparison-signal[data-signal="heat"] {
+  --signal-color: var(--signal-heat);
+  --signal-soft: var(--signal-heat-soft);
+}
+.comparison-signal[data-signal="vegetation"] {
+  --signal-color: var(--signal-vegetation);
+  --signal-soft: var(--signal-vegetation-soft);
+}
+.comparison-signal[data-signal="coverage"] {
+  --signal-color: var(--signal-coverage);
+  --signal-soft: var(--signal-coverage-soft);
+}
+.comparison-signal-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+.comparison-signal-values span {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-subtle);
+  margin-bottom: 4px;
+}
+.comparison-signal-values strong {
+  display: block;
+  font-size: 28px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 550;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 8px;
+}
+.comparison-delta strong {
+  color: var(--signal-color, var(--color-text-strong));
+}
+.comparison table tr[data-signal="heat"] th {
+  color: var(--signal-heat);
+}
+.comparison table tr[data-signal="vegetation"] th {
+  color: var(--signal-vegetation);
+}
+.comparison table tr[data-signal="coverage"] th {
+  color: var(--signal-coverage);
+}
+
+.history-section {
+  scroll-margin-top: 180px;
+  margin-block: 48px;
+}
+.observatory .history {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background:
+    var(--atmosphere-glow),
+    var(--color-surface);
+  padding: 8px 24px 24px;
+}
+.history .panel-title {
+  padding-block: 20px;
+  border-top: 0;
+}
+.history-heat .panel-title h2 {
+  box-shadow: inset 0 -3px 0 var(--signal-heat);
+}
+.history-vegetation .panel-title h2 {
+  box-shadow: inset 0 -3px 0 var(--signal-vegetation);
+}
+.history .panel-title h2 {
+  display: inline-block;
+  font-size: 30px;
+  font-weight: 550;
+  letter-spacing: -0.035em;
+  padding-bottom: 8px;
+}
+.history-composition {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.history-composition > * {
+  min-width: 0;
+}
+.history-plot {
+  background: color-mix(in srgb, var(--color-bg) 55%, var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.history-plot svg {
+  width: 100%;
+  height: auto;
+  min-height: 260px;
+}
+.history-plot .chart-scope {
+  font-size: 15px;
+  margin-top: 0;
+}
+.history-composition .table-wrap {
+  border-top: 3px solid var(--signal-ground);
+  padding-top: 16px;
+}
+.history-composition table {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.history-composition th,
+.history-composition td {
+  padding: 12px 10px;
+}
+.history-composition td:not(:first-child),
+.history-composition th:not(:first-child) {
+  text-align: right;
+}
+.history-composition caption {
+  text-align: left;
+  padding-bottom: 18px;
+  line-height: 1.5;
+}
+.acquisition-select {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 0 6px;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+.acquisition-select[aria-pressed="true"] {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.history-composition tr[aria-current="true"] {
+  background: var(--color-surface-raised);
+}
+
+.observatory .provenance {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 28px;
+  gap: 40px;
+  background:
+    var(--atmosphere-glow),
+    var(--color-surface);
+}
+#procedencia {
+  scroll-margin-top: 180px;
+}
+.provenance h2 {
+  font-size: 28px;
+  font-weight: 550;
+  letter-spacing: -0.03em;
+}
+.provenance-intro {
+  grid-column: 1 / -1;
+}
+.provenance-intro > p {
+  margin: 0 0 12px;
+  color: var(--color-text-subtle);
+}
+.evidence-chain {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  list-style: none;
+  padding: 0;
+  margin: 32px 0 0;
+}
+.evidence-chain li {
+  position: relative;
+  padding: 24px 22px 12px 0;
+  border-top: 3px solid var(--stage-color, var(--color-border-strong));
+  min-width: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--stage-color, transparent) 12%, transparent),
+    transparent 70%
+  );
+}
+.evidence-chain li::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--stage-color, var(--signal-ground));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--stage-color, var(--signal-ground)) 25%, transparent);
+}
+.evidence-chain li[data-stage="source"] {
+  --stage-color: var(--signal-ground);
+}
+.evidence-chain li[data-stage="acquisition"] {
+  --stage-color: var(--signal-heat);
+}
+.evidence-chain li[data-stage="coverage"] {
+  --stage-color: var(--signal-coverage);
+}
+.evidence-chain li[data-stage="publish"] {
+  --stage-color: var(--signal-vegetation);
+}
+.evidence-chain span {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--color-text-subtle);
+  font-size: 14px;
+}
+.evidence-chain strong {
+  font-size: 22px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.evidence-chain p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.limitation-list {
+  display: grid;
+  gap: 10px;
+  padding-left: 0;
+  list-style: none;
+}
+.limitation-list li {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 3px solid var(--signal-heat);
+  background: var(--signal-heat-soft);
+}
+.method-visible {
+  margin-top: 32px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg) 40%, transparent);
+}
+.method-visible p {
+  line-height: 1.8;
+}
+
+.evidence-closing {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 64px;
+  margin-block: 64px 40px;
+  padding: 48px 28px;
+  border-radius: 18px;
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--signal-ground);
+  background:
+    var(--atmosphere-glow),
+    var(--color-surface);
+  scroll-margin-top: 190px;
+}
+.evidence-closing h2 {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(38px, 5vw, 66px);
+  font-weight: 550;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+  margin: 24px 0;
+}
+.closing-place {
+  color: var(--signal-ground);
+}
+.closing-evidence > p {
+  font-size: 14px;
+}
+.closing-readouts {
+  margin: 16px 0 24px;
+}
+
+.compare-meta {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.compare-meta-title {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+.compare-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.compare-meta-grid article {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--signal-coverage);
+  background: var(--signal-coverage-soft);
+}
+.compare-meta-grid h4 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.compare-meta-value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--color-text-strong);
+}
+
+.guide-answers {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+.guide-answer {
+  border-left: 3px solid var(--answer-color, var(--signal-ground));
+  padding: 14px 18px 16px;
+  background: color-mix(in srgb, var(--answer-soft, var(--signal-ground-soft)) 80%, var(--color-surface));
+  border-radius: 0 10px 10px 0;
+}
+.guide-answer[data-signal="heat"] {
+  --answer-color: var(--signal-heat);
+  --answer-soft: var(--signal-heat-soft);
+}
+.guide-answer[data-signal="vegetation"] {
+  --answer-color: var(--signal-vegetation);
+  --answer-soft: var(--signal-vegetation-soft);
+}
+.guide-answer[data-signal="coverage"] {
+  --answer-color: var(--signal-coverage);
+  --answer-soft: var(--signal-coverage-soft);
+}
+.guide-answer h3 {
+  margin-top: 0;
+}
+
+/* Non-map pages: same telemetry language, never flat grey walls of text. */
+body:not(:has(.observatory)) main {
+  background:
+    var(--atmosphere-glow),
+    var(--color-bg);
+}
+body:not(:has(.observatory)) main > .page-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+  margin-block: 48px;
+  padding: 28px 0 32px;
+  border-bottom: 1px solid var(--color-border);
+}
+body:not(:has(.observatory)) .page-header h1 {
+  font-size: clamp(32px, 4vw, 52px);
+  font-stretch: 100%;
+  font-weight: 550;
+  line-height: 1.1;
+}
+body:not(:has(.observatory)) .status {
+  border-radius: 12px;
+  border-width: 1px;
+  border-left: 3px solid var(--signal-ground);
+  padding: 32px;
+}
+body:not(:has(.observatory)) .status ul {
+  display: grid;
+  gap: 16px;
+  padding-left: 20px;
+}
+body:not(:has(.observatory)) .card-grid {
+  gap: 24px;
+}
+body:not(:has(.observatory)) .card-grid > * {
+  border-radius: 12px;
+  border-top: 3px solid var(--signal-coverage);
+  background: var(--color-surface);
+}
+body:not(:has(.observatory)) .panel-stack {
+  display: grid;
+  gap: 24px;
+}
+body:not(:has(.observatory)) .panel-stack > .panel,
+body:not(:has(.observatory)) main > .panel,
+body:not(:has(.observatory)) .panel-stack section.panel {
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--signal-coverage) 6%, var(--color-surface)),
+      var(--color-surface) 38%
+    );
+  box-shadow: inset 3px 0 0 var(--signal-ground);
+}
+body:not(:has(.observatory)) .downloads {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  background: var(--signal-coverage-soft);
+  border: 1px solid color-mix(in srgb, var(--signal-coverage) 35%, var(--color-border));
+  border-radius: 12px;
+}
+body:not(:has(.observatory)) .downloads a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--color-surface-raised);
+  text-decoration: none;
+  color: var(--color-text-strong);
+  border: 1px solid var(--color-border-strong);
+}
+body:not(:has(.observatory)) table thead th {
+  border-bottom: 2px solid var(--signal-ground);
+}
+body:not(:has(.observatory)) .facts {
+  display: grid;
+  gap: 10px;
+}
+body:not(:has(.observatory)) .facts:not(.facts-readouts) {
+  grid-template-columns: minmax(140px, 0.6fr) minmax(0, 1.4fr);
+}
+body:not(:has(.observatory)) .note {
+  border-left: 3px solid var(--signal-coverage);
+  background: var(--signal-coverage-soft);
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 24px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .identity-row {
+    animation: identity-reveal 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .presentation-metrics .metric-value {
+    animation: value-reveal 500ms ease-out both;
+  }
+  .history-composition tbody tr {
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+  .presentation-header .brand {
+    transition: letter-spacing 300ms ease;
+  }
+  .presentation-header .brand:hover {
+    letter-spacing: -0.025em;
+  }
+  .route-stops button,
+  .route-controls button {
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  }
+  .route-stops button:hover {
+    color: var(--color-text-strong);
+    border-bottom-color: var(--color-border-strong);
+  }
+  .evidence-chain li::before {
+    transition: transform 220ms ease;
+  }
+  .evidence-chain li:hover::before {
+    transform: scale(1.35);
+  }
+  .acquisition-select {
+    transition: color 160ms ease;
+  }
+  .closing-evidence a {
+    transition: text-underline-offset 200ms ease;
+  }
+  .closing-evidence a:hover {
+    text-underline-offset: 7px;
+  }
+  @keyframes identity-reveal {
+    from {
+      opacity: 0.4;
+      translate: 0 -6px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  @keyframes value-reveal {
+    from {
+      opacity: 0.5;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@media (max-width: 1000px) {
+  .history-composition {
+    grid-template-columns: 1fr;
+  }
+  .observatory .territory {
+    grid-template-columns: 1fr;
+  }
+  .comparison-signal-values {
+    grid-template-columns: 1fr;
+  }
+  body:has(main) .presentation-header .nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  body:has(main) .presentation-header.topbar {
+    top: 0;
+    position: relative;
+  }
+  .identity-tools {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .evidence-chain {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .evidence-closing {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  body:not(:has(.observatory)) main > .page-header {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .route-controls {
+    margin-left: 0;
+  }
+  .compare-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .presentation-header .identity-row {
+    align-items: start;
+    flex-direction: column;
+    padding-block: 20px;
+    gap: 14px;
+  }
+  .identity-tools {
+    flex-direction: row;
+  }
+  body:has(main) .presentation-header .nav a {
+    font-size: 12px;
+  }
+  .evidence-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .evidence-heading > div:last-child:not(:first-child) {
+    justify-items: start;
+  }
+  .observatory .presentation-metrics.vital-signs {
+    grid-template-columns: 1fr;
+  }
+  .observatory .presentation-metrics .metric-signal {
+    padding: 20px;
+  }
+  .evidence-index {
+    gap: 14px;
+  }
+  .evidence-chain {
+    grid-template-columns: 1fr;
+  }
+  .readout {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

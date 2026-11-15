@@ -163,7 +163,18 @@ def test_legend_and_feature_info_mocked(monkeypatch):
 def test_territories_marks_wms_available_when_key_configured(monkeypatch):
     monkeypatch.setenv("GAMC_WMS_API_KEY", "configured")
     get_settings.cache_clear()
-    with TestClient(create_app()) as client:
+    from cocha_api.db.session import get_session
+
+    app = create_app()
+    session = MagicMock()
+    session.scalars.return_value = []
+    session.scalar.return_value = 0
+
+    def override_session():
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    with TestClient(app) as client:
         body = client.get("/v1/territories").json()
     assert all(layer["status"] == "available" for layer in body["wms_layers"])
     assert body["vector_districts"]["status"] == "unavailable"

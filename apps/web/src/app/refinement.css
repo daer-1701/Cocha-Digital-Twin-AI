@@ -1,0 +1,103 @@
+/* Orbital observatory: presentation only. Map tokens and controls stay intact. */
+body.mission-shell:has(main) {
+  background: radial-gradient(ellipse at 85% 0, #183455 0, transparent 36rem), radial-gradient(ellipse at 0 60%, #12283a 0, transparent 55rem), #080d19;
+}
+body.mission-shell main { animation: none; }
+body.mission-shell .presentation-header.topbar {
+  background: #080d19ed; backdrop-filter: blur(22px); border-bottom: 1px solid #304c6e; box-shadow: 0 14px 36px #02071166;
+}
+body.mission-shell .presentation-header .identity-row {
+  position: relative; overflow: hidden; border: 0; padding: 20px 26px; margin: 0; min-height: 142px;
+  background: radial-gradient(ellipse at 78% 150%, #286caf55, transparent 60%), linear-gradient(115deg, #0d1729, #0c1625 60%, #142f46);
+}
+body.mission-shell .presentation-header .identity-row::after {
+  content: ''; position: absolute; inset: auto 0 0; height: 1px; background: linear-gradient(90deg, #b6e6ff, #629dff66, transparent);
+}
+body.mission-shell .presentation-header .brand {
+  position: relative; z-index: 1; display: flex; align-items: baseline; flex-wrap: wrap; gap: 18px; text-decoration: none; white-space: normal;
+}
+.mission-shell .brand-name {
+  font-size: clamp(48px, 5vw, 76px); font-weight: 750; font-variation-settings: 'wdth' 115; letter-spacing: -.075em; line-height: .95; color: #f1f8ff;
+}
+.mission-shell .brand-system { font-size: clamp(16px, 1.8vw, 25px); font-weight: 400; letter-spacing: -.035em; color: #afc9e5; }
+.mission-shell .brand-purpose { position: relative; z-index: 1; margin-top: 14px; color: #b6cce3; }
+.orbital-signature { position: absolute; right: 18px; top: -2px; width: 360px; height: 150px; stroke: #9bd6ff; stroke-width: .7; pointer-events: none; opacity: .7; filter: drop-shadow(0 0 9px #449dff88); }
+.orbital-signature path { stroke: #9bd6ff55; }
+.orbital-core, .orbital-satellite { fill: #d4f2ff; stroke: none; }
+body.mission-shell .presentation-header nav { padding: 6px; border: 0; }
+body.mission-shell .presentation-header .nav { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 3px; }
+body.mission-shell .presentation-header .nav a { border-radius: 3px; font-size: 13px; min-height: 46px; color: #a6bdd6; transition: color 200ms, background-color 200ms; }
+body.mission-shell .presentation-header .nav a[aria-current='page'] { background: #203d61; color: #f3faff; box-shadow: inset 0 -2px #9bd6ff, 0 0 20px #529bff16; }
+body.mission-shell .nav-active-surface { background: #203d61; border-radius: 3px; }
+body.mission-shell .presentation-header .nav a:hover { color: white; background: #192c45; transform: none; }
+body.mission-shell .page-header { position: relative; padding: 36px 0 30px; margin: 0 0 18px; gap: 36px; background: none; border-bottom: 1px solid #344f6a; }
+body.mission-shell .page-header h1 { font-family: var(--font-display), sans-serif; font-size: clamp(32px, 3.8vw, 58px); line-height: 1.04; font-weight: 550; letter-spacing: -.055em; max-width: 22ch; text-wrap: balance; color: #eef7ff; }
+body.mission-shell .page-header .intro { max-width: min(100%, 39ch); }
+body.mission-shell .page-header .intro p { font-size: 16px; line-height: 1.6; color: #abc1da; }
+body.mission-shell .observatory > .note { border-left: 2px solid #79bbff; padding: 12px 18px; margin: 0 0 24px; background: #12253c; color: #bfd2e5; }
+body.mission-shell .evidence-heading { margin-top: 76px; padding-bottom: 20px; border-bottom: 1px solid #36516f; }
+body.mission-shell .evidence-heading h2 { font-size: clamp(32px, 3.3vw, 48px); letter-spacing: -.05em; color: #e1f3ff; }
+body.mission-shell .panel:not(.map-panel), body.mission-shell .territory, body.mission-shell .controls, body.mission-shell .evidence-guide, body.mission-shell .provenance-panel {
+  background: linear-gradient(125deg, #172940, #0d1728 75%); border: 1px solid #304963; border-radius: 6px 22px 6px 6px; box-shadow: inset 0 1px #addcff19, 0 18px 45px #0207133d;
+}
+body.mission-shell .panel:not(.map-panel) { padding: 28px; }
+body.mission-shell .panel:not(.map-panel) .panel-title { padding-bottom: 18px; border-bottom: 1px solid #3f607b; margin-bottom: 24px; }
+body.mission-shell .panel-title h2 { font-size: clamp(23px, 2vw, 30px); letter-spacing: -.035em; font-weight: 550; }
+body.mission-shell .controls { padding: 24px; border-left: 3px solid #8bd0ff; }
+body.mission-shell .controls :is(button, select), body.mission-shell .downloads a { border-color: #52749a; border-radius: 4px; background: #1a304d; color: #edf7ff; box-shadow: inset 0 1px #ffffff0a; }
+body.mission-shell .controls :is(button, select):hover, body.mission-shell .downloads a:hover { background: #294d72; border-color: #b6e6ff; }
+body.mission-shell .presentation-metrics .metric-signal {
+  border: 1px solid color-mix(in srgb, var(--signal-color) 50%, #223750); border-top: 3px solid var(--signal-color); border-radius: 4px 4px 20px 4px;
+  background: radial-gradient(ellipse at 100% 0, var(--signal-soft), transparent 75%), #0e1b2d; padding: 30px 26px; box-shadow: 0 20px 50px #0003;
+}
+body.mission-shell .presentation-metrics .metric-signal::before { display: none; }
+body.mission-shell .presentation-metrics .metric-value { font-size: clamp(54px, 6vw, 88px); font-weight: 500; margin-block: 22px 16px; }
+body.mission-shell .signal-gauge-track { height: 4px; }
+body.mission-shell .evidence-closing { background: radial-gradient(ellipse at 0 0, #21588388, transparent 65%), #0c1729; border: 1px solid #416180; border-top: 2px solid #b6e6ff; border-radius: 0 0 28px 0; padding: clamp(24px, 4vw, 60px); }
+body.mission-shell .evidence-closing h2 { font-size: clamp(34px, 4vw, 60px); letter-spacing: -.055em; }
+body.mission-shell .analysis-conclusion { font-family: var(--font-display), sans-serif; font-size: clamp(25px, 3vw, 42px); line-height: 1.18; letter-spacing: -.04em; color: #d3ecff; }
+body.mission-shell .analysis-results > section { background: #0b1728; border-color: #3c5c7d; border-radius: 4px; border-top: 2px solid #8bcaff; }
+body.mission-shell .analysis-value { color: #b6e6ff; font-family: var(--font-display), sans-serif; }
+body.mission-shell .analysis-page > * { min-width: 0; }
+body.mission-shell .analysis-results > section { min-width: 0; overflow-wrap: anywhere; }
+body.mission-shell footer { border-top: 1px solid #426480; padding-block: 32px; color: #a8bed6; }
+body.mission-shell .reading-progress { height: 3px; background: #b6e6ff; box-shadow: 0 0 14px #629dff; }
+@media (prefers-reduced-motion: no-preference) {
+  body.mission-shell .reading-progress {
+    box-shadow: 0 0 18px #7bc7ff, 0 0 40px #4d9dff55;
+  }
+}
+@media (max-width: 1000px) {
+  body.mission-shell .presentation-header .nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .orbital-signature { right: -90px; opacity: .3; }
+  body.mission-shell .presentation-header .identity-row { min-height: 120px; }
+}
+@media (max-width: 600px) {
+  body.mission-shell { padding-inline: 16px; }
+  body.mission-shell .presentation-header.topbar { position: relative; }
+  body.mission-shell .presentation-header .identity-row { padding: 24px 16px; }
+  body.mission-shell .presentation-header .brand { gap: 10px; }
+  .mission-shell .brand-name { font-size: 50px; }
+  .orbital-signature { width: 230px; right: -110px; }
+  body.mission-shell .presentation-header .nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.mission-shell .presentation-header .nav a { font-size: 12px; }
+  body.mission-shell .page-header { display: block; padding-block: 28px; }
+  body.mission-shell .page-header h1 { font-size: 36px; }
+  body.mission-shell .panel:not(.map-panel) { padding: 20px; }
+  body.mission-shell .evidence-heading { margin-top: 48px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="on"]) body.mission-shell *,
+  html:not([data-motion="on"]) body.mission-shell *::before,
+  html:not([data-motion="on"]) body.mission-shell *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.date-comparison-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 20px; margin-bottom: 28px; }
+.date-comparison-controls label { display: grid; gap: 8px; flex: 1 1 180px; }
+.date-comparison-controls select { width: 100%; }
+.date-comparison-controls p { flex: 2 1 260px; margin: 0; font-size: 14px; }

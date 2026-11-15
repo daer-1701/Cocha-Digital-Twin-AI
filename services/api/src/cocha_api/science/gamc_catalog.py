@@ -40,10 +40,16 @@ GAMC_WMS_DEFAULT_ENDPOINT: Final[str] = "https://serviciosgamc.cochabamba.bo/api
 GAMC_WMS_VERSION: Final[str] = "1.1.1"
 ALLOWED_CRS: Final[frozenset[str]] = frozenset({"EPSG:4326", "EPSG:3857"})
 VECTOR_DISTRICTS_BLOCKER: Final[str] = (
-    "Official GAMC Limite Distritos polygons are imported in PostGIS as "
-    "boundary_version=gamc-official-20261114 (WMS KML kmscore=100, 15 valid "
-    "districts, no overlap >1 m2). Public /v1/territories still reports "
-    "unavailable until Andrés exposes the official version in the contract. "
+    "Official GAMC Limite Distritos polygons are not imported in PostGIS yet. "
+    "Expected boundary_version prefix gamc-official- (15 municipal districts). "
+    "WMS Limite Distritos imagery is orientation only. "
+    "Do not treat demo-synthetic-v1 rectangles as GAMC boundaries."
+)
+VECTOR_DISTRICTS_AVAILABLE: Final[str] = (
+    "Official GAMC Limite Distritos polygons are available from PostGIS. "
+    "Use /v1/territories/districts for the catalog. "
+    "Boundaries alone are not LST/NDVI indicators; those require accepted "
+    "zonal statistics on /v1/series. "
     "Do not treat demo-synthetic-v1 rectangles as GAMC boundaries."
 )
 

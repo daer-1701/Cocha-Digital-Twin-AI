@@ -65,7 +65,7 @@ export default async function Page({
         {header}
         <StatusPanel status="empty" title="No hay observaciones para exportar">
           <p>
-            El servidor todavía no publicó un snapshot de la ventana piloto. Los
+            El servidor todavía no publicó un snapshot de la área de estudio. Los
             informes distritales formales también están pendientes.
           </p>
           <ServerDetail reason={data.reason} />
@@ -85,10 +85,12 @@ export default async function Page({
     <>
       {header}
       <div className="note">
-        Exporta las observaciones de la ventana piloto tal como las publica el
-        servidor. No es un informe por distrito ni incluye tendencias, estimaciones
+        Exporta las observaciones del área de estudio mostradas en el explorador.
+        No es un informe por distrito ni incluye tendencias, estimaciones
         o escenarios.
       </div>
+      <p><Link href="/analisis">Ver análisis estadístico y descargar la serie sobre soporte común</Link>.
+        Estas exportaciones usan medias por escena; la serie del análisis compara los mismos píxeles.</p>
       <div className="panel-stack">
         <Panel title="Contenido del informe" meta="Selección">
           <form className="report-form" method="get" action="/informes">
@@ -134,38 +136,52 @@ export default async function Page({
             </a>
             <small>
               Archivo: <code>{reportFilename("csv", selection, synthetic)}</code>
-              {synthetic && ". Rotulado como demo: contiene datos sintéticos de prueba."}
+              {synthetic && ". Rotulado como datos sintéticos: contiene datos sintéticos de prueba."}
             </small>
           </div>
         </Panel>
         <Panel title="Metadatos" meta={`Snapshot del ${day(evidence.generated_at)}`}>
-          <dl className="facts">
-            <dt>Alcance</dt>
-            <dd>Ventana piloto ({evidence.area_name}); no es un informe distrital</dd>
-            <dt>Período</dt>
-            <dd>
-              {first && last
-                ? `${day(first.acquired_at)} a ${day(last.acquired_at)}, ${evidence.scenes.length} escenas`
-                : "Sin escenas"}
-            </dd>
-            <dt>Fuente</dt>
-            <dd>
-              {evidence.collection}, versión {evidence.product_version}
-            </dd>
-            <dt>Licencia</dt>
-            <dd lang="en">{evidence.license}</dd>
-            <dt>Unidades</dt>
-            <dd>
-              LST en °C (temperatura de la superficie, no del aire); NDVI sin unidad;
-              cobertura válida de 0 a 1
-            </dd>
-            <dt>Generación</dt>
-            <dd>
-              Snapshot generado el {evidence.generated_at}. La fecha de descarga se
-              agrega al archivo.
-            </dd>
-            <dt>Datos faltantes</dt>
-            <dd>Se dejan vacíos en el CSV y como null en el JSON; nunca como cero.</dd>
+          <dl className="facts facts-readouts">
+            <div className="readout" data-signal="ground">
+              <dt>Alcance</dt>
+              <dd>Área de estudio ({evidence.area_name}); no es un informe distrital</dd>
+            </div>
+            <div className="readout" data-signal="coverage">
+              <dt>Período</dt>
+              <dd>
+                {first && last
+                  ? `${day(first.acquired_at)} a ${day(last.acquired_at)}, ${evidence.scenes.length} escenas`
+                  : "Sin escenas"}
+              </dd>
+            </div>
+            <div className="readout" data-signal="heat">
+              <dt>Fuente</dt>
+              <dd>
+                {evidence.collection}, versión {evidence.product_version}
+              </dd>
+            </div>
+            <div className="readout" data-signal="ground">
+              <dt>Licencia</dt>
+              <dd lang="en">{evidence.license}</dd>
+            </div>
+            <div className="readout" data-signal="vegetation">
+              <dt>Unidades</dt>
+              <dd>
+                LST en °C (temperatura de la superficie, no del aire); NDVI sin unidad;
+                cobertura válida de 0 a 1
+              </dd>
+            </div>
+            <div className="readout" data-signal="coverage">
+              <dt>Generación</dt>
+              <dd>
+                Snapshot generado el {evidence.generated_at}. La fecha de descarga se
+                agrega al archivo.
+              </dd>
+            </div>
+            <div className="readout" data-signal="heat">
+              <dt>Datos faltantes</dt>
+              <dd>Se dejan vacíos en el CSV y como null en el JSON; nunca como cero.</dd>
+            </div>
           </dl>
           <ServerDetail reason={exported.note} />
           {evidence.limitations.length > 0 && (

@@ -53,6 +53,7 @@ from cocha_api.science.gamc_catalog import MONICA_METADATA_PENDING, STATION_CATA
 from cocha_api.science.indicators import (
     DEMO_INDICATORS_REASON,
     DISTRICT_VECTOR_REASON,
+    OFFICIAL_VECTOR_NO_DEMO_REASON,
     SERIES_REASON,
     DemoCellMean,
     demo_indicator_means,
@@ -183,9 +184,15 @@ def list_indicators(
 ) -> IndicatorsResponse:
     geometries = _demo_geometries(session)
     if not geometries:
+        official_count = session.scalar(
+            select(func.count())
+            .select_from(District)
+            .where(District.boundary_version != DEMO_BOUNDARY_VERSION)
+        )
+        reason = OFFICIAL_VECTOR_NO_DEMO_REASON if official_count else DISTRICT_VECTOR_REASON
         return IndicatorsResponse(
             status="unavailable",
-            reason=DISTRICT_VECTOR_REASON,
+            reason=reason,
             items=[],
             limit=limit,
             offset=offset,

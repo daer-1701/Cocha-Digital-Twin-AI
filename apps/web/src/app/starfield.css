@@ -1,0 +1,61 @@
+/* Negative layer inside the isolated body: above its background, behind all
+   content. Opaque panels and maps occlude particles without changing map CSS. */
+body.mission-shell {
+  isolation: isolate;
+}
+
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.starfield-star {
+  position: absolute;
+  top: -10vh;
+  border-radius: 50%;
+  background: #d6eaff;
+  box-shadow: 0 0 7px #9acfff99;
+}
+
+/* This explicit presentation choice overrides the blanket reduced-motion
+   rules only for these particles, never for the rest of the interface. */
+body.mission-shell .starfield .starfield-star {
+  animation: starfield-fall var(--star-duration) var(--star-delay) linear infinite !important;
+}
+
+.starfield-star:nth-child(4n)::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: #d6eaff;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+}
+
+.starfield-star::before {
+  content: "";
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 1px;
+  height: 18px;
+  transform: translateX(-50%);
+  background: linear-gradient(to top, #b7dbffb3, transparent);
+}
+
+@keyframes starfield-fall {
+  from { transform: translate3d(-12px, 0, 0); }
+  to { transform: translate3d(12px, 120vh, 0); }
+}
+
+@media (max-width: 640px) {
+  .starfield-star:nth-child(n + 37) { display: none; }
+}
+
+@media print {
+  .starfield { display: none; }
+  body.mission-shell .starfield .starfield-star { animation: none !important; }
+}

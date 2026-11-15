@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  getDistricts,
   getEvidence,
   getSeries,
   getTerritories,
@@ -11,12 +12,12 @@ import {
   parseFilters,
   type SearchParams,
 } from "../lib/filters";
-import { section } from "../lib/navigation";
 import { territoryOptions } from "../lib/territory";
 import { Explorer } from "../components/explorer";
 import { DemoBanner } from "../components/ui/demo-banner";
 import { PageHeader } from "../components/ui/page-header";
 import { StatusPanel } from "../components/ui/status-panel";
+import "./observatory.css";
 
 export const dynamic = "force-dynamic";
 
@@ -25,16 +26,24 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const [{ data, error, demo }, territories, trends, series, params] =
+  const [{ data, error, demo }, territories, districts, trends, series, params] =
     await Promise.all([
       getEvidence(),
       getTerritories(),
+      getDistricts({ includeGeometry: true }),
       getTrends(),
       getSeries(),
       searchParams,
     ]);
-  const current = section("/");
-  const pageDemo = mergeDemo(demo, territories.demo, trends.demo, series.demo);
+  const pageDemo = mergeDemo(
+    demo,
+    territories.demo,
+    districts.demo,
+    trends.demo,
+    series.demo,
+  );
+  const officialDistricts =
+    districts.data?.status === "available" ? (districts.data.items ?? []) : [];
   const parsed =
     data &&
     parseFilters(
@@ -45,11 +54,16 @@ export default async function Home({
         .map((option) => option.id),
     );
   return (
-    <>
+    <div className="observatory">
       <DemoBanner state={pageDemo} />
-      <PageHeader title={current.title}>
-        <p>{current.summary}</p>
+      <PageHeader title="Temperatura superficial y vegetación">
+        <p>Área de estudio de Cochabamba. Adquisiciones, cobertura y fuentes a la vista.</p>
       </PageHeader>
+      {demo === "off" && data?.scenes.length === 12 && data.scenes[0]?.acquired_at.startsWith("2014") && (
+        <p className="note">Paquete local verificado: 12 adquisiciones de julio, 2014–2025.
+          {" "}<Link href="/analisis">Ver análisis estadístico y comprobar los datos</Link>.
+          Las cifras del mapa son medias por escena; las pruebas usan píxeles comunes.</p>
+      )}
       {data && parsed ? (
         <Explorer
           key={filtersToQuery(parsed.filters)}
@@ -58,6 +72,7 @@ export default async function Home({
           initial={parsed.filters}
           notices={parsed.notices}
           catalog={territories.data}
+          districts={officialDistricts}
           trends={trends.data}
           series={series.data}
         />
@@ -80,6 +95,6 @@ export default async function Home({
           </p>
         </StatusPanel>
       )}
-    </>
+    </div>
   );
 }

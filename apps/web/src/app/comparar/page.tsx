@@ -1,63 +1,195 @@
 import type { Metadata } from "next";
-import { DistrictBoard } from "../../components/district-board";
+import Link from "next/link";
 import { PendingSection } from "../../components/pending-section";
-import { getIndicators, getTrends, mergeDemo } from "../../lib/api";
+import { DemoBanner } from "../../components/ui/demo-banner";
+import { NatureBadge } from "../../components/ui/nature-badge";
+import { PageHeader } from "../../components/ui/page-header";
+import { Panel } from "../../components/ui/panel";
+import { ServerDetail } from "../../components/ui/server-detail";
+import { StatusPanel } from "../../components/ui/status-panel";
+import {
+  getDistricts,
+  getSeries,
+  getTerritories,
+  getTrends,
+  mergeDemo,
+} from "../../lib/api";
 import { section } from "../../lib/navigation";
 
 const current = section("/comparar");
 export const metadata: Metadata = { title: current.title };
 export const dynamic = "force-dynamic";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ scene_id?: string }>;
-}) {
-  const { scene_id: sceneId } = await searchParams;
-  const [indicators, trends] = await Promise.all([getIndicators(sceneId), getTrends()]);
-  const selectedSceneId = indicators.data?.selected_scene_id ?? null;
-  const scenes = indicators.data?.pilot_window?.scenes ?? [];
-  const reasons = [indicators.data?.reason, trends.data?.reason].filter(
-    (reason): reason is string => Boolean(reason),
+export default async function Page() {
+  const [territories, districts, series, trends] = await Promise.all([
+    getTerritories(),
+    getDistricts({ includeGeometry: true }),
+    getSeries(),
+    getTrends(),
+  ]);
+  const demo = mergeDemo(
+    territories.demo,
+    districts.demo,
+    series.demo,
+    trends.demo,
   );
-  const demoItems = (indicators.data?.items ?? []).filter(
-    (item) => item.nature === "demo_synthetic",
-  );
+  const vector = territories.data?.vector_districts;
+  const officialReady =
+    vector?.status === "available" && districts.data?.status === "available";
+  const reasons = [
+    vector?.reason,
+    districts.data?.reason,
+    series.data?.reason,
+    trends.data?.reason,
+  ].filter((reason): reason is string => Boolean(reason));
+
+  const officialItems = series.data?.official_items ?? [];
+  const officialTrends = trends.data?.official_trends ?? [];
+  const districtRows = districts.data?.items ?? [];
+  const indicatorsReady =
+    series.data?.status === "available" && officialItems.length > 0;
+
+  // Official boundaries are real published data — do not wrap them in the
+  // "no example values" pending shell, which reads as if everything were demo.
+  if (!officialReady) {
+    return (
+      <PendingSection
+        section={current}
+        demo={demo}
+        server={{
+          status: territories.data || districts.data ? "unavailable" : null,
+          items: reasons,
+        }}
+      >
+        <section className="panel" aria-labelledby="district-evidence-status">
+          <h2 id="district-evidence-status">Resultados distritales</h2>
+          <p>
+            La comparación aparecerá cuando el servidor publique el catálogo de
+            límites oficiales. No se muestran rectángulos sintéticos en su lugar.
+          </p>
+          <ServerDetail reason={vector?.reason ?? districts.data?.reason} />
+        </section>
+      </PendingSection>
+    );
+  }
+
   return (
-    <PendingSection
-      section={current}
-      demo={mergeDemo(indicators.demo, trends.demo)}
-      preview={demoItems.length > 0}
-      server={{
-        // District comparison needs both resources; report the least available one.
-        status:
-          indicators.data && trends.data
-            ? indicators.data.status === "available" && trends.data.status === "available"
-              ? "available"
-              : "unavailable"
-            : null,
-        items: reasons,
-      }}
-    >
-      {selectedSceneId && scenes.length > 0 && (
-        <form action="/comparar">
-          <label htmlFor="comparison-scene">Fecha de la comparación de prueba</label>{" "}
-          <select id="comparison-scene" name="scene_id" defaultValue={selectedSceneId}>
-            {scenes.map((scene) => (
-              <option key={scene.scene_id} value={scene.scene_id}>
-                {scene.acquired_at?.slice(0, 10) ?? scene.scene_id}
-              </option>
-            ))}
-          </select>{" "}
-          <button type="submit">Ver fecha</button>
-          <p>Por defecto se muestra la adquisición más reciente disponible.</p>
-        </form>
-      )}
-      <DistrictBoard
-        indicators={demoItems}
-        trends={trends.data?.demo_trends ?? []}
-        sceneId={selectedSceneId}
-      />
-    </PendingSection>
+    <>
+      <DemoBanner state={demo} />
+      <PageHeader title={current.title}>
+        <p>{current.summary}</p>
+        <NatureBadge nature="observed" detailed />
+      </PageHeader>
+
+      <Panel
+        title="Distritos oficiales"
+        meta={districts.data?.boundary_version ?? undefined}
+        className="district-catalog"
+      >
+        <p>
+          Catálogo municipal importado ({districtRows.length} distritos). Estos
+          polígonos son límites oficiales GAMC, no rectángulos de demostración.
+          La comparación de LST/NDVI aparece solo cuando hay estadísticas zonales
+          aceptadas.
+        </p>
+        <ServerDetail reason={vector?.reason} />
+        <div className="table-wrap">
+          <table>
+            <caption>Límites oficiales publicados por el servidor</caption>
+            <thead>
+              <tr>
+                <th scope="col">N.º</th>
+                <th scope="col">Distrito</th>
+                <th scope="col">Versión</th>
+              </tr>
+            </thead>
+            <tbody>
+              {districtRows.map((row) => (
+                <tr key={row.id}>
+                  <th scope="row">{row.number}</th>
+                  <td>{row.name}</td>
+                  <td>{row.boundary_version}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+
+      <section className="panel" aria-labelledby="district-indicators-status">
+        <h2 id="district-indicators-status">Indicadores por distrito</h2>
+        {indicatorsReady ? (
+          <>
+            <p>
+              Estadísticas zonales aceptadas sobre la versión oficial. LST es
+              temperatura de superficie, no del aire.
+            </p>
+            <div className="table-wrap">
+              <table>
+                <caption>Indicadores oficiales aceptados</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Distrito</th>
+                    <th scope="col">Variable</th>
+                    <th scope="col">Estadístico</th>
+                    <th scope="col">Valor</th>
+                    <th scope="col">Período</th>
+                    <th scope="col">Cobertura</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {officialItems.map((item) => (
+                    <tr key={item.id}>
+                      <th scope="row">
+                        {item.district_number}. {item.district_name}
+                      </th>
+                      <td>{item.variable}</td>
+                      <td>{item.statistic}</td>
+                      <td>
+                        {item.value == null
+                          ? "Sin datos"
+                          : item.value.toFixed(
+                              item.variable.includes("ndvi") ? 3 : 1,
+                            )}
+                        {item.units ? ` ${item.units}` : ""}
+                      </td>
+                      <td>
+                        {item.period_start} → {item.period_end}
+                      </td>
+                      <td>
+                        {item.valid_fraction == null
+                          ? "—"
+                          : `${(item.valid_fraction * 100).toFixed(0)}%`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <StatusPanel
+            status="pending"
+            title="Faltan estadísticas zonales aceptadas"
+            action={<Link href="/">Ver la malla Landsat en el explorador</Link>}
+          >
+            <p>
+              Los 15 límites oficiales ya están publicados. Todavía no hay
+              LST/NDVI por distrito calculados y aceptados; no se inventan
+              valores ni se muestran rectángulos sintéticos en su lugar.
+            </p>
+            <ServerDetail reason={series.data?.reason} items={reasons} />
+          </StatusPanel>
+        )}
+        {officialTrends.length > 0 ? (
+          <p className="caption">
+            El servidor también publicó {officialTrends.length} tendencia(s)
+            oficial(es) aceptada(s).
+          </p>
+        ) : (
+          <ServerDetail reason={trends.data?.reason} />
+        )}
+      </section>
+    </>
   );
 }

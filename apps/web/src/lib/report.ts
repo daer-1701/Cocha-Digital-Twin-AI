@@ -76,7 +76,7 @@ export function buildCsv(
     `Snapshot generado: ${evidence.generated_at}; descargado: ${downloadedAt.toISOString()}`,
     "Unidades: lst en °C (temperatura superficial, no del aire); ndvi sin unidad; valid_fraction de 0 a 1",
     "Celdas vacías = sin datos (no cero)",
-    `Nota del servidor: ${exported.note}`,
+    `Nota de procedencia: ${exported.note}`,
   ].filter((line): line is string => line !== null);
   const header = meta.map((line) => `# ${line.replace(/[\r\n]+/g, " ")}`);
   if (selection.content === "celdas") {
@@ -123,7 +123,9 @@ export function buildJson(
   return {
     download: {
       downloaded_at: downloadedAt.toISOString(),
-      source: "/v1/reports observation_export",
+      source: exported.note.startsWith("Paquete local verificado")
+        ? "local:pilot-analysis/explorer.json"
+        : "/v1/reports observation_export",
       selection: { content: selection.content, scene_id: selection.sceneId },
       synthetic_fixture: synthetic,
     },

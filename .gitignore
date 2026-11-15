@@ -49,6 +49,7 @@ output/playwright/
 apps/web/test-results/
 apps/web/playwright-report/
 apps/web/public/maplibre-worker.mjs
+apps/web/public/pilot-analysis/
 .DS_Store
 Thumbs.db
 .idea/

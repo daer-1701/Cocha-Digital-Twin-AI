@@ -286,8 +286,13 @@ class WmsLayerAvailability(AvailabilityModel):
 
 
 class VectorDistrictsAvailability(AvailabilityModel):
-    status: Literal["unavailable"] = "unavailable"
-    reason: str
+    """Official GAMC Limite Distritos import status (not WMS imagery)."""
+
+    status: AvailabilityStatus = "unavailable"
+    reason: str | None = None
+    boundary_version: str | None = None
+    boundary_versions: list[str] = Field(default_factory=list)
+    count: int | None = Field(default=None, ge=0)
 
 
 class OfficialDistrictItem(AvailabilityModel):

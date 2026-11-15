@@ -78,8 +78,8 @@ La web añade `/procesamiento` y `/estaciones/[id]`. La lectura guiada de
 | GET | `/v1/datasets?limit=50&offset=0` | Catálogo persistido; limit entre 1 y 100 |
 | GET | `/openapi.json` | Contrato generado |
 | GET | `/v1/explorer` | Snapshot Landsat validado; estado vacío si falta, 503 si es inválido |
-| GET | `/v1/territories` | Piloto disponible; capas WMS según clave; vector distrital `unavailable` |
-| GET | `/v1/indicators?scene_id=...&limit=100` | `unavailable` sin distritos demo; `empty` sin escenas. Solo una adquisición (la más reciente por defecto), seleccionada antes de paginar; `selected_scene_id` identifica la elegida y una inexistente responde 404. El vector GAMC sigue ausente |
+| GET | `/v1/territories` | Piloto disponible; capas WMS según clave; `vector_districts` refleja el catálogo oficial en PostGIS (`available` con 15 polígonos `gamc-official-*`) |
+| GET | `/v1/indicators?scene_id=...&limit=100` | Solo medias sintéticas sobre `demo-synthetic-v1`; `unavailable` sin demo (aunque el vector oficial exista). Indicadores oficiales van en `/v1/series`. Una adquisición por respuesta (`selected_scene_id`); escena inexistente → 404 |
 | GET | `/v1/territories/districts` | Versiones territoriales oficiales (excluye demo), paginadas, GeoJSON opcional; `unavailable` sin vector importado; con varias versiones exige `boundary_version` |
 | GET | `/v1/series` | `official_items` solo de `district_indicators` aceptados sobre versiones oficiales, con filtros de versión, distrito, variable, estadístico y período; `unavailable` si no hay ninguna fila aceptada |
 | GET | `/v1/trends` | `official_trends` solo si hay `trend_results` aceptados; si no, `unavailable`. `pilot_trends` y `demo_trends` siguen descriptivos sin inferencia |

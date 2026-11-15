@@ -1403,16 +1403,25 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
-        /** VectorDistrictsAvailability */
+        /**
+         * VectorDistrictsAvailability
+         * @description Official GAMC Limite Distritos import status (not WMS imagery).
+         */
         VectorDistrictsAvailability: {
             /**
              * Status
              * @default unavailable
-             * @constant
+             * @enum {string}
              */
-            status: "unavailable";
+            status: "available" | "empty" | "unavailable";
             /** Reason */
-            reason: string;
+            reason?: string | null;
+            /** Boundary Version */
+            boundary_version?: string | null;
+            /** Boundary Versions */
+            boundary_versions?: string[];
+            /** Count */
+            count?: number | null;
         };
         /** WmsLayerAvailability */
         WmsLayerAvailability: {

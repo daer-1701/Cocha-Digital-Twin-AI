@@ -104,16 +104,36 @@ def test_stations_empty_profile_when_database_has_no_rows():
 def test_territories_exposes_pilot_and_vector_blocker():
     with patch("cocha_api.routes.territories.get_settings") as settings:
         settings.return_value.gamc_wms_api_key = None
-        with TestClient(create_app()) as client:
+        app = create_app()
+        session = _override_empty_session(app)
+        session.scalars.return_value = []
+        with TestClient(app) as client:
             response = client.get("/v1/territories")
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "available"
     assert body["pilot"]["status"] == "available"
     assert body["vector_districts"]["status"] == "unavailable"
-    assert "gamc-official-20261114" in body["vector_districts"]["reason"].lower()
+    assert "not imported" in body["vector_districts"]["reason"].lower()
     assert "do not treat demo-synthetic-v1" in body["vector_districts"]["reason"].lower()
     assert all(layer["status"] == "unavailable" for layer in body["wms_layers"])
+
+
+def test_territories_marks_official_vector_available_when_imported():
+    with patch("cocha_api.routes.territories.get_settings") as settings:
+        settings.return_value.gamc_wms_api_key = None
+        app = create_app()
+        session = _override_empty_session(app)
+        session.scalars.return_value = ["gamc-official-20261114"]
+        session.scalar.return_value = 15
+        with TestClient(app) as client:
+            response = client.get("/v1/territories")
+    assert response.status_code == 200
+    vector = response.json()["vector_districts"]
+    assert vector["status"] == "available"
+    assert vector["boundary_version"] == "gamc-official-20261114"
+    assert vector["count"] == 15
+    assert "do not treat demo-synthetic-v1" in vector["reason"].lower()
 
 
 def test_demo_indicators_are_available_and_official_trends_stay_blocked(monkeypatch, tmp_path):
