@@ -328,6 +328,86 @@ export async function explainDistrictEvidence(input: {
   }
 }
 
+/** Free-form project question grounded by the assistant evidence pack. */
+export async function askProjectQuestion(question: string): Promise<ExplainResult> {
+  const headers = assistantHeaders();
+  if (!headers) {
+    return {
+      answer: null,
+      message:
+        "La interpretación generativa no está habilitada en este servidor. Usa las sugerencias locales del buscador.",
+    };
+  }
+  const cleaned = String(question ?? "").trim().slice(0, 500);
+  if (cleaned.length < 4) {
+    return { answer: null, message: "Escribe una pregunta un poco más concreta." };
+  }
+  try {
+    const response = await fetch(`${apiBaseUrl()}/v1/assistant/ask`, {
+      method: "POST",
+      cache: "no-store",
+      signal: AbortSignal.timeout(45000),
+      headers,
+      body: JSON.stringify({
+        request_id: `guide-${Date.now().toString(36)}`,
+        question: [
+          "Responde en español a esta pregunta sobre el prototipo Cocha Digital Twin AI.",
+          "Usa solo evidencia publicada que el servidor adjunte. No inventes cifras ni tendencias.",
+          "Distingue LST (superficie) de temperatura del aire. Sugiere 1–3 acciones concretas en la interfaz si aplica.",
+          `Pregunta del usuario: ${cleaned}`,
+        ].join("\n"),
+      }),
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok) {
+      return {
+        answer: null,
+        message:
+          typeof result?.detail === "string"
+            ? result.detail
+            : "El asistente no pudo responder. Revisa autorización y cuota.",
+        status: "http_error",
+      };
+    }
+    if (!result || typeof result.status !== "string") {
+      return { answer: null, message: "Respuesta del asistente no válida.", status: "invalid" };
+    }
+    if (result.status !== "answered" || typeof result.answer !== "string") {
+      return {
+        answer: null,
+        message:
+          typeof result.reason === "string"
+            ? result.reason
+            : "Sin respuesta IA: el servidor mantuvo controles de evidencia, autorización o presupuesto.",
+        status: result.status,
+        model: typeof result.model === "string" ? result.model : null,
+      };
+    }
+    let spent: number | null = null;
+    try {
+      const status = await fetch(`${apiBaseUrl()}/v1/assistant`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (status.ok) {
+        const body = await status.json();
+        if (typeof body.spent_usd === "number") spent = body.spent_usd;
+      }
+    } catch {
+      spent = null;
+    }
+    return {
+      answer: result.answer.slice(0, 12000),
+      message: "Respuesta IA basada en evidencia del servidor. Las cifras oficiales siguen en las fichas estructuradas.",
+      status: "answered",
+      spent_usd: spent,
+      model: typeof result.model === "string" ? result.model : null,
+    };
+  } catch {
+    return { answer: null, message: "El asistente no respondió a tiempo. Puedes reintentar." };
+  }
+}
+
 /** City-wide fallback used when no district is selected. */
 export async function explainMapEvidence(): Promise<ExplainResult> {
   const headers = assistantHeaders();

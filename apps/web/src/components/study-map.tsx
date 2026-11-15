@@ -19,8 +19,10 @@ import {
   type OfficialDistrict,
 } from "../lib/districts-geojson";
 import {
+  explainDistrictEvidence,
   loadDistrictIndicators,
   type DistrictSeriesResult,
+  type ExplainResult,
   type WeatherReading,
 } from "../app/map-actions";
 import {
@@ -427,6 +429,8 @@ export default function StudyMap({
   >(null);
   const [districtWeather, setDistrictWeather] = useState<WeatherReading | null>(null);
   const [districtWeatherLoading, setDistrictWeatherLoading] = useState(false);
+  const [districtAi, setDistrictAi] = useState<ExplainResult | null>(null);
+  const [districtAiBusy, setDistrictAiBusy] = useState(false);
   const districtSeriesGen = useRef(0);
   const districtLiftFrame = useRef(0);
   const districtLiftHeight = useRef(0);
@@ -681,6 +685,7 @@ export default function StudyMap({
     Promise.resolve().then(() => {
       if (!cancelled && districtSeriesGen.current === requestId) {
         setDistrictSeries({ status: "loading" });
+        setDistrictAi(null);
       }
     });
     loadDistrictIndicators({
@@ -1720,6 +1725,11 @@ export default function StudyMap({
               if (index !== null) selectDistrict(index);
               else closeDistrict();
             }}
+            onGuideAction={(action) => {
+              if (action.intent === "pick-district" && districts.length > 0 && !selectedDistrictName) {
+                selectDistrict(0);
+              }
+            }}
           />
         )}
         <div className="map-presentation-controls">
@@ -1983,7 +1993,33 @@ export default function StudyMap({
         <DistrictResultCard
           series={districtSeries}
           districtName={selectedDistrict.name}
+          askBusy={districtAiBusy}
+          onAskAi={async () => {
+            setDistrictAiBusy(true);
+            try {
+              const result = await explainDistrictEvidence({
+                districtNumber: selectedDistrict.number,
+                boundaryVersion: selectedDistrict.boundary_version,
+              });
+              setDistrictAi(result);
+            } catch {
+              setDistrictAi({
+                answer: null,
+                message: "No se pudo consultar el asistente para este distrito.",
+              });
+            } finally {
+              setDistrictAiBusy(false);
+            }
+          }}
         />
+        {districtAi && (
+          <div className="district-ai-note" role="status">
+            <p>{districtAi.message}</p>
+            {districtAi.answer && (
+              <p style={{ whiteSpace: "pre-wrap" }}>{districtAi.answer}</p>
+            )}
+          </div>
+        )}
         <small className="cell-inspector-note">
           Pulsa el polígono o usa el buscador de arriba. Los valores solo aparecen si hay filas
           aceptadas en la API.
