@@ -46,7 +46,7 @@ export function PendingSection({
       <StatusPanel
         status="pending"
         title="Esta sección todavía no tiene resultados"
-        action={<Link href="/">Ir al explorador</Link>}
+        action={<Link href="/?territorio=distritos">Ir al explorador</Link>}
       >
         {server && (
           <p>

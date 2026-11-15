@@ -238,7 +238,7 @@ export default async function Page({
         </Panel>
       </div>
       <p className="caption">
-        <Link href="/">Volver al explorador</Link>
+        <Link href="/?territorio=distritos">Volver al explorador</Link>
       </p>
     </>
   );

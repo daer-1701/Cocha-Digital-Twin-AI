@@ -14,7 +14,7 @@ export default async function AnalysisPage() {
   const local = await getPilotPackage();
   if (!local) return <Panel title="Análisis local no disponible">
     <p>No se ha preparado el paquete científico en esta instalación.</p>
-    <Link href="/">Volver al explorador</Link>
+    <Link href="/?territorio=distritos">Volver al explorador</Link>
   </Panel>;
   const { analysis, evidence } = local;
   return <div className="analysis-page">

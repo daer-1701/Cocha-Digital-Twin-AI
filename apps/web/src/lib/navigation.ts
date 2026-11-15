@@ -14,7 +14,7 @@ export type Section = {
 
 export const SECTIONS: Section[] = [
   {
-    href: "/",
+    href: "/?territorio=distritos",
     label: "Explorador",
     title: "Temperatura superficial y vegetación",
     summary:

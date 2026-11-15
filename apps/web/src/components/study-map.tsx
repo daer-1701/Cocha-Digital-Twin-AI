@@ -6,6 +6,7 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { components } from "@cocha/shared";
 import { MapClimate } from "./map-climate";
+import { DistrictClimateFx } from "./district-climate-fx";
 import { CellCombobox } from "./cell-combobox";
 import { ThemeToggle, useTheme } from "./ui/theme-provider";
 import { cellKey } from "../lib/cell-identity";
@@ -19,6 +20,7 @@ import {
 import {
   loadDistrictIndicators,
   type DistrictSeriesResult,
+  type WeatherReading,
 } from "../app/map-actions";
 import {
   GAMC_BLOCKS_ID,
@@ -422,6 +424,8 @@ export default function StudyMap({
   const [districtSeries, setDistrictSeries] = useState<
     DistrictSeriesResult | { status: "loading" } | null
   >(null);
+  const [districtWeather, setDistrictWeather] = useState<WeatherReading | null>(null);
+  const [districtWeatherLoading, setDistrictWeatherLoading] = useState(false);
   const districtSeriesGen = useRef(0);
   const districtLiftFrame = useRef(0);
   const districtLiftHeight = useRef(0);
@@ -1728,7 +1732,18 @@ export default function StudyMap({
                 }
               : null
           }
+          onWeatherChange={(weather, loading) => {
+            setDistrictWeather(weather);
+            setDistrictWeatherLoading(loading);
+          }}
         />
+        {selectedDistrict && (
+          <DistrictClimateFx
+            weather={districtWeather}
+            loading={districtWeatherLoading}
+            districtName={selectedDistrict.name}
+          />
+        )}
         {!showDistrictOutlines && <aside className="map-data-key" aria-label="Leyenda de datos del mapa">
           <strong>{differenceActive ? "Diferencia de " : ""}{variable === "lst" ? "LST · °C" : "NDVI · sin unidad"}</strong>
           <span>{scene.acquired_at.slice(0, 10)}{differenceActive && referenceScene ? ` menos ${referenceScene.acquired_at.slice(0, 10)}` : ""}</span>

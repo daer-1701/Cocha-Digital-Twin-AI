@@ -74,7 +74,7 @@ export default async function Page() {
         <p>
           <Link href="/?territorio=distritos">Abrir el mapa en distritos</Link>
           {" · "}
-          <Link href="/">Explorador</Link>
+          <Link href="/?territorio=distritos">Explorador</Link>
         </p>
       </Panel>
       {evidence.data && (

@@ -6,7 +6,7 @@ export default function NotFound() {
     <StatusPanel
       status="empty"
       title="Esta página no existe"
-      action={<Link href="/">Ir al explorador</Link>}
+      action={<Link href="/?territorio=distritos">Ir al explorador</Link>}
     >
       <p>Revisa la dirección o elige una sección del menú.</p>
     </StatusPanel>

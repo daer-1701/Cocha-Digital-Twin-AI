@@ -2,7 +2,7 @@
 .mission-shell { background:#101e2b; }
 .mission-shell .topbar { padding-block:18px 0; }
 .mission-shell .identity-row { padding-bottom:16px; }
-.mission-shell .orbital-signature { display:none; }
+.mission-shell .orbital-signature { opacity:.55; }
 .workspace-nav { display:flex; align-items:start; gap:16px; border-top:1px solid #365064; padding:8px 0; }
 .nav-primary { display:flex; flex-wrap:wrap; gap:4px; flex:1; }
 .workspace-nav a,.nav-more summary { display:block; padding:10px 14px; border-radius:7px; color:#cbdce6; text-decoration:none; cursor:pointer; }

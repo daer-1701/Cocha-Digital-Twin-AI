@@ -17,17 +17,28 @@ type DistrictContext = {
   longitude: number;
 };
 
-export function MapClimate({ district }: { district?: DistrictContext | null }) {
+export function MapClimate({
+  district,
+  onWeatherChange,
+}: {
+  district?: DistrictContext | null;
+  onWeatherChange?: (weather: WeatherReading | null, loading: boolean) => void;
+}) {
   const [weather, setWeather] = useState<WeatherReading | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [explanation, setExplanation] = useState<ExplainResult | null>(null);
   const [explanationKey, setExplanationKey] = useState("pilot");
   const weatherGen = useRef(0);
+  const onWeatherChangeRef = useRef(onWeatherChange);
   const districtKey = district
     ? `${district.number}:${district.boundaryVersion}`
     : "pilot";
   const visibleExplanation = explanationKey === districtKey ? explanation : null;
+
+  useEffect(() => {
+    onWeatherChangeRef.current = onWeatherChange;
+  }, [onWeatherChange]);
 
   useEffect(() => {
     const id = ++weatherGen.current;
@@ -41,17 +52,25 @@ export function MapClimate({ district }: { district?: DistrictContext | null }) 
           })
         : loadMapWeather();
     Promise.resolve().then(() => {
-      if (!cancelled && weatherGen.current === id) setLoading(true);
+      if (!cancelled && weatherGen.current === id) {
+        setLoading(true);
+        onWeatherChangeRef.current?.(null, true);
+      }
     });
     request
       .then((value) => {
         if (!cancelled && weatherGen.current === id) {
           setWeather(value);
           setLoading(false);
+          onWeatherChangeRef.current?.(value, false);
         }
       })
       .catch(() => {
-        if (!cancelled && weatherGen.current === id) setLoading(false);
+        if (!cancelled && weatherGen.current === id) {
+          setWeather(null);
+          setLoading(false);
+          onWeatherChangeRef.current?.(null, false);
+        }
       });
     return () => {
       cancelled = true;
