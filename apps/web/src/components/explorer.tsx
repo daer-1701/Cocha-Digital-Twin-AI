@@ -347,7 +347,7 @@ export function Explorer({
                 <summary>Cómo leer el mapa</summary>
                 <p className="hud-note">
                   {showDistrictOutlines
-                    ? "Se dibujan los 15 polígonos oficiales del GAMC (límites irregulares reales). La cuadrícula blanca de celdas Landsat queda oculta aquí para no confundirla con distritos. Sin LST/NDVI distrital inventado."
+                    ? "Se dibujan los 15 polígonos oficiales del GAMC. La cuadrícula Landsat queda oculta. Pulsa un distrito para ver su ficha y las series zonales aceptadas; la cobertura puede ser baja si el ráster solo cubre la ventana piloto."
                     : "El color representa la variable seleccionada en celdas de unos 360 m. Las celdas sin valor quedan transparentes. Selecciona una para ver LST, NDVI y cobertura."}
                 </p>
               </details>
@@ -356,7 +356,11 @@ export function Explorer({
                 <div><dt>NDVI · vegetación</dt><dd>{format(scene.ndvi_mean, 3)}</dd></div>
                 <div><dt>Cobertura válida</dt><dd>{format(scene.valid_fraction * 100, 1)} %</dd></div>
               </dl>
-              <p className="caption">Selecciona una celda para consultar sus valores y procedencia. Las medias corresponden a la ventana piloto.</p>
+              <p className="caption">
+                {showDistrictOutlines
+                  ? "Las medias del panel son de la escena piloto Landsat (contexto). Los indicadores del distrito seleccionado salen de /v1/series, no de esa media de ventana."
+                  : "Selecciona una celda para consultar sus valores y procedencia. Las medias corresponden a la ventana piloto."}
+              </p>
               <EvidenceTrigger
                 onClick={() =>
                   openEvidence({ kind: "scene", scene, variable: displayVariable })
@@ -514,7 +518,7 @@ export function Explorer({
         <Panel title="Capas de referencia" meta={date} className="map-panel">
           <p className="caption">
             {showDistrictOutlines
-              ? "Mapa centrado en los 15 distritos oficiales GAMC. Las capas WMS solo orientan; no hay LST/NDVI distrital inventado."
+              ? "Mapa centrado en los 15 distritos oficiales GAMC. Las capas WMS solo orientan. LST/NDVI por distrito salen de series aceptadas al seleccionar un polígono."
               : "El rectángulo de celdas es una ventana de estudio Landsat, no un límite municipal."}
           </p>
           <MapLayers

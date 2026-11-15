@@ -1926,7 +1926,7 @@ export default function StudyMap({
           {fullscreen && (
             <small>
               {showDistrictOutlines
-                ? "Polígonos municipales reales. Sin LST/NDVI distrital inventado."
+                ? "Polígonos municipales reales. Pulsa uno para ver series aceptadas."
                 : "Selecciona una celda para consultar sus datos."}
             </small>
           )}

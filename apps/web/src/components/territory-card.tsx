@@ -44,8 +44,9 @@ export function TerritoryCard({
         </dl>
         <p className="caption">
           Polígonos oficiales GAMC (Tunari, Molle, Alejo Calatayud…). No es la
-          malla blanca Landsat. LST/NDVI por distrito solo cuando el servidor
-          publique estadísticas zonales aceptadas; no se inventan valores.
+          malla blanca Landsat. Al seleccionar un distrito, el mapa consulta
+          /v1/series para indicadores zonales aceptados; si faltan o la cobertura
+          es nula, se muestra ese estado sin inventar cifras.
         </p>
       </Panel>
     );

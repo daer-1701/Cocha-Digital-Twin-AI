@@ -100,11 +100,12 @@ export const SECTIONS: Section[] = [
     label: "Asistente",
     title: "Asistente científico",
     summary:
-      "Preguntar por la evidencia publicada y recibir respuestas que citan su fuente.",
-    available: false,
+      "Consultar el estado del presupuesto Gemini y la evidencia que puede citar. La interpretación por distrito vive en el mapa.",
+    available: true,
     requires: [
-      "Habilitar las llamadas en el servidor después de verificar los precios oficiales; hoy están desactivadas.",
-      "Resultados estructurados que el asistente pueda citar sin inventar cifras.",
+      "Clave Gemini y GEMINI_CALLS_ENABLED en el servidor API.",
+      "API_ASSISTANT_TOKEN coincidente en la web (servidor) y en la API.",
+      "Evidencia publicada (piloto y, si existen, series distritales aceptadas).",
     ],
   },
 ];

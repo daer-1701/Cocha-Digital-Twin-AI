@@ -39,7 +39,7 @@ export function territoryOptions(
       id: "distritos",
       label: "Distritos municipales",
       description:
-        "Los 15 polígonos oficiales GAMC (Tunari, Molle, Alejo Calatayud…). Sin LST/NDVI distrital inventado.",
+        "Los 15 polígonos oficiales GAMC (Tunari, Molle, Alejo Calatayud…). Pulsa un distrito para ver series zonales aceptadas e interpretación con evidencia.",
       available: catalog?.vector_districts.status === "available",
       pending:
         catalog?.vector_districts.status === "available"
