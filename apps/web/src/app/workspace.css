@@ -181,9 +181,8 @@ body.mission-shell .map-shell .map-chrome-dock .camera-tools { position:static; 
 body.mission-shell .map-shell .map-chrome-dock .map-evidence-label { display:none; }
 body.mission-shell .evidence-workbench .stage .map-stage { height:760px; }
 body.mission-shell .map-shell:fullscreen .map-stage { flex:1; height:100%; }
-body.mission-shell .map-shell .map-data-key { top:90px; max-height:calc(100% - 250px); }
-body.mission-shell .map-shell .map-climate { top:118px; max-height:calc(100% - 280px); }
-
+body.mission-shell .map-shell .map-data-key,
+body.mission-shell .map-shell .map-climate { top:90px; max-height:calc(100% - 250px); }
 body.mission-shell .map-shell .cell-inspector { position:absolute; right:14px; bottom:125px; z-index:9; max-height:65%; overflow:auto; }
 @media(max-width:700px) {
  body.mission-shell .map-shell .map-presentation-controls { left:12px; top:68px; right:12px; gap:6px; }
