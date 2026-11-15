@@ -399,7 +399,8 @@ body:has(.observatory) .nav a:hover { background: var(--color-surface-raised); c
   .observatory .stage:has(.map-shell:not(:fullscreen)) { grid-template-columns: 1fr; }
 }
 .district-selection-info { order:7; flex-basis:100%; padding:20px; border:1px solid var(--color-border-strong); background:var(--color-surface); border-radius:10px; }
-.map-shell:fullscreen .district-selection-info { position:absolute; right:24px; bottom:40px; width:300px; z-index:10; }
+.map-shell:fullscreen .district-selection-info { position:absolute; right:24px; bottom:40px; width:min(640px, calc(100% - 48px)); z-index:10; }
+
 /* Selection facts: compact reading groups; absent values have no row. */
 .selection-heading { display:grid; gap:8px; margin-bottom:20px; }
 .selection-kind { color:var(--color-text-subtle); font-size:12px; }
